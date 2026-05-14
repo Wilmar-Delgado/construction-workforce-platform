@@ -1,0 +1,28 @@
+.table-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.table-icon-btn:hover {
+    background: transparent;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+}
+
+.table-icon-btn.blue {
+    color: #050064;
+}
+
+.table-icon-btn.danger {
+    color: #dc2626;
+}
+
+.table-icon {
+    width: 18px;
+    height: 18px;
+}

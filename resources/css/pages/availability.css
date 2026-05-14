@@ -1,0 +1,50 @@
+.worker-name {
+    font-weight: 600;
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+.status-tag {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Available */
+.status-available {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Booked */
+.status-booked {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+/* Unavailable */
+.status-unavailable {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.disabled-field {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.error {
+    color: #dc2626;
+    font-size: 12px;
+}

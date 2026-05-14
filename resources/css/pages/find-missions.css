@@ -1,0 +1,183 @@
+/* =====================================================
+   2. COUNT
+===================================================== */
+.results-count {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+/* =====================================================
+   MISSIONS LIST
+===================================================== */
+.missions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mission-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.mission-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.mission-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+/* JOB TAG */
+.job-wrapper {
+    margin-left: auto;
+}
+
+.job-tag {
+    background: #4f46e5;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.mission-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.stat-box small {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.stat-box strong {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.mission-description {
+    color: #374151;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.mission-footer {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* ICONS */
+.mini-icon {
+    width: 14px;
+    height: 14px;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+/* Subtitle rows */
+.mission-subtitle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.meta-inline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Stats */
+.stat-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+/* REQUIREMENTS */
+.mission-requirements {
+    margin-bottom: 18px;
+}
+
+.requirements-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.requirements-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.requirement-tag {
+    background: #eef4ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.empty-text {
+    font-size: 13px;
+    color: #dc2626;
+    margin-top: 8px;
+}
+
+.info-box {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+@media (max-width: 768px) {
+
+    .mission-header,
+    .mission-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mission-title {
+        font-size: 20px;
+    }
+
+    .mission-stats {
+        grid-template-columns: 1fr;
+    }
+}

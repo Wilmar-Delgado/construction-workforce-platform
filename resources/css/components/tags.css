@@ -1,0 +1,80 @@
+/* TAGS */
+.section-label {
+    font-weight: 900;
+    font-size: 15px;
+    /* color: #6b7280; */
+    margin-bottom: 6px;
+}
+
+.tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag {
+    background: #eef2ff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.cert {
+    background: #e0f2fe;
+}
+
+.more {
+    background: #f3f4f6;
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.tag button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: inherit;
+    font-size: 12px;
+}
+
+.blue-tag {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.tag-remove {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.tag-remove:hover {
+    color: #ef4444;
+}
+
+.skill-tag,
+.more-skills {
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.company-tag {
+    background: #e5e7eb;
+    color: #020617;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+}
