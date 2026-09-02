@@ -104,7 +104,7 @@ function submitRequest() {
 </script>
 
 <template>
-    <Head title="Find Workers" />
+    <Head :title="t('find_workers_page.title')" />
 
     <SidebarLayout>
         <BaseToast
@@ -151,55 +151,63 @@ function submitRequest() {
                     <div class="card-header">
                         <h3 class="worker-name">{{ worker.name }}</h3>
                         <div class="rating">
-                            <Star class="icon" /> {{ worker.rating ?? 'N/A' }}
+                            <Star class="icon" /> {{ worker.rating ?? t('common.not_available') }}
                         </div>
                     </div>
 
                     <p class="job">{{ t(`profiles_page.jobs.${worker.job}`) }}</p>
 
-                    <!-- EXPERIENCE + RATE -->
-                    <div class="card-meta">
-                        <div class="meta-item">
-                            <Briefcase class="icon" />
-                            <span>{{ worker.years_experience }} yrs</span>
+                    <div class="card-body">
+                        <!-- EXPERIENCE + RATE -->
+                        <div class="card-meta">
+                            <div class="meta-item">
+                                <Briefcase class="icon" />
+                                <span>{{ t('find_workers_page.experience_years_short', { count: worker.years_experience }) }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <DollarSign class="icon" />
+                                <span>{{ worker.hourly_rate }} {{ t('common.per_hour') }}</span>
+                            </div>
                         </div>
-                        <div class="meta-item">
-                            <DollarSign class="icon" />
-                            <span>{{ worker.hourly_rate }}/hr</span>
-                        </div>
-                    </div>
 
-                    <div class="company-wrapper">
-                        <span class="company-tag" :class="{ 'self-employed': !worker.company }">
-                            {{ worker.company?.name || 'Self-employed' }}
-                        </span>
-                    </div>
-
-                    <!-- CERTIFICATIONS -->
-                    <div style="margin-bottom: 10px;">
-                        <p class="section-label">{{ t('find_workers_page.certifications') }}</p>
-                        <div class="tag-row">
-                            <span v-for="cert in worker.certifications.slice(0,2)" :key="cert.id" class="tag cert">
-                                {{ cert.name }}
-                            </span>
-
-                            <span v-if="worker.certifications.length > 2" class="tag more"> 
-                                +{{ worker.certifications.length - 2 }}
+                        <div class="company-wrapper">
+                            <span class="company-tag" :class="{ 'self-employed': !worker.company }">
+                                {{ worker.company?.name || t('common.self_employed') }}
                             </span>
                         </div>
-                    </div>
 
-                    <!-- SKILLS -->
-                    <div style="margin-bottom: 10px;">
-                        <p class="section-label">{{ t('find_workers_page.top_skills') }}</p>
-                        <div class="tag-row">
-                            <span v-for="skill in worker.skills.slice(0,2)" :key="skill.id" class="tag">
-                                {{ skill.name }}
-                            </span>
+                        <!-- CERTIFICATIONS -->
+                        <div class="fixed-section">
+                            <p class="section-label">{{ t('find_workers_page.certifications') }}</p>
+                            <div class="tag-row">
+                                <template v-if="worker.certifications.length">
+                                    <span v-for="cert in worker.certifications.slice(0,2)" :key="cert.id" class="tag cert">
+                                        {{ cert.name }}
+                                    </span>
 
-                            <span v-if="worker.skills.length > 2" class="tag more">
-                                +{{ worker.skills.length - 2 }}
-                            </span>
+                                    <span v-if="worker.certifications.length > 2" class="tag more">
+                                        +{{ worker.certifications.length - 2 }}
+                                    </span>
+                                </template>
+
+                                <span v-else class="empty-tags">
+                                    {{ t('find_workers_page.no_certifications') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- SKILLS -->
+                        <div class="fixed-section">
+                            <p class="section-label">{{ t('find_workers_page.top_skills') }}</p>
+                            <div class="tag-row">
+                                <span v-for="skill in worker.skills.slice(0,2)" :key="skill.id" class="tag">
+                                    {{ skill.name }}
+                                </span>
+
+                                <span v-if="worker.skills.length > 2" class="tag more">
+                                    +{{ worker.skills.length - 2 }}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -230,13 +238,13 @@ function submitRequest() {
                         <p class="job">{{ t(`profiles_page.jobs.${selectedWorker.job}`) }}</p>
 
                         <span class="company-tag" :class="{ 'self-employed': !selectedWorker.company }">
-                            {{ selectedWorker.company?.name || 'Self-employed' }}
+                            {{ selectedWorker.company?.name || t('common.self_employed') }}
                         </span>
                     </div>
 
                     <div class="rating">
                         <Star class="icon" />
-                        {{ selectedWorker.rating ?? 'N/A' }}
+                        {{ selectedWorker.rating ?? t('common.not_available') }}
                     </div>
                 </div>
 
@@ -246,7 +254,7 @@ function submitRequest() {
                         <Briefcase class="icon" />
                         <div>
                             <p class="label">{{ t('find_workers_page.profile_modal.experience') }}</p>
-                            <p>{{ selectedWorker.years_experience }} years</p>
+                            <p>{{ t('find_workers_page.experience_years', { count: selectedWorker.years_experience }) }}</p>
                         </div>
                     </div>
 
@@ -254,7 +262,7 @@ function submitRequest() {
                         <DollarSign class="icon" />
                         <div>
                             <p class="label">{{ t('find_workers_page.profile_modal.rate') }}</p>
-                            <p>{{ selectedWorker.hourly_rate }}/hr</p>
+                            <p>{{ selectedWorker.hourly_rate }} {{ t('common.per_hour') }}</p>
                         </div>
                     </div>
                 </div>
@@ -296,10 +304,10 @@ function submitRequest() {
                         </div>
                         <div class="right">
                             <p class="rate">
-                                ${{ selectedWorker.hourly_rate }}/hr
+                                ${{ selectedWorker.hourly_rate }} {{ t('common.per_hour') }}
                             </p>
                             <p class="rating">
-                                ⭐ {{ selectedWorker.rating ?? 'N/A' }}
+                                ⭐ {{ selectedWorker.rating ?? t('common.not_available') }}
                             </p>
                         </div>
                     </div>

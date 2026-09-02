@@ -49,6 +49,12 @@
     max-width: 500px;
 }
 
+.empty-tags {
+    font-size: 13px;
+    color: #9ca3af;
+    font-style: italic;
+}
+
 @media (max-width: 768px) {
 
     .page-container,

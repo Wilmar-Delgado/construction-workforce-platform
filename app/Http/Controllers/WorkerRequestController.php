@@ -3,14 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Mission;
 use App\Models\WorkerProfile;
 use App\Models\WorkerRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\WorkerRequestCreated;
 
 class WorkerRequestController extends Controller
 {
+    use AuthorizesRequests;
+
     public function store(Request $request, WorkerProfile $worker)
     {
         $validated = $request->validate(
@@ -24,6 +28,10 @@ class WorkerRequestController extends Controller
                 'message.max' => 'Message cannot exceed 1000 characters.',
             ]
         );
+
+        $mission = Mission::findOrFail($validated['mission_id']);
+
+        $this->authorize('createInvite', [WorkerRequest::class, $mission, $worker]);
 
         $companyId = auth()->user()->company_id;
 

@@ -11,5 +11,6 @@ export const jobOptions = [
     'painter',
     'mason',
     'ironworker',
-    'insulator'
+    'insulator',
+    'drywall_installer'
 ];

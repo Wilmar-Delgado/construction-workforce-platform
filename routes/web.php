@@ -69,7 +69,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('worker-profiles', WorkerProfileController::class);
+    Route::resource('worker-profiles', WorkerProfileController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
 
     /*
     |--------------------------------------------------------------------------
@@ -77,7 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('availability', AvailabilityController::class);
+    Route::resource('availability', AvailabilityController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
 
     /*
     |--------------------------------------------------------------------------
@@ -104,7 +106,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('missions', MissionController::class);
+    Route::resource('missions', MissionController::class)
+        ->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::put('/missions/{mission}/archive', [MissionController::class, 'archive'])
+        ->name('missions.archive');
 
     /*
     |--------------------------------------------------------------------------
@@ -112,7 +117,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('mission-management', MissionManagementController::class);
+    Route::resource('mission-management', MissionManagementController::class)
+        ->only(['index']);
+    Route::post('/mission-management/requests/{workerRequest}/respond', [MissionManagementController::class, 'respond'])
+        ->name('mission-management.respond');
+    Route::post('/mission-management/requests/{workerRequest}/complete', [MissionManagementController::class, 'complete'])
+        ->name('mission-management.complete');
 
     /*
     |--------------------------------------------------------------------------

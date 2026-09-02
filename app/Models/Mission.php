@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use App\Models\Company;
+use App\Models\MissionRequirement;
+use App\Models\Rating;
 use App\Models\User;
 use App\Models\WorkerProfile;
-use App\Models\MissionRequirement;
 use Illuminate\Database\Eloquent\Model;
 
 class Mission extends Model
@@ -71,5 +72,10 @@ class Mission extends Model
     public function requirements()
     {
         return $this->hasMany(MissionRequirement::class);
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
     }
 }

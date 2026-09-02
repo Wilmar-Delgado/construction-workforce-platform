@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mission;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -10,8 +11,12 @@ use Illuminate\Http\RedirectResponse;
 
 class MissionController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Mission::class);
+
         $baseQuery = Mission::with('requirements')
             ->where('hiring_company_id', auth()->user()->company_id);
 
@@ -86,6 +91,8 @@ class MissionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Mission::class);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -138,6 +145,8 @@ class MissionController extends Controller
         $mission = Mission::with(['hiringCompany', 'lendingCompany', 'creator', 'workerProfile', 'requirements'])
             ->findOrFail($id);
 
+        $this->authorize('view', $mission);
+
         return Inertia::render('MissionDetails', [
             'mission' => $mission,
         ]);
@@ -145,6 +154,8 @@ class MissionController extends Controller
 
     public function update(Request $request, Mission $mission): RedirectResponse
     {
+        $this->authorize('update', $mission);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -194,12 +205,23 @@ class MissionController extends Controller
     {
         $mission = Mission::findOrFail($id);
 
-        if ($mission->hiring_company_id !== auth()->user()->company_id) {
-            abort(403);
-        }
+        $this->authorize('delete', $mission);
 
         $mission->delete();
 
         return redirect()->route('missions.index')->with('success', 'Mission successfully deleted.');
+    }
+
+    public function archive(Mission $mission): RedirectResponse
+    {
+        $this->authorize('archive', $mission);
+
+        $mission->update([
+            'archived_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('missions.index')
+            ->with('success', 'Mission successfully archived.');
     }
 }

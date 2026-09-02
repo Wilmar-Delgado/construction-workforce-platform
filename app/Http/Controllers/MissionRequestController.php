@@ -7,11 +7,15 @@ use App\Models\Mission;
 use App\Models\MissionRequest;
 use App\Models\User;
 use App\Models\WorkerProfile;
+use App\Models\WorkerRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
 class MissionRequestController extends Controller
 {
+    use AuthorizesRequests;
+
     public function store(Request $request, Mission $mission)
     {
         $validated = $request->validate([
@@ -19,22 +23,14 @@ class MissionRequestController extends Controller
             'message' => 'nullable|string|max:1000',
         ]);
 
-        $user = auth()->user();
-
         // Load worker profile
         $worker = WorkerProfile::findOrFail(
             $validated['worker_profile_id']
         );
 
-        // Self-employed
-        if (!$user->company_id && $worker->user_id !== $user->id) {
-            abort(403);
-        }
+        $this->authorize('createApplication', [WorkerRequest::class, $mission, $worker]);
 
-        // Company worker
-        if ($user->company_id && $worker->company_id !== $user->company_id) {
-            abort(403);
-        }
+        $user = auth()->user();
 
         // Prevent duplicate requests
         $alreadyExists = MissionRequest::where([

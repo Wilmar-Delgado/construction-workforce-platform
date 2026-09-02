@@ -18,6 +18,12 @@ class WorkerRequest extends Model
         'status',
         'responded_by',
         'responded_at',
+        'completed_at',
+    ];
+
+    protected $casts = [
+        'responded_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function mission()

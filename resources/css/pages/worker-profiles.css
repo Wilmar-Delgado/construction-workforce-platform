@@ -151,13 +151,13 @@ select {
 }
 
 /* Inputs feel tighter + cleaner */
-.form-group input,
+/* .form-group input,
 .form-group select {
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
     transition: border 0.15s ease, box-shadow 0.15s ease;
-}
+} */
 
 /* Focus state (important upgrade) */
 .form-group input:focus,

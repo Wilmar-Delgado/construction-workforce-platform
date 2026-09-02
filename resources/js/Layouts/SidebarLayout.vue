@@ -141,7 +141,15 @@ const { can } = usePermissions();
                     </h1>
                 </div>
 
-                <p class="topbar-user">{{ authStore.userName }}</p>
+                <div class="topbar-user">
+                    <p class="topbar-user-name">
+                        {{ authStore.userName }}
+                    </p>
+
+                    <p class="topbar-company">
+                        {{ authStore.user?.company?.name || t('self_employed') }}
+                    </p>
+                </div>
             </header>
 
             <!-- PAGE CONTENT -->
@@ -267,7 +275,7 @@ const { can } = usePermissions();
 
 /* Logout section */
 .logout-container {
-    padding: 16px;
+    padding: 0 16px;
     border-top: 1px solid #e5e7eb;
 }
 
@@ -325,6 +333,20 @@ const { can } = usePermissions();
 }
 
 .topbar-user {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.2;
+}
+
+.topbar-user-name {
+    font-weight: 600;
+    color: #374151;
+}
+
+.topbar-company {
+    font-size: 13px;
+    font-weight: 500;
     color: #6b7280;
 }
 
@@ -345,7 +367,7 @@ const { can } = usePermissions();
     }
 
     .topbar {
-        padding: 0 35px;
+        padding: 0 45px 0 35px;
     }
 
 }

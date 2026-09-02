@@ -29,7 +29,7 @@ const notifications = ref({
 async function savePersonalInfo() {
     try {
         await axios.post('/settings/personal', personalInfo.value);
-        alert('Personal information updated.');
+        alert(t('settings_page.personal.success'));
     } catch (error) {
         console.error('Error saving personal info:', error);
     }
@@ -38,7 +38,7 @@ async function savePersonalInfo() {
 async function saveNotifications() {
     try {
         await axios.post('/settings/notifications', notifications.value);
-        alert('Notification preferences updated.');
+        alert(t('settings_page.notifications.success'));
     } catch (error) {
         console.error('Error saving notification preferences:', error);
     }
@@ -49,10 +49,10 @@ async function changePassword() {
 }
 
 async function deleteAccount() {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (confirm(t('settings_page.danger_zone.confirm'))) {
         try {
             await axios.post('/settings/delete-account');
-            alert('Account deleted. Redirecting to homepage.');
+            alert(t('settings_page.danger_zone.deleted_alert'));
             window.location.href = '/';
         } catch (error) {
             console.error('Error deleting account:', error);
@@ -62,7 +62,7 @@ async function deleteAccount() {
 </script>
 
 <template>
-    <Head title="Settings" />
+    <Head :title="t('settings_page.title')" />
 
     <SidebarLayout>
         <template #title>
@@ -117,7 +117,7 @@ async function deleteAccount() {
                                 {{ t('settings_page.notifications.email') }}
                             </p>
                             <p class="setting-desc">
-                                Receive email updates
+                                {{ t('settings_page.notifications.email_description') }}
                             </p>
                         </div>
 
@@ -129,7 +129,7 @@ async function deleteAccount() {
                                 {{ t('settings_page.notifications.sms') }}
                             </p>
                             <p class="setting-desc">
-                                Receive SMS updates
+                                {{ t('settings_page.notifications.sms_description') }}
                             </p>
                         </div>
 
@@ -141,7 +141,7 @@ async function deleteAccount() {
                                 {{ t('settings_page.notifications.missions') }}
                             </p>
                             <p class="setting-desc">
-                                Get notified about new missions
+                                {{ t('settings_page.notifications.missions_description') }}
                             </p>
                         </div>
                         <input type="checkbox" v-model="notifications.missionAlerts" />
@@ -164,8 +164,8 @@ async function deleteAccount() {
                             {{ t('settings_page.notifications.timezone') }}
                         </label>
                         <select v-model="notifications.timezone">
-                            <option value="Europe/Paris">Europe/Paris (GMT+1)</option>
-                            <option value="UTC">UTC</option>
+                            <option value="Europe/Paris">{{ t('settings_page.notifications.timezone_options.paris') }}</option>
+                            <option value="UTC">{{ t('settings_page.notifications.timezone_options.utc') }}</option>
                         </select>
                     </div>
 

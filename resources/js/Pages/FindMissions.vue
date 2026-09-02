@@ -103,7 +103,7 @@ function openRequestModal(mission) {
 function formatDate(date) {
     if (!date) return '';
 
-    return new Date(date).toLocaleDateString('en-CA', {
+    return new Date(date).toLocaleDateString(page.props.locale === 'fr' ? 'fr-CA' : 'en-CA', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -118,7 +118,12 @@ function missionDuration(mission) {
 
     const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
-    return `${diff} day${diff !== 1 ? 's' : ''}`;
+    return t(
+        diff === 1
+            ? 'find_missions_page.mission_card.duration_day'
+            : 'find_missions_page.mission_card.duration_days',
+        { count: diff }
+    );
 }
 
 function submitRequest() {
@@ -136,7 +141,7 @@ function submitRequest() {
 </script>
 
 <template>
-    <Head title="Find Missions" />
+    <Head :title="t('find_missions_page.title')" />
 
     <SidebarLayout>
         <BaseToast
@@ -212,7 +217,7 @@ function submitRequest() {
 
                         <div class="job-wrapper">
                             <span class="job-tag">
-                                {{ mission.job_type.charAt(0).toUpperCase() + mission.job_type.slice(1).replace('_', ' ') }}
+                                {{ t(`profiles_page.jobs.${mission.job_type}`) }}
                             </span>
                         </div>
                     </div>
@@ -234,7 +239,7 @@ function submitRequest() {
                                 <small>{{ t('find_missions_page.mission_card.rate') }}</small>
                             </div>
 
-                            <strong>${{ mission.hourly_rate ?? '--' }} {{ t('find_missions_page.mission_card.per_hour') }}</strong>
+                            <strong>${{ mission.hourly_rate ?? '--' }} {{ t('common.per_hour') }}</strong>
                         </div>
 
                         <div class="stat-box">
@@ -308,7 +313,7 @@ function submitRequest() {
                         </div>
                         <div class="meta-inline">
                             <DollarSign class="mini-icon" />
-                            <span>{{ selectedMission?.hourly_rate ?? '--' }}/hr</span>
+                            <span>{{ selectedMission?.hourly_rate ?? '--' }} {{ t('common.per_hour') }}</span>
                         </div>
                     </div>
 
@@ -330,7 +335,7 @@ function submitRequest() {
                                 :key="worker.id"
                                 :value="worker.id"
                             >
-                                {{ worker.name }} ({{ worker.job.charAt(0).toUpperCase() + worker.job.slice(1).replace('_', ' ') }})
+                                {{ worker.name }} ({{ t(`profiles_page.jobs.${worker.job}`) }})
                             </option>
                         </select>
 

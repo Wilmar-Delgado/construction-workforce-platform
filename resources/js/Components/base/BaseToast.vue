@@ -61,7 +61,7 @@ const classes = computed(() => ({
 .toast {
     position: fixed;
     top: 20px;
-    right: 35px;
+    right: 45px;
     z-index: 9999;
     padding: 12px 16px;
     border-radius: 10px;

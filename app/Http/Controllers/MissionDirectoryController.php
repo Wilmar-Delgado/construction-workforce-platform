@@ -44,9 +44,24 @@ class MissionDirectoryController extends Controller
             ->distinct()
             ->pluck('city');
 
-        $workers = WorkerProfile::where('company_id', $user->company_id)
-            ->select('id', 'user_id', 'name', 'job')
-            ->get();
+        $workersQuery = WorkerProfile::select('id', 'user_id', 'name', 'job');
+
+        if ($user->role?->name === 'administrator') {
+            // Administrators can access worker profiles across companies.
+        } elseif (
+            $user->company_id !== null
+            && in_array($user->role?->name, ['company_owner', 'planning_manager'], true)
+        ) {
+            $workersQuery->where('company_id', $user->company_id);
+        } elseif ($user->company_id === null && $user->role?->name === 'self_employed') {
+            $workersQuery
+                ->whereNull('company_id')
+                ->where('user_id', $user->id);
+        } else {
+            $workersQuery->whereRaw('1 = 0');
+        }
+
+        $workers = $workersQuery->get();
 
         return Inertia::render('FindMissions', [
             'missions' => $missions,

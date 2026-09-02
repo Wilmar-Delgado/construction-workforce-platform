@@ -120,10 +120,23 @@ function resetModal() {
     action.value = 'Create';
     editingAvailabilityId.value = null;
 }
+
+function formatDate(date) {
+    if (!date) return '';
+
+    return new Date(`${date}T00:00:00`).toLocaleDateString(
+        page.props.locale === 'fr' ? 'fr-CA' : 'en-CA',
+        { year: 'numeric', month: '2-digit', day: '2-digit' }
+    );
+}
+
+function statusLabel(status) {
+    return t(`availability_page.status_options.${status}`);
+}
 </script>
 
 <template>
-<Head title="Availability" />
+<Head :title="t('availability_page.title')" />
 
 <SidebarLayout>
     <BaseToast
@@ -155,7 +168,7 @@ function resetModal() {
         <DataTable
             :columns="columns"
             :rows="availability"
-            :emptyText="`No availability slots added yet. Click '${t('availability_page.add_availability')}' to get started.`"
+            :emptyText="t('availability_page.empty_table', { action: t('availability_page.add_availability') })"
             sortable
             :sort="filters.sort"
             :direction="filters.direction"
@@ -164,9 +177,9 @@ function resetModal() {
             <tr v-for="avai in availability" :key="avai.id">
                 <td class="worker-name">{{ avai.worker_name }}</td>
                 <td>{{ t(`profiles_page.jobs.${avai.job}`) }}</td>
-                <td>{{ avai.date }}</td>
+                <td>{{ formatDate(avai.date) }}</td>
                 <td>{{ avai.start_time }} - {{ avai.end_time }}</td>
-                <td><span :class="`status-tag status-${avai.status}`">{{ avai.status.charAt(0).toUpperCase() + avai.status.slice(1) }}</span></td>
+                <td><span :class="`status-tag status-${avai.status}`">{{ statusLabel(avai.status) }}</span></td>
                 <td class="actions" style="text-align: right;">
                     <button @click="editAvailability(avai)" class="table-icon-btn blue">
                         <Edit2 class="table-icon" />
@@ -187,7 +200,10 @@ function resetModal() {
             v-model="showDeleteModal"
             :title="t('availability_page.delete_modal.title')"
             :message="t('availability_page.delete_modal.message')"
-            :item-name="deletingAvailability?.worker_name + ' on ' + deletingAvailability?.date"
+            :item-name="t('availability_page.delete_modal.item_name', {
+                worker: deletingAvailability?.worker_name ?? t('common.not_available'),
+                date: formatDate(deletingAvailability?.date)
+            })"
             :confirmText="t('availability_page.delete_modal.confirm')"
             :cancelText="t('availability_page.delete_modal.cancel')"
             danger

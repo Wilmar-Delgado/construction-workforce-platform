@@ -13,6 +13,8 @@ import { usePermissions } from '@/composables/usePermissions';
 import { useDataTable } from '@/composables/useDataTable';
 import { Edit2, Trash2, Plus } from 'lucide-vue-next';
 
+const { t } = useTranslate();
+
 // =========================
 // LAZY LOADED COMPONENTS
 // =========================
@@ -23,7 +25,7 @@ const BaseModal = defineAsyncComponent(() =>
 const DataTable = defineAsyncComponent({
     loader: () => import('@/Components/tables/DataTable.vue'),
     loadingComponent: {
-        template: '<div>Loading table...</div>'
+        template: `<div>${t('common.loading')}</div>`
     },
     delay: 200,
 });
@@ -31,7 +33,6 @@ const DataTable = defineAsyncComponent({
 // =========================
 // PROPS & STATE
 // =========================
-const { t } = useTranslate();
 const { isSelfEmployed } = useUserRole();
 const { can } = usePermissions();
 
@@ -172,7 +173,7 @@ function resetModal() {
 </script>
 
 <template>
-<Head title="Worker Profiles" />
+<Head :title="isSelfEmployed ? t('profiles_page.self_title') : t('profiles_page.company_title')" />
 
 <SidebarLayout>
     <BaseToast
@@ -245,24 +246,24 @@ function resetModal() {
                     </div>
 
                     <div class="rating">
-                        ⭐ {{ workers[0].rating ?? 'N/A' }}
+                        ⭐ {{ workers[0].rating ?? t('common.not_available') }}
                     </div>
                 </div>
 
                 <div class="profile-meta">
                     <div class="meta-box">
                         <p class="label">{{ t('profiles_page.table.experience') }}</p>
-                        <p>{{ workers[0].years_experience }} yrs</p>
+                        <p>{{ t('profiles_page.experience_years_short', { count: workers[0].years_experience }) }}</p>
                     </div>
 
                     <div class="meta-box">
                         <p class="label">{{ t('profiles_page.table.rate') }}</p>
-                        <p>${{ workers[0].hourly_rate }}/hr</p>
+                        <p>${{ workers[0].hourly_rate }} {{ t('common.per_hour') }}</p>
                     </div>
                 </div>
 
                 <div class="section">
-                    <p class="section-label">Certifications</p>
+                    <p class="section-label">{{ t('profiles_page.labels.certifications') }}</p>
                     <div class="tag-row">
                         <span v-for="cert in workers[0].certifications" :key="cert.id" class="tag cert">
                             {{ cert.name }}
@@ -271,7 +272,7 @@ function resetModal() {
                 </div>
 
                 <div class="section">
-                    <p class="section-label">Skills</p>
+                    <p class="section-label">{{ t('profiles_page.labels.skills') }}</p>
                     <div class="tag-row">
                         <span v-for="skill in workers[0].skills" :key="skill.id" class="tag">
                             {{ skill.name }}
@@ -292,7 +293,7 @@ function resetModal() {
                 v-if="can('manage_workers')"
                 :columns="columns"
                 :rows="workers"
-                :emptyText="`No workers added yet. Click '${t('profiles_page.add_worker')}' to get started.`"
+                :emptyText="t('profiles_page.empty_table', { action: t('profiles_page.add_worker') })"
                 sortable
                 :sort="filters.sort"
                 :direction="filters.direction"
@@ -301,9 +302,9 @@ function resetModal() {
                 <tr v-for="worker in workers" :key="worker.id">
                     <td>{{ worker.name }}</td>
                     <td>{{ t(`profiles_page.jobs.${worker.job}`) }}</td>
-                    <td>{{ worker.years_experience }} yrs</td>
-                    <td>${{ worker.hourly_rate }}/hr</td>
-                    <td>⭐{{ worker.rating ?? 'N/A' }}</td>
+                    <td>{{ t('profiles_page.experience_years_short', { count: worker.years_experience }) }}</td>
+                    <td>${{ worker.hourly_rate }} {{ t('common.per_hour') }}</td>
+                    <td>⭐{{ worker.rating ?? t('common.not_available') }}</td>
                     <td class="skills">
                         <span v-for="skill in worker.skills.slice(0,2)" :key="skill.id" class="skill-tag">
                             {{ skill.name }}
@@ -348,7 +349,7 @@ function resetModal() {
             max-width="900px"
             :title="action === 'Create'
                 ? t('profiles_page.add_modal.title')
-                : t('profiles_page.edit_modal.title') + ' - ' + form.name"
+                : t('profiles_page.edit_modal.title', { name: form.name })"
         >
             <form id="worker-form" @submit.prevent="submitWorker">
                 <!-- ROW 1 -->

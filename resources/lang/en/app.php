@@ -12,7 +12,32 @@ return [
     'missions' => 'My Missions',
     'mission_management' => 'Mission Management',
     'settings' => 'Settings',
+    'self_employed' => 'Self-employed',
     'logout' => 'Logout',
+
+    'common' => [
+        'save' => 'Save',
+        'cancel' => 'Cancel',
+        'delete' => 'Delete',
+        'close' => 'Close',
+        'loading' => 'Loading...',
+        'not_available' => 'N/A',
+        'unknown_company' => 'Unknown Company',
+        'self_employed' => 'Self-employed',
+        'per_hour' => '/hour',
+        'no_message_provided' => 'No message provided.',
+        'statuses' => [
+            'pending' => 'Pending',
+            'accepted' => 'Accepted',
+            'ongoing' => 'Ongoing',
+            'completed' => 'Completed',
+            'rejected' => 'Rejected',
+            'cancelled' => 'Cancelled',
+            'draft' => 'Draft',
+            'open' => 'Open',
+            'in_progress' => 'In progress',
+        ],
+    ],
 
     //:: Post Registration Onboarding
     'onboarding' => [
@@ -24,6 +49,10 @@ return [
             'address' => 'Address',
             'create' => 'Create Company',
         ],
+    ],
+
+    'onboarding_page' => [
+        'title' => 'Onboarding',
     ],
 
     //:: Auth
@@ -130,6 +159,10 @@ return [
             'pending_requests' => 'Pending Requests',
             'active_workers' => 'Active Workers',
             'total_missions' => 'Total Missions',
+            'ongoing' => 'Ongoing',
+            'pending' => 'Pending',
+            'workers' => 'Workers',
+            'missions' => 'Missions',
         ],
 
         'actions' => [
@@ -154,11 +187,15 @@ return [
         'manage_profile' => 'Manage Profile',
         'manage_profiles' => 'Manage Profiles',
         'manage_missions' => 'Manage Missions',
+        'view_all_missions' => 'View All Missions',
+        'manage_availability' => 'Manage Availability',
         'settings' => 'Settings',
     ],
 
     //:: Profiles Page
     'profiles_page' => [
+        'title' => 'Worker Profiles',
+        'subtitle' => 'Manage your worker profiles',
         'self_title' => 'My Profile',
         'company_title' => 'Worker Profiles',
         'self_subtitle' => 'View and manage your profile',
@@ -169,6 +206,13 @@ return [
         'company_subtitle' => 'Manage your worker profiles',
         'add_worker' => 'Add New Worker',
         'confirm_delete' => 'Are you sure you want to delete this worker profile?',
+        'empty_table' => 'No workers added yet. Click “:action” to get started.',
+        'experience_years_short' => ':count yrs',
+
+        'labels' => [
+            'certifications' => 'Certifications',
+            'skills' => 'Skills',
+        ],
 
         'table' => [
             'name' => 'Name',
@@ -194,6 +238,7 @@ return [
             'mason' => 'Mason',
             'ironworker' => 'Ironworker',
             'insulator' => 'Insulator',
+            'drywall_installer' => 'Drywall Installer',
         ],
 
         'add_modal' => [
@@ -212,9 +257,10 @@ return [
         ],
 
         'edit_modal' => [
-            'title' => 'Edit Worker Profile',
+            'title' => 'Edit Worker Profile - :name',
             'updating' => 'Updating...',
             'update' => 'Update Profile',
+            'save' => 'Update Profile',
         ],
 
         'delete_modal' => [
@@ -228,10 +274,12 @@ return [
     //:: Availability Page
     'availability_page' => [
         'title' => 'Availability Management',
+        'subtitle' => 'Manage your workers\' availability',
         'subtitle_company' => 'Manage your workers\' availability',
         'subtitle_self' => 'Manage your availability',
         'add_availability' => 'Add Time Slot',
         'confirm_delete' => 'Are you sure you want to delete this availability entry?',
+        'empty_table' => 'No availability slots added yet. Click “:action” to get started.',
 
         'table' => [
             'worker' => 'Worker',
@@ -265,6 +313,7 @@ return [
             'title' => 'Edit Availability Slot',
             'updating' => 'Updating...',
             'update' => 'Save Changes',
+            'save' => 'Save Changes',
         ],
 
         'delete_modal' => [
@@ -272,6 +321,7 @@ return [
             'message' => 'Are you sure you want to delete this availability entry? This action cannot be undone.',
             'confirm' => 'Yes, delete it',
             'cancel' => 'Cancel',
+            'item_name' => ':worker on :date',
         ],
     ],
 
@@ -284,6 +334,9 @@ return [
         'request' => 'Request Worker',
         'certifications' => 'Certifications',
         'top_skills' => 'Top Skills',
+        'no_certifications' => 'No certifications added',
+        'experience_years_short' => ':count yrs',
+        'experience_years' => ':count years',
 
         'filters' => [
             'search' => 'Search by name, job, skills or certifications...',
@@ -315,6 +368,9 @@ return [
             ],
 
             'select_mission' => 'Select Mission *',
+            'company' => 'Your Company Name',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
             'choose_mission' => 'Choose a mission for this worker',
             'mission_desc' => 'Optional Message (e.g. specific tasks, project details, etc.)',
             'already_requested' => 'Already Requested',
@@ -338,8 +394,9 @@ return [
 
         'mission_card' => [
             'duration' => 'Duration',
+            'duration_day' => ':count day',
+            'duration_days' => ':count days',
             'rate' => 'Rate',
-            'per_hour' => '/hour',
             'starts' => 'Starts',
             'requirements' => 'Requirements',
             'posted_by' => 'Posted by',
@@ -367,6 +424,38 @@ return [
         'create_mission' => 'Create Mission',
         'empty_title' => 'No missions yet',
         'empty_desc' => 'Create your first mission to start finding workers and filling your workforce gaps.',
+        'empty_tab_title' => 'No :status missions found',
+        'empty_search_description' => 'Try adjusting your search or filters.',
+        'empty_tab_description' => 'You currently have no :status missions.',
+        'copy_title' => ':title (Copy :count)',
+
+        'tabs' => [
+            'all' => 'All',
+        ],
+
+        'labels' => [
+            'date_range' => ':start to :end',
+            'workers_needed_singular' => ':count worker needed',
+            'workers_needed_plural' => ':count workers needed',
+        ],
+
+        'fallbacks' => [
+            'no_description' => 'No description provided.',
+        ],
+
+        'actions' => [
+            'edit' => 'Edit',
+            'view' => 'View',
+        ],
+
+        'table' => [
+            'title' => 'Title',
+            'status' => 'Status',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'city' => 'City',
+            'actions' => 'Actions',
+        ],
 
         'stats' => [
             'total_missions' => 'Total Missions',
@@ -392,6 +481,9 @@ return [
             'directions' => 'Directions',
             'job_type' => 'Required Job Type *',
             'number_of_workers' => 'Number of Workers Needed',
+            'hourly_rate' => 'Hourly Rate ($)',
+            'requirements' => 'Requirements',
+            'requirements_placeholder' => "Add requirements (e.g. 'Own tools', '5+ years of experience')",
             'status' => 'Status *',
             'saving' => 'Saving...',
             'save' => 'Create Mission',
@@ -399,8 +491,26 @@ return [
         ],
 
         'edit_modal' => [
-            'title' => 'Edit Mission',
+            'title' => 'Edit Mission - :title',
             'save' => 'Update Mission',
+        ],
+
+        'view_modal' => [
+            'title' => 'View Mission - :title',
+        ],
+
+        'delete_modal' => [
+            'title' => 'Delete Mission - :title',
+            'message' => 'Are you sure you want to delete this mission?',
+            'subtitle' => 'This action cannot be undone.',
+            'confirm' => 'Yes, Delete',
+        ],
+
+        'archive_modal' => [
+            'title' => 'Archive Mission - :title',
+            'message' => 'Are you sure you want to archive this mission?',
+            'subtitle' => 'Archived missions are hidden from your active mission list. They can be restored later.',
+            'confirm' => 'Yes, Archive',
         ],
     ],
 
@@ -418,15 +528,124 @@ return [
         ],
 
         'tabs' => [
+            'requests' => 'Requests',
+            'active' => 'Active',
+            'completed' => 'Completed',
             'requests_sent' => 'Requests Sent',
             'requests_received' => 'Requests Received',
             'requests_join' => 'Requests to Join Missions',
+            'awaiting_response_invitations' => 'Awaiting their response — Invitations',
+            'awaiting_response_applications' => 'Awaiting their response — Applications',
+            'needs_your_response' => 'Needs your response',
+            'your_active_missions' => 'Your active missions',
+            'external_assignments' => 'External assignments',
+            'your_mission' => 'Your Mission',
+            'external_assignment' => 'External Assignment',
             'ongoing_missions' => 'Ongoing Missions',
             'completed_missions' => 'Completed Missions',
             'date' => 'Requested on',
             'waiting_response' => 'Waiting for response...',
             'accept' => 'Accept',
             'reject' => 'Reject',
+        ],
+
+        'sections' => [
+            'completed_created' => 'Completed Missions You Created',
+            'completed_joined' => "Completed Missions You've Joined",
+            'pending_activity' => 'Pending Activity',
+            'ongoing_activity' => 'Ongoing Activity',
+            'completed_activity' => 'Completed Activity',
+        ],
+
+        'empty_states' => [
+            'no_sent_requests' => 'No sent requests',
+            'sent_requests_description' => 'Mission invitations you send to workers will appear here.',
+            'no_received_requests' => 'No received requests',
+            'received_requests_description' => 'Worker applications and invitations will appear here.',
+            'no_join_requests' => 'No join requests',
+            'join_requests_description' => 'Mission applications submitted by your company will appear here.',
+            'no_active_missions' => 'No active missions',
+            'active_created_description' => 'Accepted workers for your missions will appear here.',
+            'active_joined_description' => 'External missions your workers joined will appear here.',
+            'no_completed_missions' => 'No completed missions',
+            'completed_created_description' => 'Completed missions for your organization will appear here.',
+            'completed_joined_description' => 'External missions completed by your workers will appear here.',
+            'no_activity' => 'No mission activity yet',
+            'activity_description' => 'Requests, ongoing missions, and completed work will appear here.',
+            'no_pending_activity' => 'No pending activity',
+            'pending_activity_description' => 'Pending requests and missions awaiting acceptance will appear here.',
+            'no_ongoing_activity' => 'No ongoing activity',
+            'ongoing_activity_description' => 'Ongoing requests and missions will appear here.',
+            'no_completed_activity' => 'No completed activity',
+            'completed_activity_description' => 'Completed requests and missions will appear here.',
+        ],
+
+        'labels' => [
+            'mission' => 'Mission',
+            'worker' => 'Worker',
+            'requested_worker' => 'Requested Worker',
+            'proposed_worker' => 'Proposed Worker',
+            'assigned_worker' => 'Assigned Worker',
+            'requested_dates' => 'Requested Dates',
+            'mission_dates' => 'Mission Dates',
+            'worker_rate' => "Worker's Rate",
+            'rate' => 'Rate',
+            'final_rate' => 'Final Rate',
+            'message' => 'Message',
+            'message_sent' => 'Message Sent',
+            'message_received' => 'Message Received',
+            'application_message' => 'Application Message',
+            'invitation_message' => 'Invitation Message',
+            'company_name' => 'Company Name',
+            'company_owner' => 'Company Owner',
+            'requested_on' => 'Requested on',
+            'accepted_on' => 'Accepted on',
+            'completed_on' => 'Completed on',
+            'contact_company_owner' => 'Contact company owner',
+            'worker_review' => 'Worker Review',
+            'reason_optional' => 'Reason (optional)',
+        ],
+
+        'actions' => [
+            'complete_and_rate' => 'Complete & Rate',
+            'complete_mission' => 'Complete Mission',
+        ],
+
+        'states' => [
+            'mission_accepted' => 'Mission accepted.',
+            'mission_completed' => 'Mission completed successfully.',
+        ],
+
+        'fallbacks' => [
+            'no_feedback' => 'No feedback was provided for this worker.',
+            'pending_activity' => 'Pending mission activity.',
+            'active_mission' => 'Mission currently active.',
+        ],
+
+        'rating' => [
+            'score_given' => ':score/5 given',
+            'score_received' => ':score/5 received',
+        ],
+
+        'response_modal' => [
+            'accept_title' => 'Accept Request',
+            'reject_title' => 'Reject Request',
+            'accept_note' => 'This worker or company owner will be notified immediately.',
+            'reject_note' => 'The worker or company owner will be notified of this decision.',
+            'acceptance_placeholder' => 'Add an optional message...',
+            'rejection_placeholder' => 'Optional rejection reason...',
+            'confirm_accept' => 'Confirm Accept',
+            'confirm_reject' => 'Reject Request',
+            'company_contact_fallback' => 'Team',
+            'acceptance_message_self_employed' => 'Hello :worker, your request has been accepted for the mission “:mission”. We look forward to working with you. Thank you!',
+            'acceptance_message_company' => 'Hello :contact, the worker “:worker” that you proposed has been accepted for the mission “:mission”. We look forward to working with your team. Thank you!',
+        ],
+
+        'completion_modal' => [
+            'title' => 'Complete & Rate Worker',
+            'rating_label' => 'How was your experience?',
+            'comments_label' => 'Comments (optional)',
+            'comments_placeholder' => 'Share your experience...',
         ],
     ],
 
@@ -442,6 +661,7 @@ return [
             'email' => 'Email Address',
             'phone' => 'Phone Number',
             'company' => 'Company Name',
+            'success' => 'Personal information updated.',
         ],
 
         'security' => [
@@ -459,6 +679,14 @@ return [
             'language' => 'Language',
             'timezone' => 'Timezone',
             'save' => 'Save Preferences',
+            'success' => 'Notification preferences updated.',
+            'email_description' => 'Receive email updates',
+            'sms_description' => 'Receive SMS updates',
+            'missions_description' => 'Get notified about new missions',
+            'timezone_options' => [
+                'paris' => 'Europe/Paris (GMT+1)',
+                'utc' => 'UTC',
+            ],
         ],
 
         'danger_zone' => [
@@ -466,6 +694,7 @@ return [
             'subtitle' => 'Irreversible and destructive actions',
             'delete_account' => 'Delete Account',
             'confirm' => 'Are you sure you want to delete your account? This cannot be undone.',
+            'deleted_alert' => 'Account deleted. Redirecting to homepage.',
         ],
 
         'common' => [

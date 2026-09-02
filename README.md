@@ -7,6 +7,27 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Local development seed data
+
+Rebuild the local database and load the deterministic construction-workforce demo data with:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+All seeded accounts use the development-only password `password`:
+
+| Role | Email |
+| --- | --- |
+| Administrator | `admin@constructionworkforce.test` |
+| Company owner | `sarah.bennett@northstar.test` |
+| Planning manager | `marcus.lee@northstar.test` |
+| Self-employed worker | `maria.chen@independent.test` |
+
+Additional company and self-employed accounts are included to exercise request,
+assignment, and rating flows. The seed data is fictional and intended only for
+local development.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

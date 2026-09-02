@@ -20,7 +20,7 @@ function submit() {
 <template>
 <GuestLayout>
 
-    <Head title="Onboarding" />
+    <Head :title="t('onboarding_page.title')" />
 
     <h2 class="register-title">
         {{ t('onboarding.company.title') }}

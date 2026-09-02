@@ -14,6 +14,7 @@ import {
     FileText,
     Pencil,
     FolderOpen,
+    Eye,
     Clock,
     CheckCircle,
     LayoutGrid,
@@ -24,6 +25,7 @@ import {
     Users,
     Copy,
     Trash2,
+    Archive,
     DollarSign
 } from 'lucide-vue-next';
 
@@ -36,11 +38,18 @@ const missions = computed(() => page.props.missions.data || []);
 const pagination = computed(() => page.props.missions);
 const search = ref(page.props.filters?.search || '');
 const activeTab = ref('all');
-const action = ref('Create');
+
+const modalMode = ref('create');
+const isReadOnly = computed(() => modalMode.value === 'view');
 
 const showDeleteModal = ref(false);
 const deletingMissionId = ref(null);
 const deletingMissionTitle = ref('');
+
+const showArchiveModal = ref(false);
+const archivingMissionId = ref(null);
+const archivingMissionTitle = ref('');
+
 const flashSuccess = computed(() => page.props.flash?.success);
 const flashError = computed(() => page.props.flash?.error);
 const toastKey = ref(0);
@@ -127,10 +136,21 @@ const counts = computed(() => ({
 function formatDate(date) {
     if (!date) return '';
 
-    return new Date(date).toLocaleDateString('en-CA', {
+    return new Date(date).toLocaleDateString(page.props.locale === 'fr' ? 'fr-CA' : 'en-CA', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
+    });
+}
+
+function statusLabel(status) {
+    return t(`common.statuses.${status}`);
+}
+
+function dateRange(startDate, endDate) {
+    return t('missions_page.labels.date_range', {
+        start: formatDate(startDate),
+        end: formatDate(endDate)
     });
 }
 
@@ -152,7 +172,7 @@ function removeRequirement(index) {
 }
 
 function submitMission() {
-    if (action.value === 'Create') {
+    if (modalMode.value === 'create') {
         form.post(route('missions.store'), {
             onError: (errors) => {
                 console.log(errors);
@@ -169,11 +189,11 @@ function submitMission() {
     }
 }
 
-function editMission(mission) {
-    action.value = 'Edit';
+function populateMissionForm(mission) {
     editingMissionId.value = mission.id;
 
     form.reset();
+
     form.title = mission.title;
     form.description = mission.description;
     form.start_date = toInputDate(mission.start_date);
@@ -191,40 +211,38 @@ function editMission(mission) {
     form.hourly_rate = mission.hourly_rate;
     form.status = mission.status;
     form.requirements = mission.requirements?.map(r => r.name) || [];
+
     newRequirement.value = '';
+}
+
+function editMission(mission) {
+    modalMode.value = 'edit';
+
+    populateMissionForm(mission);
+
+    showModal.value = true;
+}
+
+function viewMission(mission) {
+    modalMode.value = 'view';
+
+    populateMissionForm(mission);
 
     showModal.value = true;
 }
 
 function duplicateMission(mission) {
-    form.reset();
-    
+    populateMissionForm(mission);
+
     const copyCount = missions.value.filter(m =>
         m.title.startsWith(mission.title)
     ).length;
 
-    form.title = `${mission.title} (Copy ${copyCount})`;
-    
-    form.description = mission.description;
-    form.start_date = toInputDate(mission.start_date);
-    form.end_date = toInputDate(mission.end_date);
-    form.city = mission.city;
-    form.province = mission.province;
-    form.country = mission.country;
-    form.address_line_1 = mission.address_line_1;
-    form.address_line_2 = mission.address_line_2;
-    form.postal_code = mission.postal_code;
-    form.site_name = mission.site_name;
-    form.directions = mission.directions;
-    form.job_type = mission.job_type;
-    form.workers = mission.workers;
-    form.hourly_rate = mission.hourly_rate;
+    form.title = t('missions_page.copy_title', { title: mission.title, count: copyCount });
     form.status = 'draft';
-    form.requirements = mission.requirements?.map(r => r.name) || [];
-    newRequirement.value = '';
 
-    action.value = 'Create';
     editingMissionId.value = null;
+    modalMode.value = 'create';
 
     showModal.value = true;
 }
@@ -241,6 +259,22 @@ function confirmDeleteMission() {
             showDeleteModal.value = false;
             deletingMissionId.value = null;
             deletingMissionTitle.value = '';
+        }
+    });
+}
+
+function archiveMission(mission) {
+    archivingMissionId.value = mission.id;
+    archivingMissionTitle.value = mission.title;
+    showArchiveModal.value = true;
+}
+
+function confirmArchiveMission() {
+    form.put(route('missions.archive', archivingMissionId.value), {
+        onSuccess: () => {
+            showArchiveModal.value = false;
+            archivingMissionId.value = null;
+            archivingMissionTitle.value = '';
         }
     });
 }
@@ -272,13 +306,13 @@ function resetModal() {
     form.clearErrors();
     newRequirement.value = '';
 
-    action.value = 'Create';
+    modalMode.value = 'Create';
     editingMissionId.value = null;
 }
 </script>
 
 <template>
-<Head title="Missions" />
+<Head :title="t('missions_page.title')" />
 
 <SidebarLayout>
     <BaseToast
@@ -354,7 +388,7 @@ function resetModal() {
                 <input
                     v-model="search"
                     type="text"
-                    placeholder="Search missions..."
+                    :placeholder="t('missions_page.filters.search')"
                 />
             </div>
 
@@ -366,7 +400,7 @@ function resetModal() {
                     :class="{ active: activeTab === tab }"
                     @click="activeTab = tab"
                 >
-                    {{ tab.replace('_', ' ').charAt(0).toUpperCase() + tab.replace('_', ' ').slice(1) }}
+                    {{ tab === 'all' ? t('missions_page.tabs.all') : statusLabel(tab) }}
                 </button>
             </div>
 
@@ -399,20 +433,18 @@ function resetModal() {
             <!-- TAB IS EMPTY -->
             <template v-else>
                 <h3>
-                    No
-                    {{
-                        activeTab === 'all'
-                            ? 'missions'
-                            : activeTab.replace('_', ' ')
-                    }}
-                    missions found
+                    {{ t('missions_page.empty_tab_title', {
+                        status: activeTab === 'all' ? t('missions_page.tabs.all') : statusLabel(activeTab)
+                    }) }}
                 </h3>
 
                 <p>
                     {{
                         search
-                            ? 'Try adjusting your search or filters.'
-                            : `You currently have no ${activeTab.replace('_', ' ')} missions.`
+                            ? t('missions_page.empty_search_description')
+                            : t('missions_page.empty_tab_description', {
+                                status: activeTab === 'all' ? t('missions_page.tabs.all') : statusLabel(activeTab)
+                            })
                     }}
                 </p>
             </template>
@@ -432,13 +464,13 @@ function resetModal() {
                             <h3 class="mission-title">{{ mission.title }}</h3>
 
                             <span class="status-badge" :class="mission.status">
-                                {{ mission.status.replace('_', ' ') }}
+                                {{ statusLabel(mission.status) }}
                             </span>
                         </div>
 
                         <!-- Description -->
                         <p class="mission-desc">
-                            {{ mission.description || 'No description provided.' }}
+                            {{ mission.description || t('missions_page.fallbacks.no_description') }}
                         </p>
 
                         <!-- Meta -->
@@ -450,23 +482,27 @@ function resetModal() {
 
                             <div class="meta-row">
                                 <CalendarDays class="meta-icon" />
-                                {{ formatDate(mission.start_date) }} to {{ formatDate(mission.end_date) }}
+                                {{ dateRange(mission.start_date, mission.end_date) }}
                             </div>
 
                             <div class="meta-row">
                                 <Users class="meta-icon" />
                                 <span v-if="mission.workers > 0">
-                                    {{ mission.workers }} worker{{ mission.workers > 1 ? 's' : '' }} needed
+                                    {{ t(mission.workers > 1
+                                        ? 'missions_page.labels.workers_needed_plural'
+                                        : 'missions_page.labels.workers_needed_singular', {
+                                            count: mission.workers
+                                        }) }}
                                 </span>
                                 <span v-else>
-                                    N/A
+                                    {{ t('common.not_available') }}
                                 </span>
                             </div>
 
                             <div class="meta-row green">
                                 <DollarSign class="meta-icon green" />
                                 <span v-if="mission.hourly_rate > 0">
-                                    {{ mission.hourly_rate }}/hour
+                                    {{ mission.hourly_rate }} {{ t('common.per_hour') }}
                                 </span>
                                 <span v-else>
                                     --
@@ -476,16 +512,24 @@ function resetModal() {
 
                         <!-- Footer Actions -->
                         <div class="mission-actions">
-                            <button class="btn-card-edit" @click="editMission(mission)">
-                                Edit
+                            <button v-if="mission.status !== 'completed'" class="btn-card-edit" @click="editMission(mission)">
+                                {{ t('missions_page.actions.edit') }}
+                            </button>
+
+                            <button v-else class="btn-card-edit" @click="viewMission(mission)">
+                                {{ t('missions_page.actions.view') }}
                             </button>
 
                             <button class="icon-btn blue" @click="duplicateMission(mission)">
                                 <Copy class="icon" />
                             </button>
 
-                            <button class="icon-btn danger" @click="deleteMission(mission)">
+                            <button v-if="mission.status !== 'completed'" class="icon-btn danger" @click="deleteMission(mission)">
                                 <Trash2 class="icon" />
+                            </button>
+
+                            <button v-else class="icon-btn danger" @click="archiveMission(mission)">
+                                <Archive class="icon" />
                             </button>
                         </div>
                     </div>
@@ -497,12 +541,12 @@ function resetModal() {
             <DataTable
                 v-else
                 :columns="[
-                    { key: 'title', label: 'Title', sortable: true },
-                    { key: 'status', label: 'Status', sortable: true },
-                    { key: 'start_date', label: 'Start Date' },
-                    { key: 'end_date', label: 'End Date' },
-                    { key: 'city', label: 'City' },
-                    { key: 'actions', label: 'Actions' }
+                    { key: 'title', label: t('missions_page.table.title'), sortable: true },
+                    { key: 'status', label: t('missions_page.table.status'), sortable: true },
+                    { key: 'start_date', label: t('missions_page.table.start_date') },
+                    { key: 'end_date', label: t('missions_page.table.end_date') },
+                    { key: 'city', label: t('missions_page.table.city') },
+                    { key: 'actions', label: t('missions_page.table.actions') }
                 ]"
                 :rows="missions"
                 sortable
@@ -511,19 +555,28 @@ function resetModal() {
             >
                 <tr v-for="mission in missions" :key="mission.id">
                     <td>{{ mission.title }}</td>
-                    <td>{{ mission.status.charAt(0).toUpperCase() + mission.status.slice(1).replace('_', ' ') }}</td>
+                    <td>{{ statusLabel(mission.status) }}</td>
                     <td>{{ formatDate(mission.start_date) }}</td>
                     <td>{{ formatDate(mission.end_date) }}</td>
                     <td>{{ mission.city }}, {{ mission.province }}</td>
                     <td class="actions" style="text-align: right;">
-                        <button class="table-icon-btn blue" @click="editMission(mission)">
+                        <!-- <button class="table-icon-btn blue" @click="editMission(mission)">
                             <Pencil class="table-icon" />
+                        </button> -->
+                        <button class="table-icon-btn blue" @click="mission.status === 'completed' ? viewMission(mission) : editMission(mission)">
+                            <component
+                                :is="mission.status === 'completed' ? Eye : Pencil"
+                                class="table-icon"
+                            />
                         </button>
                         <button class="table-icon-btn blue" @click="duplicateMission(mission)">
                             <Copy class="table-icon" />
                         </button>
-                        <button class="table-icon-btn danger" @click="deleteMission(mission)">
+                        <button v-if="mission.status !== 'completed'" class="table-icon-btn danger" @click="deleteMission(mission)">
                             <Trash2 class="table-icon" />
+                        </button>
+                        <button v-else class="table-icon-btn danger" @click="archiveMission(mission)">
+                            <Archive class="table-icon" />
                         </button>
                     </td>
                 </tr>
@@ -536,15 +589,27 @@ function resetModal() {
         <!-- DELETE MODAL -->
         <ConfirmModal
             v-model="showDeleteModal"
-            title="Delete Mission"
-            message="Are you sure you want to delete this mission?"
-            subtitle="This action cannot be undone."
-            :item-name="deletingMissionTitle"
-            confirm-text="Yes, Delete"
-            cancel-text="Cancel"
+            :title="t('missions_page.delete_modal.title', { title: deletingMissionTitle })"
+            :message="t('missions_page.delete_modal.message')"
+            :subtitle="t('missions_page.delete_modal.subtitle')"
+            :confirm-text="t('missions_page.delete_modal.confirm')"
+            :cancel-text="t('common.cancel')"
             danger
             :loading="form.processing"
             @confirm="confirmDeleteMission"
+        />
+
+        <!-- ARCHIVE MODAL -->
+        <ConfirmModal
+            v-model="showArchiveModal"
+            :title="t('missions_page.archive_modal.title', { title: archivingMissionTitle })"
+            :message="t('missions_page.archive_modal.message')"
+            :subtitle="t('missions_page.archive_modal.subtitle')"
+            :confirm-text="t('missions_page.archive_modal.confirm')"
+            :cancel-text="t('common.cancel')"
+            danger
+            :loading="form.processing"
+            @confirm="confirmArchiveMission"
         />
 
         <!-- EDIT/CREATE MODAL -->
@@ -552,9 +617,11 @@ function resetModal() {
             v-model="showModal"
             @close="form.reset()"
             max-width="900px"
-            :title="action === 'Create'
+            :title="modalMode === 'create'
                 ? t('missions_page.add_modal.title')
-                : t('missions_page.edit_modal.title') + ' - ' + form.title"
+                : modalMode === 'edit'
+                    ? t('missions_page.edit_modal.title', { title: form.title })
+                    : t('missions_page.view_modal.title', { title: form.title })"
         >
             <form id="mission-form" @submit.prevent="submitMission">
                 <!-- BODY -->
@@ -562,83 +629,83 @@ function resetModal() {
                     <!-- TITLE -->
                     <div class="form-group full">
                         <label>{{ t('missions_page.add_modal.mission_title') }}</label>
-                        <input v-model="form.title" type="text" />
+                        <input v-model="form.title" type="text" :disabled="isReadOnly" />
                         <span v-if="form.errors.title" class="error">{{ form.errors.title }}</span>
                     </div>
 
                     <!-- DESCRIPTION -->
                     <div class="form-group full">
                         <label>{{ t('missions_page.add_modal.description') }}</label>
-                        <textarea v-model="form.description"></textarea>
+                        <textarea v-model="form.description" :disabled="isReadOnly"></textarea>
                         <span v-if="form.errors.description" class="error">{{ form.errors.description }}</span>
                     </div>
 
                     <!-- DATES -->
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.start_date') }}</label>
-                        <input v-model="form.start_date" type="date" />
+                        <input v-model="form.start_date" type="date" :disabled="isReadOnly" />
                         <span v-if="form.errors.start_date" class="error">{{ form.errors.start_date }}</span>
                     </div>
 
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.end_date') }}</label>
-                        <input v-model="form.end_date" type="date" />
+                        <input v-model="form.end_date" type="date" :disabled="isReadOnly" />
                         <span v-if="form.errors.end_date" class="error">{{ form.errors.end_date }}</span>
                     </div>
 
                     <!-- SITE NAME -->
                     <div class="form-group full">
                         <label>{{ t('missions_page.add_modal.site_name') }}</label>
-                        <input v-model="form.site_name" type="text" />
+                        <input v-model="form.site_name" type="text" :disabled="isReadOnly" />
                     </div>
 
                     <!-- ADDRESS -->
                     <div class="form-group full">
                         <label>{{ t('missions_page.add_modal.address_line_1') }}</label>
-                        <input v-model="form.address_line_1" type="text" />
+                        <input v-model="form.address_line_1" type="text" :disabled="isReadOnly" />
                         <span v-if="form.errors.address_line_1" class="error">{{ form.errors.address_line_1 }}</span>
                     </div>
 
                     <div class="form-group full">
                         <label>{{ t('missions_page.add_modal.address_line_2') }}</label>
-                        <input v-model="form.address_line_2" type="text" />
+                        <input v-model="form.address_line_2" type="text" :disabled="isReadOnly" />
                     </div>
 
                     <!-- CITY / PROVINCE -->
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.city') }}</label>
-                        <input v-model="form.city" type="text" />
+                        <input v-model="form.city" type="text" :disabled="isReadOnly" />
                         <span v-if="form.errors.city" class="error">{{ form.errors.city }}</span>
                     </div>
 
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.province') }}</label>
-                        <input v-model="form.province" type="text" />
+                        <input v-model="form.province" type="text" :disabled="isReadOnly" />
                         <span v-if="form.errors.province" class="error">{{ form.errors.province }}</span>
                     </div>
 
                     <!-- POSTAL -->
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.postal_code') }}</label>
-                        <input v-model="form.postal_code" type="text" />
+                        <input v-model="form.postal_code" type="text" :disabled="isReadOnly" />
                     </div>
 
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.country') }}</label>
-                        <input v-model="form.country" type="text" />
+                        <input v-model="form.country" type="text" :disabled="isReadOnly" />
                         <span v-if="form.errors.country" class="error">{{ form.errors.country }}</span>
                     </div>
 
                     <!-- DIRECTIONS -->
                     <div class="form-group full">
                         <label>{{ t('missions_page.add_modal.directions') }}</label>
-                        <textarea v-model="form.directions"></textarea>
+                        <textarea v-model="form.directions" :disabled="isReadOnly"></textarea>
                     </div>
 
                     <!-- JOB TYPE -->
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.job_type') }}</label>
-                        <select v-model="form.job_type">
+                        <select v-model="form.job_type" :disabled="isReadOnly">
                             <option disabled value="">{{ t('profiles_page.add_modal.job_select') }}</option>
                             <option v-for="job in jobOptions" :key="job" :value="job">
                                 {{ t(`profiles_page.jobs.${job}`) }}
@@ -650,21 +717,21 @@ function resetModal() {
                     <!-- WORKERS -->
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.number_of_workers') }}</label>
-                        <input v-model="form.workers" type="number" />
+                        <input v-model="form.workers" type="number" :disabled="isReadOnly" />
                         <span v-if="form.errors.workers" class="error">{{ form.errors.workers }}</span>
                     </div>
 
                     <!-- RATE -->
                     <div class="form-group">
-                        <label>Hourly Rate ($)</label>
-                        <input v-model="form.hourly_rate" type="number" step="0.01" min="0" />
+                        <label>{{ t('missions_page.add_modal.hourly_rate') }}</label>
+                        <input v-model="form.hourly_rate" type="number" step="0.01" min="0" :disabled="isReadOnly" />
                         <span v-if="form.errors.hourly_rate" class="error">{{ form.errors.hourly_rate }}</span>
                     </div>
 
                     <!-- STATUS -->
                     <div class="form-group">
                         <label>{{ t('missions_page.add_modal.status') }}</label>
-                        <select v-model="form.status">
+                        <select v-model="form.status" :disabled="isReadOnly">
                             <option value="draft">{{ t('missions_page.stats.draft') }}</option>
                             <option value="open">{{ t('missions_page.stats.open') }}</option>
                             <option value="in_progress">{{ t('missions_page.stats.in_progress') }}</option>
@@ -675,14 +742,15 @@ function resetModal() {
 
                     <!-- REQUIREMENTS -->
                     <div class="form-group full">
-                        <label>Requirements</label>
+                        <label>{{ t('missions_page.add_modal.requirements') }}</label>
 
                         <div class="input-with-button">
                             <input
                                 v-model="newRequirement"
                                 type="text"
-                                placeholder="Add requirements (e.g. 'Own tools', '5+ Years of Experience, etc')"
+                                :placeholder="t('missions_page.add_modal.requirements_placeholder')"
                                 @keyup.enter="addRequirement"
+                                :disabled="isReadOnly"
                             />
 
                             <button type="button" @click="addRequirement">+</button>
@@ -697,6 +765,7 @@ function resetModal() {
                                 {{ req }}
 
                                 <button
+                                    v-if="!isReadOnly"
                                     type="button"
                                     @click="removeRequirement(index)"
                                 >
@@ -709,6 +778,7 @@ function resetModal() {
             </form>
             <template #footer>
                 <button
+                    v-if="modalMode !== 'view'"
                     type="submit" 
                     form="mission-form"
                     class="btn-primary"
@@ -716,13 +786,13 @@ function resetModal() {
                 >
                     {{ form.processing 
                         ? t('missions_page.add_modal.saving')
-                        : (action === 'Create'
+                        : (modalMode === 'create'
                             ? t('missions_page.add_modal.save')
                             : t('missions_page.edit_modal.save')) 
                     }}
                 </button>
                 <button type="button" class="btn-thirdary" @click="showModal=false">
-                    {{ t('missions_page.add_modal.cancel') }}
+                    {{ modalMode === 'view' ? t('common.close') : t('common.cancel') }}
                 </button>
             </template>
         </BaseModal>

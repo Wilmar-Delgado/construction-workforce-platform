@@ -52,7 +52,7 @@ const openSettings = () => {
 </script>
 
 <template>
-    <Head title="Home" />
+    <Head :title="t('home_page.title')" />
 
     <SidebarLayout>
         <template #title>
