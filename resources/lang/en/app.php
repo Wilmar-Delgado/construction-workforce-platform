@@ -23,6 +23,7 @@ return [
         'loading' => 'Loading...',
         'not_available' => 'N/A',
         'unknown_company' => 'Unknown Company',
+        'administrator' => 'Administrator',
         'self_employed' => 'Self-employed',
         'per_hour' => '/hour',
         'no_message_provided' => 'No message provided.',
@@ -415,6 +416,18 @@ return [
             'send' => 'Send Application',
             'cancel' => 'Cancel',
         ],
+
+        'details_modal' => [
+            'title' => 'Mission Details',
+            'trade' => 'Trade',
+            'description' => 'Description',
+            'requirements' => 'Requirements',
+            'operational_details' => 'Operational Details',
+            'site_name' => 'Site Name',
+            'address' => 'Site Address',
+            'directions' => 'Directions',
+            'contact' => 'Site Contact',
+        ],
     ],
 
     //:: My Missions Page
@@ -428,6 +441,11 @@ return [
         'empty_search_description' => 'Try adjusting your search or filters.',
         'empty_tab_description' => 'You currently have no :status missions.',
         'copy_title' => ':title (Copy :count)',
+
+        'filters' => [
+            'search' => 'Search by title, location, or requirements...',
+            'status' => 'All statuses',
+        ],
 
         'tabs' => [
             'all' => 'All',
@@ -609,6 +627,8 @@ return [
         'actions' => [
             'complete_and_rate' => 'Complete & Rate',
             'complete_mission' => 'Complete Mission',
+            'view_worker_profile' => 'View Worker Profile',
+            'view_mission' => 'View Mission',
         ],
 
         'states' => [

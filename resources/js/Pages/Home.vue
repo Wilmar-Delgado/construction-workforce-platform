@@ -153,3 +153,5 @@ const openSettings = () => {
         </div>
     </SidebarLayout>
 </template>
+
+<style scoped src="../../css/pages/home.css"></style>

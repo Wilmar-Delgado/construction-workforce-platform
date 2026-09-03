@@ -388,3 +388,23 @@
         height: 42px;
     }
 }
+
+.icon {
+    width: 16px;
+    height: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    font-weight: 900;
+    font-size: 15px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}

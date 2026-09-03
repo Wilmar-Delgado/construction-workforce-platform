@@ -231,6 +231,16 @@ function viewMission(mission) {
     showModal.value = true;
 }
 
+watch(
+    () => page.props.selectedMission,
+    (mission) => {
+        if (mission) {
+            viewMission(mission);
+        }
+    },
+    { immediate: true }
+);
+
 function duplicateMission(mission) {
     populateMissionForm(mission);
 
@@ -799,3 +809,5 @@ function resetModal() {
     </div>
 </SidebarLayout>
 </template>
+
+<style scoped src="../../css/pages/missions.css"></style>

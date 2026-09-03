@@ -20,6 +20,7 @@ return [
         'loading' => 'Chargement...',
         'not_available' => 'N/D',
         'unknown_company' => 'Entreprise inconnue',
+        'administrator' => 'Administrateur',
         'self_employed' => 'Travailleur autonome',
         'per_hour' => '/heure',
         'no_message_provided' => 'Aucun message fourni.',
@@ -410,6 +411,18 @@ return [
             'send' => 'Envoyer la candidature',
             'cancel' => 'Annuler',
         ],
+
+        'details_modal' => [
+            'title' => 'Détails de la mission',
+            'trade' => 'Métier',
+            'description' => 'Description',
+            'requirements' => 'Exigences',
+            'operational_details' => 'Détails opérationnels',
+            'site_name' => 'Nom du chantier',
+            'address' => 'Adresse du chantier',
+            'directions' => 'Instructions',
+            'contact' => 'Personne-ressource du chantier',
+        ],
     ],
 
     //:: My Missions Page
@@ -423,6 +436,11 @@ return [
         'empty_search_description' => 'Essayez de modifier votre recherche ou vos filtres.',
         'empty_tab_description' => 'Vous n’avez actuellement aucune mission :status.',
         'copy_title' => ':title (Copie :count)',
+
+        'filters' => [
+            'search' => 'Rechercher par titre, lieu ou exigences...',
+            'status' => 'Tous les statuts',
+        ],
 
         'tabs' => [
             'all' => 'Toutes',
@@ -604,6 +622,8 @@ return [
         'actions' => [
             'complete_and_rate' => 'Terminer et évaluer',
             'complete_mission' => 'Terminer la mission',
+            'view_worker_profile' => 'Voir le profil du travailleur',
+            'view_mission' => 'Voir la mission',
         ],
 
         'states' => [

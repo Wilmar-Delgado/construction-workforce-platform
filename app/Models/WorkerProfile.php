@@ -19,6 +19,10 @@ class WorkerProfile extends Model
         'hourly_rate',
     ];
 
+    protected $appends = [
+        'rating',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -47,5 +51,23 @@ class WorkerProfile extends Model
             'worker_profile_id',
             'certification_id'
         );
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class, 'worker_profile_id');
+    }
+
+    /**
+     * The rounded display value for the average ratings aggregate.
+     *
+     * Controllers load ratings_avg_score with withAvg(), so this accessor
+     * never performs an additional database query.
+     */
+    public function getRatingAttribute(): ?float
+    {
+        $average = $this->attributes['ratings_avg_score'] ?? null;
+
+        return $average === null ? null : round((float) $average, 1);
     }
 }

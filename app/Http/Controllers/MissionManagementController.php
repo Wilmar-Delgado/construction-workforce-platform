@@ -157,6 +157,12 @@ class MissionManagementController extends Controller
                         ->where('user_id', $user->id);
                 }
             });
+
+            if ($isCompanyManager) {
+                $ongoingJoinedQuery->whereHas('mission', function ($q) use ($companyId) {
+                    $q->where('hiring_company_id', '!=', $companyId);
+                });
+            }
         }
 
         $ongoingJoined = $ongoingJoinedQuery
@@ -214,6 +220,12 @@ class MissionManagementController extends Controller
                         ->where('user_id', $user->id);
                 }
             });
+
+            if ($isCompanyManager) {
+                $completedJoinedQuery->whereHas('mission', function ($q) use ($companyId) {
+                    $q->where('hiring_company_id', '!=', $companyId);
+                });
+            }
         }
 
         $completedJoined = $completedJoinedQuery

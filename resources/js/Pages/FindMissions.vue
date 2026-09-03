@@ -33,6 +33,7 @@ const props = defineProps({
     locations: Array,
     filters: Object,
     workers: Array,
+    selectedMission: Object,
 });
 
 /* ============================= */
@@ -69,6 +70,19 @@ watch(
 
 const showRequestModal = ref(false);
 const selectedMission = ref(null);
+const selectedMissionDetails = ref(null);
+const showMissionDetails = ref(false);
+
+watch(
+    () => props.selectedMission,
+    (mission) => {
+        if (mission) {
+            selectedMissionDetails.value = mission;
+            showMissionDetails.value = true;
+        }
+    },
+    { immediate: true }
+);
 
 const form = useForm({
     worker_profile_id: '',
@@ -291,6 +305,109 @@ function submitRequest() {
             <BasePagination :links="pagination.links" />
 
             <BaseModal
+                v-model="showMissionDetails"
+                :title="t('find_missions_page.details_modal.title')"
+                max-width="900px"
+            >
+                <div v-if="selectedMissionDetails">
+                    <div class="request-mission">
+                        <h3><strong>{{ selectedMissionDetails.title }}</strong></h3>
+
+                        <div class="meta-inline">
+                            <Building2 class="mini-icon" />
+                            <span>{{ selectedMissionDetails.hiring_company?.name }}</span>
+                        </div>
+
+                        <div class="meta-inline">
+                            <MapPin class="mini-icon" />
+                            <span>
+                                {{ selectedMissionDetails.city }},
+                                {{ selectedMissionDetails.province }}
+                            </span>
+                        </div>
+
+                        <div class="meta-inline">
+                            <CalendarDays class="mini-icon" />
+                            <span>
+                                {{ formatDate(selectedMissionDetails.start_date) }} -
+                                {{ formatDate(selectedMissionDetails.end_date) }}
+                            </span>
+                        </div>
+
+                        <div class="meta-inline">
+                            <DollarSign class="mini-icon" />
+                            <span>
+                                {{ selectedMissionDetails.hourly_rate ?? '--' }}
+                                {{ t('common.per_hour') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>{{ t('find_missions_page.details_modal.trade') }}</label>
+                        <p>{{ t(`profiles_page.jobs.${selectedMissionDetails.job_type}`) }}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>{{ t('find_missions_page.details_modal.description') }}</label>
+                        <p>{{ selectedMissionDetails.description }}</p>
+                    </div>
+
+                    <div v-if="selectedMissionDetails.requirements?.length" class="form-group">
+                        <label>{{ t('find_missions_page.details_modal.requirements') }}</label>
+                        <div class="requirements-tags">
+                            <span
+                                v-for="requirement in selectedMissionDetails.requirements"
+                                :key="requirement.id"
+                                class="requirement-tag"
+                            >
+                                {{ requirement.name }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div v-if="selectedMissionDetails.operational_details" class="form-group">
+                        <label>{{ t('find_missions_page.details_modal.operational_details') }}</label>
+
+                        <p v-if="selectedMissionDetails.operational_details.site_name">
+                            <strong>{{ t('find_missions_page.details_modal.site_name') }}:</strong>
+                            {{ selectedMissionDetails.operational_details.site_name }}
+                        </p>
+
+                        <p v-if="selectedMissionDetails.operational_details.address_line_1">
+                            <strong>{{ t('find_missions_page.details_modal.address') }}:</strong>
+                            {{ selectedMissionDetails.operational_details.address_line_1 }}
+                            <template v-if="selectedMissionDetails.operational_details.address_line_2">
+                                , {{ selectedMissionDetails.operational_details.address_line_2 }}
+                            </template>
+                            <template v-if="selectedMissionDetails.operational_details.postal_code">
+                                , {{ selectedMissionDetails.operational_details.postal_code }}
+                            </template>
+                        </p>
+
+                        <p v-if="selectedMissionDetails.operational_details.directions">
+                            <strong>{{ t('find_missions_page.details_modal.directions') }}:</strong>
+                            {{ selectedMissionDetails.operational_details.directions }}
+                        </p>
+
+                        <p v-if="selectedMissionDetails.operational_details.contact_name || selectedMissionDetails.operational_details.contact_phone">
+                            <strong>{{ t('find_missions_page.details_modal.contact') }}:</strong>
+                            {{ selectedMissionDetails.operational_details.contact_name }}
+                            <template v-if="selectedMissionDetails.operational_details.contact_phone">
+                                — {{ selectedMissionDetails.operational_details.contact_phone }}
+                            </template>
+                        </p>
+                    </div>
+                </div>
+
+                <template #footer>
+                    <button class="btn-thirdary" @click="showMissionDetails = false">
+                        {{ t('common.close') }}
+                    </button>
+                </template>
+            </BaseModal>
+
+            <BaseModal
                 v-model="showRequestModal"
                 :title="t('find_missions_page.request_modal.title')"
             >
@@ -395,3 +512,5 @@ function submitRequest() {
         </div>
     </SidebarLayout>
 </template>
+
+<style scoped src="../../css/pages/find-missions.css"></style>

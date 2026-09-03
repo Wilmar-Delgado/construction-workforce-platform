@@ -87,7 +87,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('find-workers', WorkerDirectoryController::class);
+    Route::resource('find-workers', WorkerDirectoryController::class)
+        ->only(['index']);
     Route::post('/request-worker/{worker}', [WorkerRequestController::class, 'store'])
         ->name('request-worker.store');
 
@@ -97,7 +98,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |-------------------------------------------------------------------------- 
     */
 
-    Route::resource('find-missions', MissionDirectoryController::class);
+    Route::resource('find-missions', MissionDirectoryController::class)
+        ->only(['index']);
     Route::post('/request-mission/{mission}', [MissionRequestController::class, 'store'])
         ->name('request-mission.store');
     /*
@@ -107,7 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
 
     Route::resource('missions', MissionController::class)
-        ->only(['index', 'show', 'store', 'update', 'destroy']);
+        ->only(['index', 'store', 'update', 'destroy']);
     Route::put('/missions/{mission}/archive', [MissionController::class, 'archive'])
         ->name('missions.archive');
 

@@ -25,7 +25,8 @@ const props = defineProps({
     jobs: Array,
     filters: Object,
     missions: Array,
-    existingRequests: Array
+    existingRequests: Array,
+    selectedWorker: Object,
 });
 
 /* ============================= */
@@ -63,10 +64,29 @@ const selectedWorker = ref(null);
 const showProfile = ref(false);
 const showRequest = ref(false);
 
+watch(
+    () => props.selectedWorker,
+    (worker) => {
+        if (worker) {
+            selectedWorker.value = worker;
+            showProfile.value = true;
+        }
+    },
+    { immediate: true }
+);
+
 const requestForm = useForm({
     mission_id: '',
     message: '',
 });
+
+function ratingDisplay(worker) {
+    if (worker.rating === null || worker.rating === undefined) {
+        return t('common.not_available');
+    }
+
+    return `${Number(worker.rating).toFixed(1)} (${worker.ratings_count})`;
+}
 
 const alreadyRequested = (workerId, missionId) => {
     return props.existingRequests.some(r =>
@@ -151,7 +171,7 @@ function submitRequest() {
                     <div class="card-header">
                         <h3 class="worker-name">{{ worker.name }}</h3>
                         <div class="rating">
-                            <Star class="icon" /> {{ worker.rating ?? t('common.not_available') }}
+                            <Star class="icon" /> {{ ratingDisplay(worker) }}
                         </div>
                     </div>
 
@@ -244,7 +264,7 @@ function submitRequest() {
 
                     <div class="rating">
                         <Star class="icon" />
-                        {{ selectedWorker.rating ?? t('common.not_available') }}
+                        {{ ratingDisplay(selectedWorker) }}
                     </div>
                 </div>
 
@@ -307,7 +327,7 @@ function submitRequest() {
                                 ${{ selectedWorker.hourly_rate }} {{ t('common.per_hour') }}
                             </p>
                             <p class="rating">
-                                ⭐ {{ selectedWorker.rating ?? t('common.not_available') }}
+                                ⭐ {{ ratingDisplay(selectedWorker) }}
                             </p>
                         </div>
                     </div>
@@ -370,3 +390,5 @@ function submitRequest() {
         </div>
     </SidebarLayout>
 </template>
+
+<style scoped src="../../css/pages/find-workers.css"></style>

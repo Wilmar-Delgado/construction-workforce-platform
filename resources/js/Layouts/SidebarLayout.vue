@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { useAuthStore } from '@/stores/auth';
 import { useTranslate } from '@/composables/useTranslate';
@@ -12,6 +12,22 @@ const authStore = useAuthStore();
 const { t } = useTranslate();
 const { isSelfEmployed } = useUserRole();
 const { can } = usePermissions();
+
+const topbarOrganizationLabel = computed(() => {
+    if (authStore.user?.company?.name) {
+        return authStore.user.company.name;
+    }
+
+    if (authStore.user?.role?.name === 'administrator') {
+        return t('common.administrator');
+    }
+
+    if (isSelfEmployed.value) {
+        return t('common.self_employed');
+    }
+
+    return t('common.not_available');
+});
 </script>
 
 <template>
@@ -147,7 +163,7 @@ const { can } = usePermissions();
                     </p>
 
                     <p class="topbar-company">
-                        {{ authStore.user?.company?.name || t('self_employed') }}
+                        {{ topbarOrganizationLabel }}
                     </p>
                 </div>
             </header>

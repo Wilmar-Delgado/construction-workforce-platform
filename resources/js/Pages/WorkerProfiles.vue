@@ -89,6 +89,14 @@ const { handleSort } = useDataTable('worker-profiles.index', filters);
 const showDeleteModal = ref(false);
 const deletingWorker = ref(null);
 
+function ratingDisplay(worker) {
+    if (worker.rating === null || worker.rating === undefined) {
+        return t('common.not_available');
+    }
+
+    return `${Number(worker.rating).toFixed(1)} (${worker.ratings_count})`;
+}
+
 // =========================
 // FORM HELPERS
 // =========================
@@ -246,7 +254,7 @@ function resetModal() {
                     </div>
 
                     <div class="rating">
-                        ⭐ {{ workers[0].rating ?? t('common.not_available') }}
+                        ⭐ {{ ratingDisplay(workers[0]) }}
                     </div>
                 </div>
 
@@ -304,7 +312,7 @@ function resetModal() {
                     <td>{{ t(`profiles_page.jobs.${worker.job}`) }}</td>
                     <td>{{ t('profiles_page.experience_years_short', { count: worker.years_experience }) }}</td>
                     <td>${{ worker.hourly_rate }} {{ t('common.per_hour') }}</td>
-                    <td>⭐{{ worker.rating ?? t('common.not_available') }}</td>
+                    <td>⭐ {{ ratingDisplay(worker) }}</td>
                     <td class="skills">
                         <span v-for="skill in worker.skills.slice(0,2)" :key="skill.id" class="skill-tag">
                             {{ skill.name }}
@@ -451,3 +459,5 @@ function resetModal() {
     </div>
 </SidebarLayout>
 </template>
+
+<style scoped src="../../css/pages/worker-profiles.css"></style>

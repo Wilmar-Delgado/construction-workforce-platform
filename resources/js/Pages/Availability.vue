@@ -286,3 +286,5 @@ function statusLabel(status) {
     </div>
 </SidebarLayout>
 </template>
+
+<style scoped src="../../css/pages/availability.css"></style>

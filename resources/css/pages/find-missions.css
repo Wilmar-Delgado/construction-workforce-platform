@@ -181,3 +181,47 @@
         grid-template-columns: 1fr;
     }
 }
+
+.mission-card {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    transition: 0.2s ease;
+}
+
+.mission-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.mission-title {
+    font-size: 20px;
+    line-height: 1.35;
+    color: #111827;
+}
+
+.info-box {
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 10px;
+    padding: 2px;
+    margin-top: 14px;
+    font-size: 13px;
+}
+
+.error {
+    color: #dc2626;
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    .mission-card {
+        min-height: auto;
+        padding: 16px;
+    }
+
+    .mission-title {
+        font-size: 18px;
+    }
+}

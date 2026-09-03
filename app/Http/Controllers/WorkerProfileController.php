@@ -23,7 +23,9 @@ class WorkerProfileController extends Controller
         $sortDirection = $request->get('direction', 'asc');
         $user = auth()->user();
 
-        $workerProfilesQuery = WorkerProfile::with(['company', 'skills', 'certifications']);
+        $workerProfilesQuery = WorkerProfile::with(['company', 'skills', 'certifications'])
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings');
 
         if ($user->role?->name === 'administrator') {
             // Administrators can manage profiles across all companies.

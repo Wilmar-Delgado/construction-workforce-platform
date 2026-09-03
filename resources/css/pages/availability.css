@@ -36,7 +36,7 @@
     cursor: not-allowed;
 }
 
-.close-btn {
+:deep(.close-btn) {
     background: transparent;
     border: none;
     font-size: 20px;

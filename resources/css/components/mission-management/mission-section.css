@@ -1,0 +1,51 @@
+/* ========================= */
+/* SECTION */
+/* ========================= */
+.mission-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin: 16px 0;
+
+    cursor: pointer;
+    user-select: none;
+}
+
+.mission-section-title h3 {
+    font-size: 18px;
+    font-weight: 600;
+
+    margin: 0;
+}
+
+.section-arrow {
+    width: 18px;
+    height: 18px;
+
+    color: #6b7280;
+
+    transition: transform 0.2s ease;
+}
+
+/* ========================= */
+/* TRANSITION/ANIMATION EFFECT*/
+/* ========================= */
+.section-collapse-enter-active,
+.section-collapse-leave-active {
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
+}
+
+.section-collapse-enter-from {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.section-collapse-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+}

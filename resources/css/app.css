@@ -5,13 +5,6 @@
 @import './components/table.css';
 @import './components/tags.css';
 
-@import './pages/home.css';
-@import './pages/worker-profiles.css';
-@import './pages/availability.css';
-@import './pages/find-workers.css';
-@import './pages/find-missions.css';
-@import './pages/missions.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

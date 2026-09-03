@@ -17,6 +17,15 @@ class MissionController extends Controller
     {
         $this->authorize('viewAny', Mission::class);
 
+        $selectedMission = null;
+
+        if ($request->filled('mission')) {
+            $selectedMission = Mission::with('requirements')
+                ->findOrFail($request->integer('mission'));
+
+            $this->authorize('view', $selectedMission);
+        }
+
         $baseQuery = Mission::with('requirements')
             ->where('hiring_company_id', auth()->user()->company_id);
 
@@ -61,6 +70,7 @@ class MissionController extends Controller
 
         return Inertia::render('Missions', [
             'missions' => $missions,
+            'selectedMission' => $selectedMission,
 
             'filters' => [
                 'search' => $request->search,
@@ -135,21 +145,6 @@ class MissionController extends Controller
         }
 
         return redirect()->route('missions.index')->with('success', 'Mission successfully created.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): Response
-    {
-        $mission = Mission::with(['hiringCompany', 'lendingCompany', 'creator', 'workerProfile', 'requirements'])
-            ->findOrFail($id);
-
-        $this->authorize('view', $mission);
-
-        return Inertia::render('MissionDetails', [
-            'mission' => $mission,
-        ]);
     }
 
     public function update(Request $request, Mission $mission): RedirectResponse
