@@ -1,6 +1,71 @@
 <script setup>
 import { watch, onMounted, onBeforeUnmount } from 'vue';
 
+let activeScrollLocks = 0;
+let lockedScrollContainers = [];
+
+function getScrollContainers() {
+    const contentAreas = Array.from(document.querySelectorAll('.content-area'));
+
+    return contentAreas.length > 0 ? contentAreas : [document.scrollingElement];
+}
+
+function getScrollbarWidth(element) {
+    if (element === document.scrollingElement) {
+        return window.innerWidth - document.documentElement.clientWidth;
+    }
+
+    return element.offsetWidth - element.clientWidth;
+}
+
+function lockBackgroundScroll() {
+    if (activeScrollLocks === 0) {
+        lockedScrollContainers = getScrollContainers().map((element) => {
+            const scrollbarWidth = getScrollbarWidth(element);
+            const supportsScrollbarGutter = CSS.supports('scrollbar-gutter: stable');
+            const state = {
+                element,
+                overflowY: element.style.overflowY,
+                scrollbarGutter: element.style.scrollbarGutter,
+                paddingInlineEnd: element.style.paddingInlineEnd,
+                scrollTop: element.scrollTop
+            };
+
+            if (scrollbarWidth > 0) {
+                if (supportsScrollbarGutter) {
+                    element.style.scrollbarGutter = 'stable';
+                } else {
+                    const currentPadding = parseFloat(getComputedStyle(element).paddingInlineEnd) || 0;
+                    element.style.paddingInlineEnd = `${currentPadding + scrollbarWidth}px`;
+                }
+            }
+
+            element.style.overflowY = 'hidden';
+
+            return state;
+        });
+    }
+
+    activeScrollLocks += 1;
+}
+
+function unlockBackgroundScroll() {
+    if (activeScrollLocks === 0) return;
+
+    activeScrollLocks -= 1;
+
+    if (activeScrollLocks > 0) return;
+
+    lockedScrollContainers.forEach(({ element, overflowY, scrollbarGutter, paddingInlineEnd, scrollTop }) => {
+        element.style.overflowY = overflowY;
+        element.style.scrollbarGutter = scrollbarGutter;
+        element.style.paddingInlineEnd = paddingInlineEnd;
+        element.scrollTop = scrollTop;
+    });
+
+    lockedScrollContainers = [];
+}
+
 const props = defineProps({
     modelValue: Boolean,
     title: String,
@@ -11,6 +76,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:modelValue', 'close']);
+
+let hasScrollLock = false;
 
 function close() {
     emit('update:modelValue', false);
@@ -24,15 +91,32 @@ function handleEsc(e) {
 
 onMounted(() => {
     window.addEventListener('keydown', handleEsc);
+
+    if (props.modelValue && !hasScrollLock) {
+        lockBackgroundScroll();
+        hasScrollLock = true;
+    }
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleEsc);
+
+    if (hasScrollLock) {
+        unlockBackgroundScroll();
+        hasScrollLock = false;
+    }
 });
 
-// Prevent body scroll when modal open
 watch(() => props.modelValue, (val) => {
-    document.body.style.overflow = val ? 'hidden' : '';
+    if (val && !hasScrollLock) {
+        lockBackgroundScroll();
+        hasScrollLock = true;
+    }
+
+    if (!val && hasScrollLock) {
+        unlockBackgroundScroll();
+        hasScrollLock = false;
+    }
 });
 </script>
 

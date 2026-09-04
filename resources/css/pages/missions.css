@@ -265,6 +265,14 @@
     font-size: 12px;
 }
 
+.table-cell-nowrap {
+    white-space: nowrap;
+}
+
+.mission-title-cell {
+    min-width: 240px;
+}
+
 /* =====================================================
    MODAL ACTIONS
 ===================================================== */

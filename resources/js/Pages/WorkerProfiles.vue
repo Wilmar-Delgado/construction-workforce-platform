@@ -301,6 +301,7 @@ function resetModal() {
                 v-if="can('manage_workers')"
                 :columns="columns"
                 :rows="workers"
+                min-width="900px"
                 :emptyText="t('profiles_page.empty_table', { action: t('profiles_page.add_worker') })"
                 sortable
                 :sort="filters.sort"
@@ -308,11 +309,11 @@ function resetModal() {
                 @sort="handleSort"
             >
                 <tr v-for="worker in workers" :key="worker.id">
-                    <td>{{ worker.name }}</td>
-                    <td>{{ t(`profiles_page.jobs.${worker.job}`) }}</td>
-                    <td>{{ t('profiles_page.experience_years_short', { count: worker.years_experience }) }}</td>
-                    <td>${{ worker.hourly_rate }} {{ t('common.per_hour') }}</td>
-                    <td>⭐ {{ ratingDisplay(worker) }}</td>
+                    <td class="table-cell-nowrap">{{ worker.name }}</td>
+                    <td class="table-cell-nowrap">{{ t(`profiles_page.jobs.${worker.job}`) }}</td>
+                    <td class="table-cell-nowrap">{{ t('profiles_page.experience_years_short', { count: worker.years_experience }) }}</td>
+                    <td class="table-cell-nowrap">${{ worker.hourly_rate }} {{ t('common.per_hour') }}</td>
+                    <td class="table-cell-nowrap">⭐ {{ ratingDisplay(worker) }}</td>
                     <td class="skills">
                         <span v-for="skill in worker.skills.slice(0,2)" :key="skill.id" class="skill-tag">
                             {{ skill.name }}

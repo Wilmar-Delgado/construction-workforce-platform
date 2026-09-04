@@ -168,6 +168,7 @@ function statusLabel(status) {
         <DataTable
             :columns="columns"
             :rows="availability"
+            min-width="760px"
             :emptyText="t('availability_page.empty_table', { action: t('availability_page.add_availability') })"
             sortable
             :sort="filters.sort"
@@ -175,11 +176,11 @@ function statusLabel(status) {
             @sort="handleSort"
         >
             <tr v-for="avai in availability" :key="avai.id">
-                <td class="worker-name">{{ avai.worker_name }}</td>
-                <td>{{ t(`profiles_page.jobs.${avai.job}`) }}</td>
-                <td>{{ formatDate(avai.date) }}</td>
-                <td>{{ avai.start_time }} - {{ avai.end_time }}</td>
-                <td><span :class="`status-tag status-${avai.status}`">{{ statusLabel(avai.status) }}</span></td>
+                <td class="worker-name table-cell-nowrap">{{ avai.worker_name }}</td>
+                <td class="table-cell-nowrap">{{ t(`profiles_page.jobs.${avai.job}`) }}</td>
+                <td class="table-cell-nowrap">{{ formatDate(avai.date) }}</td>
+                <td class="table-cell-nowrap">{{ avai.start_time }} - {{ avai.end_time }}</td>
+                <td class="table-cell-nowrap"><span :class="`status-tag status-${avai.status}`">{{ statusLabel(avai.status) }}</span></td>
                 <td class="actions" style="text-align: right;">
                     <button @click="editAvailability(avai)" class="table-icon-btn blue">
                         <Edit2 class="table-icon" />

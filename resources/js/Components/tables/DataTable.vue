@@ -1,9 +1,15 @@
 <script setup>
+import { computed } from 'vue';
+
 const props = defineProps({
     columns: Array,
     sortable: Boolean,
     sort: String,
     direction: String,
+    minWidth: {
+        type: String,
+        default: null,
+    },
     rows: {
         type: Array,
         default: () => []
@@ -16,6 +22,16 @@ const props = defineProps({
 
 const emit = defineEmits(['sort']);
 
+const tableStyle = computed(() => {
+    if (!props.minWidth) {
+        return undefined;
+    }
+
+    return {
+        '--table-min-width': props.minWidth,
+    };
+});
+
 function handleSort(field) {
     emit('sort', field);
 }
@@ -24,7 +40,7 @@ function handleSort(field) {
 <template>
     <div class="table-container">
         <div class="table-scroll">
-            <table class="data-table">
+            <table class="data-table" :style="tableStyle">
                 <!-- HEADER -->
                 <thead>
                     <tr>
@@ -79,12 +95,16 @@ function handleSort(field) {
 }
 
 .table-scroll {
+    width: 100%;
     flex: 1;
+    overflow-x: auto;
     overflow-y: auto;
 }
 
 .data-table {
     width: 100%;
+    min-width: var(--table-min-width, auto);
+    table-layout: auto;
     border-collapse: collapse;
 }
 
@@ -93,6 +113,7 @@ function handleSort(field) {
     font-size: 12px;
     letter-spacing: 0.05em;
     color: #6b7280;
+    white-space: nowrap;
 }
 
 .data-table th.sortable {
@@ -104,6 +125,10 @@ function handleSort(field) {
     text-align: left;
     padding: 8px 12px;
     border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table td.actions {
+    white-space: nowrap;
 }
 
 .table-empty-state {

@@ -559,16 +559,17 @@ function resetModal() {
                     { key: 'actions', label: t('missions_page.table.actions') }
                 ]"
                 :rows="missions"
+                min-width="840px"
                 sortable
                 :sort="'title'"
                 :direction="'asc'"
             >
                 <tr v-for="mission in missions" :key="mission.id">
-                    <td>{{ mission.title }}</td>
-                    <td>{{ statusLabel(mission.status) }}</td>
-                    <td>{{ formatDate(mission.start_date) }}</td>
-                    <td>{{ formatDate(mission.end_date) }}</td>
-                    <td>{{ mission.city }}, {{ mission.province }}</td>
+                    <td class="mission-title-cell">{{ mission.title }}</td>
+                    <td class="table-cell-nowrap">{{ statusLabel(mission.status) }}</td>
+                    <td class="table-cell-nowrap">{{ formatDate(mission.start_date) }}</td>
+                    <td class="table-cell-nowrap">{{ formatDate(mission.end_date) }}</td>
+                    <td class="table-cell-nowrap">{{ mission.city }}, {{ mission.province }}</td>
                     <td class="actions" style="text-align: right;">
                         <!-- <button class="table-icon-btn blue" @click="editMission(mission)">
                             <Pencil class="table-icon" />

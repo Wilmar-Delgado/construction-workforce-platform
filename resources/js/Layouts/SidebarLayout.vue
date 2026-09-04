@@ -366,6 +366,50 @@ const topbarOrganizationLabel = computed(() => {
     color: #6b7280;
 }
 
+@media (max-width: 767px) {
+    .topbar {
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 12px;
+    }
+
+    .topbar-left {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .menu-btn {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .topbar-title {
+        min-width: 0;
+        font-size: 16px;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+
+    .topbar-user {
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: 42%;
+    }
+
+    .topbar-user-name {
+        font-size: 14px;
+        overflow-wrap: anywhere;
+    }
+
+    .topbar-company {
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+}
+
 @media (min-width: 768px) {
 
     .sidebar {

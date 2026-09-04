@@ -143,6 +143,10 @@ select {
     flex-direction: column;
 }
 
+.table-cell-nowrap {
+    white-space: nowrap;
+}
+
 /* Better spacing */
 .form-group label {
     margin-bottom: 4px;
