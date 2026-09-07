@@ -272,16 +272,21 @@ return [
         'subtitle_company' => 'Gérez les disponibilités de vos travailleurs',
         'subtitle_self' => 'Gérez vos disponibilités',
         'add_availability' => 'Ajouter une disponibilité',
-        'confirm_delete' => 'Êtes-vous sûr de vouloir supprimer cette entrée de disponibilité ?',
-        'empty_table' => 'Aucune disponibilité ajoutée pour le moment. Cliquez sur « :action » pour commencer.',
 
-        'table' => [
-            'worker' => 'Travailleur',
-            'job' => 'Poste',
-            'date' => 'Date',
-            'time' => 'Heure',
-            'status' => 'Statut',
-            'actions' => 'Actions',
+        'calendar' => [
+            'today' => 'Aujourd’hui',
+            'previous' => 'Précédent',
+            'next' => 'Suivant',
+            'day' => 'Jour',
+            'week' => 'Semaine',
+            'month' => 'Mois',
+            'loading' => 'Chargement du calendrier…',
+            'load_error' => 'Impossible de charger les disponibilités du calendrier.',
+            'worker_filter_label' => 'Travailleur',
+            'all_workers' => 'Tous les travailleurs',
+            'status_legend' => 'Légende des statuts de disponibilité',
+            'no_workers' => 'Aucun travailleur n’est disponible pour la planification.',
+            'no_slots' => 'Aucune disponibilité pour cette période.',
         ],
 
         'add_modal' => [
@@ -301,6 +306,14 @@ return [
             'available' => 'Disponible',
             'booked' => 'Réservé',
             'unavailable' => 'Indisponible',
+        ],
+
+        'validation' => [
+            'overlap' => 'Ce travailleur a déjà une disponibilité qui chevauche cette période.',
+            'end_after_start' => 'L’heure de fin doit être postérieure à l’heure de début.',
+            'mission_assignment_conflict' => 'Ce travailleur est déjà affecté à une mission à cette date.',
+            'calendar_range_too_large' => 'La période du calendrier ne peut pas dépasser :days jours.',
+            'worker_not_available' => 'Le travailleur sélectionné ne vous est pas accessible.',
         ],
 
         'edit_modal' => [

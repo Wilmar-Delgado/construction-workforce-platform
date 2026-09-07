@@ -78,6 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
+    Route::get('/availability/calendar', [AvailabilityController::class, 'calendar'])
+        ->name('availability.calendar');
     Route::resource('availability', AvailabilityController::class)
         ->only(['index', 'store', 'update', 'destroy']);
 

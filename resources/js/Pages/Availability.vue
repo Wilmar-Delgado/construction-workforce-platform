@@ -1,32 +1,20 @@
 <script setup>
 import SidebarLayout from '@/Layouts/SidebarLayout.vue';
 import BaseModal from '@/Components/base/BaseModal.vue';
-import BasePagination from '@/Components/base/BasePagination.vue';
-import DataTable from '@/Components/tables/DataTable.vue';
 import ConfirmModal from '@/Components/base/ConfirmModal.vue';
 import BaseToast from '@/Components/base/BaseToast.vue';
+import AvailabilityCalendar from '@/Components/availability/AvailabilityCalendar.vue';
 import { Head, usePage, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useTranslate } from '@/composables/useTranslate';
-import { useDataTable } from '@/composables/useDataTable';
-import { Edit2, Trash2, Plus } from 'lucide-vue-next';
+import { Plus } from 'lucide-vue-next';
 
 const { t } = useTranslate();
-const columns = [
-    { key: 'worker_name', label: t('availability_page.table.worker'), sortable: true },
-    { key: 'job', label: t('availability_page.table.job'), sortable: true },
-    { key: 'date', label: t('availability_page.table.date'), sortable: true },
-    { key: 'time', label: t('availability_page.table.time') },
-    { key: 'status', label: t('availability_page.table.status'), sortable: true },
-    { key: 'actions', label: t('availability_page.table.actions') }
-];
 const page = usePage();
 const workers = computed(() => page.props.workerProfiles || []);
 const hasSingleWorker = computed(() => workers.value.length === 1);
-const availability = computed(() => page.props.availability.data || []);
-const pagination = computed(() => page.props.availability);
-const filters = computed(() => page.props.filters);
 const showModal = ref(false);
+const availabilityCalendar = ref(null);
 
 const flashSuccess = computed(() => page.props.flash?.success);
 const flashError = computed(() => page.props.flash?.error);
@@ -49,8 +37,6 @@ const form = useForm({
 const action = ref('Create');
 const editingAvailabilityId = ref(null);
 
-const { handleSort } = useDataTable('availability.index', filters);
-
 const showDeleteModal = ref(false);
 const deletingAvailability = ref(null);
 
@@ -66,14 +52,31 @@ function submitAvailability() {
     if (action.value === 'Create') {
         form.post(route('availability.store'), {
             data: payload,
-            onSuccess: resetModal
+            onSuccess: () => {
+                resetModal();
+                availabilityCalendar.value?.refresh();
+            }
         });
     } else {
         form.put(route('availability.update', editingAvailabilityId.value), {
             data: payload,
-            onSuccess: resetModal
+            onSuccess: () => {
+                resetModal();
+                availabilityCalendar.value?.refresh();
+            }
         });
     }
+}
+
+function openCreateAvailability(prefill = {}) {
+    resetModal();
+
+    form.worker_profile_id = prefill.worker_profile_id ?? form.worker_profile_id;
+    form.date = prefill.date ?? '';
+    form.start_time = prefill.start_time ?? '';
+    form.end_time = prefill.end_time ?? '';
+
+    showModal.value = true;
 }
 
 function editAvailability(avai) {
@@ -92,7 +95,13 @@ function editAvailability(avai) {
 }
 
 function deleteAvailability(availability) {
-    deletingAvailability.value = availability;
+    deletingAvailability.value = {
+        ...availability,
+        worker_name: availability.worker_name ?? workers.value.find(
+            (worker) => String(worker.id) === String(availability.worker_profile_id)
+        )?.name,
+    };
+    showModal.value = false;
     showDeleteModal.value = true;
 }
 
@@ -100,6 +109,9 @@ function confirmDeleteAvailability() {
     form.delete(route('availability.destroy', deletingAvailability.value.id), {
         onSuccess: () => {
             showDeleteModal.value = false;
+            deletingAvailability.value = null;
+            resetModal();
+            availabilityCalendar.value?.refresh();
         }
     });
 }
@@ -130,9 +142,6 @@ function formatDate(date) {
     );
 }
 
-function statusLabel(status) {
-    return t(`availability_page.status_options.${status}`);
-}
 </script>
 
 <template>
@@ -159,42 +168,16 @@ function statusLabel(status) {
         <!-- Header -->
         <div class="page-header">
             <h2>{{ hasSingleWorker ? t('availability_page.subtitle_self') : t('availability_page.subtitle_company') }}</h2>
-            <button @click="resetModal(); showModal = true" class="btn-primary">
+            <button @click="openCreateAvailability" class="btn-primary">
                 <Plus class="icon" /> {{ t('availability_page.add_availability') }}
             </button>
         </div>
 
-        <!-- Table -->
-        <DataTable
-            :columns="columns"
-            :rows="availability"
-            min-width="760px"
-            :emptyText="t('availability_page.empty_table', { action: t('availability_page.add_availability') })"
-            sortable
-            :sort="filters.sort"
-            :direction="filters.direction"
-            @sort="handleSort"
-        >
-            <tr v-for="avai in availability" :key="avai.id">
-                <td class="worker-name table-cell-nowrap">{{ avai.worker_name }}</td>
-                <td class="table-cell-nowrap">{{ t(`profiles_page.jobs.${avai.job}`) }}</td>
-                <td class="table-cell-nowrap">{{ formatDate(avai.date) }}</td>
-                <td class="table-cell-nowrap">{{ avai.start_time }} - {{ avai.end_time }}</td>
-                <td class="table-cell-nowrap"><span :class="`status-tag status-${avai.status}`">{{ statusLabel(avai.status) }}</span></td>
-                <td class="actions" style="text-align: right;">
-                    <button @click="editAvailability(avai)" class="table-icon-btn blue">
-                        <Edit2 class="table-icon" />
-                    </button>
-                    <button @click="deleteAvailability(avai)" class="table-icon-btn danger">
-                        <Trash2 class="table-icon" />
-                    </button>
-                </td>
-            </tr>
-
-            <template #pagination>
-                <BasePagination :links="pagination.links" />
-            </template>
-        </DataTable>
+        <AvailabilityCalendar
+            ref="availabilityCalendar"
+            @edit-availability="editAvailability"
+            @create-availability="openCreateAvailability"
+        />
 
         <!-- DELETE MODAL -->
         <ConfirmModal
@@ -267,6 +250,19 @@ function statusLabel(status) {
                 </div>
             </form>
             <template #footer>
+                <button
+                    v-if="action === 'Update'"
+                    type="button"
+                    class="btn-danger"
+                    :disabled="form.processing"
+                    @click="deleteAvailability({
+                        id: editingAvailabilityId,
+                        worker_profile_id: form.worker_profile_id,
+                        date: form.date,
+                    })"
+                >
+                    {{ t('common.delete') }}
+                </button>
                 <button 
                     type="submit"
                     form="availability-form"

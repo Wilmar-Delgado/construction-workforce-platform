@@ -279,22 +279,35 @@ return [
         'subtitle_company' => 'Manage your workers\' availability',
         'subtitle_self' => 'Manage your availability',
         'add_availability' => 'Add Time Slot',
-        'confirm_delete' => 'Are you sure you want to delete this availability entry?',
-        'empty_table' => 'No availability slots added yet. Click “:action” to get started.',
 
-        'table' => [
-            'worker' => 'Worker',
-            'job' => 'Job / Trade',
-            'date' => 'Date',
-            'time' => 'Time',
-            'status' => 'Status',
-            'actions' => 'Actions',
+        'calendar' => [
+            'today' => 'Today',
+            'previous' => 'Previous',
+            'next' => 'Next',
+            'day' => 'Day',
+            'week' => 'Week',
+            'month' => 'Month',
+            'loading' => 'Loading calendar…',
+            'load_error' => 'Unable to load calendar availability.',
+            'worker_filter_label' => 'Worker',
+            'all_workers' => 'All workers',
+            'status_legend' => 'Availability status legend',
+            'no_workers' => 'There are no workers available to schedule.',
+            'no_slots' => 'No availability slots in this period.',
         ],
 
         'status_options' => [
             'available' => 'Available',
             'booked' => 'Booked',
             'unavailable' => 'Unavailable',
+        ],
+
+        'validation' => [
+            'overlap' => 'This worker already has an availability slot that overlaps this time.',
+            'end_after_start' => 'End time must be later than start time.',
+            'mission_assignment_conflict' => 'This worker is already assigned to a mission on this date.',
+            'calendar_range_too_large' => 'The calendar range cannot exceed :days days.',
+            'worker_not_available' => 'The selected worker is not available to you.',
         ],
 
         'add_modal' => [
