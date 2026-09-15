@@ -47,7 +47,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    // Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
 
 
     /*
@@ -127,6 +126,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('mission-management.respond');
     Route::post('/mission-management/requests/{workerRequest}/complete', [MissionManagementController::class, 'complete'])
         ->name('mission-management.complete');
+    Route::post('/mission-management/requests/{workerRequest}/end-early', [MissionManagementController::class, 'endEarly'])
+        ->name('mission-management.end-early');
+    Route::post('/mission-management/missions/{mission}/close-recruiting', [MissionManagementController::class, 'closeRecruiting'])
+        ->name('mission-management.close-recruiting');
+    Route::post('/mission-management/missions/{mission}/start', [MissionManagementController::class, 'start'])
+        ->name('mission-management.start');
 
     /*
     |--------------------------------------------------------------------------
@@ -134,7 +139,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/settings', fn () => Inertia::render('Settings'))->name('settings');
+    Route::get('/settings', fn () => Inertia::render('Settings', [
+        'timezoneOptions' => config('timezones.supported'),
+    ]))->name('settings');
 
     Route::post('/settings/personal', [SettingController::class, 'updatePersonalInfo'])
         ->name('settings.personal.update');

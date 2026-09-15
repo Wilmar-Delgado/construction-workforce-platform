@@ -4,6 +4,8 @@ import { Head, usePage, useForm, router } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { jobOptions } from '@/constants/jobs';
 import { useTranslate } from '@/composables/useTranslate';
+import { useDateTime } from '@/composables/useDateTime';
+import { mergeMultiValueInput } from '@/composables/useMultiValueInput';
 import DataTable from '@/Components/tables/DataTable.vue';
 import BasePagination from '@/Components/base/BasePagination.vue';
 import BaseModal from '@/Components/base/BaseModal.vue';
@@ -33,6 +35,7 @@ import {
 // PROPS & STATE
 // =========================
 const { t } = useTranslate();
+const { formatDateOnly } = useDateTime();
 const page = usePage();
 const missions = computed(() => page.props.missions.data || []);
 const pagination = computed(() => page.props.missions);
@@ -134,9 +137,7 @@ const counts = computed(() => ({
 // ACTIONS
 // =========================
 function formatDate(date) {
-    if (!date) return '';
-
-    return new Date(date).toLocaleDateString(page.props.locale === 'fr' ? 'fr-CA' : 'en-CA', {
+    return formatDateOnly(date, {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
@@ -145,6 +146,34 @@ function formatDate(date) {
 
 function statusLabel(status) {
     return t(`common.statuses.${status}`);
+}
+
+function staffingProgress(mission) {
+    return t('missions_page.labels.staffing_progress', {
+        committed: mission.committed_worker_count ?? 0,
+        required: mission.workers ?? 0,
+    });
+}
+
+function staffingSummary(mission) {
+    return t('missions_page.labels.workers_needed_remaining', {
+        workers: mission.workers ?? 0,
+        remaining: mission.remaining_capacity ?? 0,
+    });
+}
+
+function lifecycleLabel(mission) {
+    if (mission.status === 'open') {
+        return mission.recruiting_closed_at
+            ? t('missions_page.labels.staffing_closed')
+            : t('missions_page.labels.recruiting');
+    }
+
+    return statusLabel(mission.status);
+}
+
+function canEditMission(mission) {
+    return ['draft', 'open'].includes(mission.status);
 }
 
 function dateRange(startDate, endDate) {
@@ -161,10 +190,8 @@ function toInputDate(date) {
 }
 
 function addRequirement() {
-    if (newRequirement.value.trim()) {
-        form.requirements.push(newRequirement.value.trim());
-        newRequirement.value = '';
-    }
+    form.requirements = mergeMultiValueInput(form.requirements, newRequirement.value);
+    newRequirement.value = '';
 }
 
 function removeRequirement(index) {
@@ -172,6 +199,8 @@ function removeRequirement(index) {
 }
 
 function submitMission() {
+    addRequirement();
+
     if (modalMode.value === 'create') {
         form.post(route('missions.store'), {
             onError: (errors) => {
@@ -497,16 +526,12 @@ function resetModal() {
 
                             <div class="meta-row">
                                 <Users class="meta-icon" />
-                                <span v-if="mission.workers > 0">
-                                    {{ t(mission.workers > 1
-                                        ? 'missions_page.labels.workers_needed_plural'
-                                        : 'missions_page.labels.workers_needed_singular', {
-                                            count: mission.workers
-                                        }) }}
-                                </span>
-                                <span v-else>
-                                    {{ t('common.not_available') }}
-                                </span>
+                                {{ staffingSummary(mission) }}
+                            </div>
+
+                            <div class="meta-row">
+                                <Clock class="meta-icon" />
+                                {{ lifecycleLabel(mission) }}
                             </div>
 
                             <div class="meta-row green">
@@ -522,7 +547,7 @@ function resetModal() {
 
                         <!-- Footer Actions -->
                         <div class="mission-actions">
-                            <button v-if="mission.status !== 'completed'" class="btn-card-edit" @click="editMission(mission)">
+                            <button v-if="canEditMission(mission)" class="btn-card-edit" @click="editMission(mission)">
                                 {{ t('missions_page.actions.edit') }}
                             </button>
 
@@ -534,11 +559,11 @@ function resetModal() {
                                 <Copy class="icon" />
                             </button>
 
-                            <button v-if="mission.status !== 'completed'" class="icon-btn danger" @click="deleteMission(mission)">
+                            <button v-if="mission.can_delete" class="icon-btn danger" @click="deleteMission(mission)">
                                 <Trash2 class="icon" />
                             </button>
 
-                            <button v-else class="icon-btn danger" @click="archiveMission(mission)">
+                            <button v-if="mission.can_archive" class="icon-btn danger" @click="archiveMission(mission)">
                                 <Archive class="icon" />
                             </button>
                         </div>
@@ -556,37 +581,39 @@ function resetModal() {
                     { key: 'start_date', label: t('missions_page.table.start_date') },
                     { key: 'end_date', label: t('missions_page.table.end_date') },
                     { key: 'city', label: t('missions_page.table.city') },
+                    { key: 'staffing', label: t('missions_page.table.staffing') },
                     { key: 'actions', label: t('missions_page.table.actions') }
                 ]"
                 :rows="missions"
-                min-width="840px"
+                min-width="960px"
                 sortable
                 :sort="'title'"
                 :direction="'asc'"
             >
                 <tr v-for="mission in missions" :key="mission.id">
                     <td class="mission-title-cell">{{ mission.title }}</td>
-                    <td class="table-cell-nowrap">{{ statusLabel(mission.status) }}</td>
+                    <td class="table-cell-nowrap">{{ lifecycleLabel(mission) }}</td>
                     <td class="table-cell-nowrap">{{ formatDate(mission.start_date) }}</td>
                     <td class="table-cell-nowrap">{{ formatDate(mission.end_date) }}</td>
                     <td class="table-cell-nowrap">{{ mission.city }}, {{ mission.province }}</td>
+                    <td class="table-cell-nowrap">{{ staffingProgress(mission) }}</td>
                     <td class="actions" style="text-align: right;">
                         <!-- <button class="table-icon-btn blue" @click="editMission(mission)">
                             <Pencil class="table-icon" />
                         </button> -->
-                        <button class="table-icon-btn blue" @click="mission.status === 'completed' ? viewMission(mission) : editMission(mission)">
+                        <button class="table-icon-btn blue" @click="canEditMission(mission) ? editMission(mission) : viewMission(mission)">
                             <component
-                                :is="mission.status === 'completed' ? Eye : Pencil"
+                                :is="canEditMission(mission) ? Pencil : Eye"
                                 class="table-icon"
                             />
                         </button>
                         <button class="table-icon-btn blue" @click="duplicateMission(mission)">
                             <Copy class="table-icon" />
                         </button>
-                        <button v-if="mission.status !== 'completed'" class="table-icon-btn danger" @click="deleteMission(mission)">
+                        <button v-if="mission.can_delete" class="table-icon-btn danger" @click="deleteMission(mission)">
                             <Trash2 class="table-icon" />
                         </button>
-                        <button v-else class="table-icon-btn danger" @click="archiveMission(mission)">
+                        <button v-if="mission.can_archive" class="table-icon-btn danger" @click="archiveMission(mission)">
                             <Archive class="table-icon" />
                         </button>
                     </td>
@@ -627,7 +654,6 @@ function resetModal() {
         <BaseModal
             v-model="showModal"
             @close="form.reset()"
-            max-width="900px"
             :title="modalMode === 'create'
                 ? t('missions_page.add_modal.title')
                 : modalMode === 'edit'
@@ -745,8 +771,12 @@ function resetModal() {
                         <select v-model="form.status" :disabled="isReadOnly">
                             <option value="draft">{{ t('missions_page.stats.draft') }}</option>
                             <option value="open">{{ t('missions_page.stats.open') }}</option>
-                            <option value="in_progress">{{ t('missions_page.stats.in_progress') }}</option>
-                            <option value="completed">{{ t('missions_page.stats.completed') }}</option>
+                            <option
+                                v-if="isReadOnly && !['draft', 'open'].includes(form.status)"
+                                :value="form.status"
+                            >
+                                {{ statusLabel(form.status) }}
+                            </option>
                         </select>
                         <span v-if="form.errors.status" class="error">{{ form.errors.status }}</span>
                     </div>
@@ -760,7 +790,7 @@ function resetModal() {
                                 v-model="newRequirement"
                                 type="text"
                                 :placeholder="t('missions_page.add_modal.requirements_placeholder')"
-                                @keyup.enter="addRequirement"
+                                @keydown.enter.prevent="addRequirement"
                                 :disabled="isReadOnly"
                             />
 

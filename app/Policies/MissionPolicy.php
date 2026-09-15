@@ -51,6 +51,16 @@ class MissionPolicy
         return $this->managesMission($user, $mission);
     }
 
+    public function closeRecruiting(User $user, Mission $mission): bool
+    {
+        return $this->managesMission($user, $mission);
+    }
+
+    public function start(User $user, Mission $mission): bool
+    {
+        return $this->managesMission($user, $mission);
+    }
+
     private function isCompanyMissionManager(User $user): bool
     {
         return $user->company_id !== null

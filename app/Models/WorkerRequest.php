@@ -15,15 +15,18 @@ class WorkerRequest extends Model
         'worker_profile_id',
         'type',
         'message',
+        'rejection_message',
         'status',
         'responded_by',
         'responded_at',
         'completed_at',
+        'ended_at',
     ];
 
     protected $casts = [
         'responded_at' => 'datetime',
         'completed_at' => 'datetime',
+        'ended_at' => 'datetime',
     ];
 
     public function mission()

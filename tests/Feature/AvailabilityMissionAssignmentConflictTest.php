@@ -39,10 +39,22 @@ class AvailabilityMissionAssignmentConflictTest extends TestCase
         ];
     }
 
+    public function test_an_accepted_worker_on_an_open_mission_cannot_create_availability_during_mission_dates(): void
+    {
+        [$manager, $worker] = $this->companyManagerAndWorker();
+        $this->createAssignment($manager, $worker, 'apply', '2026-10-15', '2026-10-17', 'accepted', 'open');
+
+        $this->actingAs($manager)->from(route('availability.index'))->post(route('availability.store'), [
+            ...$this->availabilityData($worker, '2026-10-16'),
+        ])->assertSessionHasErrors('date');
+
+        $this->assertDatabaseCount('availabilities', 0);
+    }
+
     public function test_an_active_assignment_blocks_each_date_in_its_inclusive_mission_range(): void
     {
         [$manager, $worker] = $this->companyManagerAndWorker();
-        $this->createAssignment($manager, $worker, 'apply', '2026-10-15', '2026-10-17');
+        $this->createAssignment($manager, $worker, 'apply', '2026-10-15', '2026-10-17', 'accepted', 'open');
 
         foreach (['2026-10-15', '2026-10-16', '2026-10-17'] as $date) {
             $response = $this->actingAs($manager)->from(route('availability.index'))->post(route('availability.store'), [
@@ -55,10 +67,10 @@ class AvailabilityMissionAssignmentConflictTest extends TestCase
         $this->assertDatabaseCount('availabilities', 0);
     }
 
-    public function test_dates_before_and_after_an_active_assignment_are_allowed(): void
+    public function test_dates_immediately_before_and_after_an_accepted_open_mission_are_allowed(): void
     {
         [$manager, $worker] = $this->companyManagerAndWorker();
-        $this->createAssignment($manager, $worker, 'invite', '2026-10-15', '2026-10-17');
+        $this->createAssignment($manager, $worker, 'invite', '2026-10-15', '2026-10-17', 'accepted', 'open');
 
         $this->actingAs($manager)->post(route('availability.store'), [
             ...$this->availabilityData($worker, '2026-10-14'),
@@ -90,8 +102,10 @@ class AvailabilityMissionAssignmentConflictTest extends TestCase
         return [
             'pending request' => ['pending', 'open'],
             'rejected request' => ['rejected', 'open'],
-            'cancelled request' => ['cancelled', 'cancelled'],
-            'completed assignment history' => ['completed', 'completed'],
+            'cancelled request' => ['cancelled', 'open'],
+            'completed request' => ['completed', 'open'],
+            'completed mission' => ['accepted', 'completed'],
+            'cancelled mission' => ['ongoing', 'cancelled'],
         ];
     }
 
@@ -109,11 +123,11 @@ class AvailabilityMissionAssignmentConflictTest extends TestCase
         $this->assertDatabaseCount('availabilities', 1);
     }
 
-    public function test_an_update_into_an_active_assignment_date_is_rejected(): void
+    public function test_an_update_into_an_accepted_open_mission_date_is_rejected(): void
     {
         [$manager, $worker] = $this->companyManagerAndWorker();
         $availability = Availability::create($this->availabilityData($worker, '2026-10-14'));
-        $this->createAssignment($manager, $worker, 'apply', '2026-10-15', '2026-10-17');
+        $this->createAssignment($manager, $worker, 'apply', '2026-10-15', '2026-10-17', 'accepted', 'open');
 
         $response = $this->actingAs($manager)->from(route('availability.index'))->put(route('availability.update', $availability), [
             ...$this->availabilityData($worker, '2026-10-16'),
@@ -124,6 +138,18 @@ class AvailabilityMissionAssignmentConflictTest extends TestCase
             'id' => $availability->id,
             'date' => '2026-10-14',
         ]);
+    }
+
+    public function test_an_ongoing_worker_on_an_in_progress_mission_remains_blocked(): void
+    {
+        [$manager, $worker] = $this->companyManagerAndWorker();
+        $this->createAssignment($manager, $worker, 'apply', '2026-10-15', '2026-10-17', 'ongoing', 'in_progress');
+
+        $this->actingAs($manager)->from(route('availability.index'))->post(route('availability.store'), [
+            ...$this->availabilityData($worker, '2026-10-16'),
+        ])->assertSessionHasErrors('date');
+
+        $this->assertDatabaseCount('availabilities', 0);
     }
 
     private function companyManagerAndWorker(): array
@@ -156,7 +182,7 @@ class AvailabilityMissionAssignmentConflictTest extends TestCase
         string $type,
         string $startDate,
         string $endDate,
-        string $requestStatus = 'accepted',
+        string $requestStatus = 'ongoing',
         string $missionStatus = 'in_progress'
     ): WorkerRequest {
         $externalManager = User::factory()->create(['role_id' => $workerManager->role_id]);

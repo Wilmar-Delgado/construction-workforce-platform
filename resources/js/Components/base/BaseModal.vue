@@ -71,7 +71,7 @@ const props = defineProps({
     title: String,
     maxWidth: {
         type: String,
-        default: '500px'
+        default: '800px'
     }
 });
 

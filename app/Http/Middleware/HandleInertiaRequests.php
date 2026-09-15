@@ -26,6 +26,7 @@ class HandleInertiaRequests extends Middleware
             
             'locale' => App::getLocale(),
             'translations' => trans('app'),
+            'timezoneOptions' => config('timezones.supported'),
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

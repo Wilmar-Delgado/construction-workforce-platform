@@ -146,7 +146,7 @@ const openSettings = () => {
                 <div class="quick-buttons">
                     <button @click="openMissionManagement">{{ t('home_page.mission_hub') }}</button>
                     <button @click="openProfiles">{{ isSelfEmployed ? t('home_page.manage_profile') : t('home_page.manage_profiles') }}</button>
-                    <button @click="openMissions">{{ t('home_page.manage_missions') }}</button>
+                    <button @click="isSelfEmployed ? openFindMissions() : openMissions()">{{ isSelfEmployed ? t('find_missions') : t('home_page.manage_missions') }}</button>
                     <button @click="openSettings">{{ t('home_page.settings') }}</button>
                 </div>
             </div>

@@ -35,13 +35,10 @@ class WorkerRequestController extends Controller
 
         $companyId = auth()->user()->company_id;
 
-        // Prevent duplicate requests
+        // A worker has one durable request record per mission, regardless of request type or status.
         $alreadyExists = WorkerRequest::where([
             'mission_id'        => $validated['mission_id'],
             'worker_profile_id' => $worker->id,
-            'company_id'        => $companyId,
-            'type'              => 'invite',
-            'status'            => 'pending',
         ])->exists();
 
         if ($alreadyExists) {

@@ -13,7 +13,16 @@ class Company extends Model
         'phone',
         'address',
         'owner_id',
+        'timezone',
     ];
+
+    public function businessTimezone(): string
+    {
+        return is_string($this->timezone)
+            && array_key_exists($this->timezone, config('timezones.supported'))
+            ? $this->timezone
+            : 'UTC';
+    }
 
     public function owner()
     {

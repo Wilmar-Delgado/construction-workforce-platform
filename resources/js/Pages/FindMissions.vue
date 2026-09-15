@@ -8,6 +8,7 @@ import BasePagination from '@/Components/base/BasePagination.vue';
 import BaseModal from '@/Components/base/BaseModal.vue';
 import BaseToast from '@/Components/base/BaseToast.vue';
 import { useTranslate } from '@/composables/useTranslate';
+import { useDateTime } from '@/composables/useDateTime';
 import { useFilters } from '@/composables/useFilters';
 import { jobOptions } from '@/constants/jobs';
 import {
@@ -17,6 +18,7 @@ import {
     CalendarDays,
     DollarSign,
     Clock3,
+    Users,
     Send,
     Info
 } from 'lucide-vue-next';
@@ -25,6 +27,7 @@ import {
 /* GLOBAL / PROPS */
 /* ============================= */
 const { t } = useTranslate();
+const { calendarDayDifference, formatDateOnly, formatTimestamp } = useDateTime();
 const page = usePage();
 const authStore = useAuthStore();
 
@@ -33,6 +36,7 @@ const props = defineProps({
     locations: Array,
     filters: Object,
     workers: Array,
+    existingRequests: Array,
     selectedMission: Object,
 });
 
@@ -89,6 +93,18 @@ const form = useForm({
     message: '',
 });
 
+function resetRequestForm() {
+    form.reset();
+    form.clearErrors();
+}
+
+watch(showRequestModal, (isOpen) => {
+    if (!isOpen) {
+        resetRequestForm();
+        selectedMission.value = null;
+    }
+});
+
 const filteredWorkers = computed(() => {
     if (!selectedMission.value) return [];
 
@@ -97,10 +113,59 @@ const filteredWorkers = computed(() => {
     );
 });
 
-function openRequestModal(mission) {
-    selectedMission.value = mission;
+function workerAlreadyRequested(workerId, missionId = selectedMission.value?.id) {
+    if (!missionId) return false;
 
-    form.reset();
+    return props.existingRequests.some((request) =>
+        String(request.mission_id) === String(missionId)
+        && String(request.worker_profile_id) === String(workerId)
+    );
+}
+
+const selectedWorkerAlreadyRequested = computed(() =>
+    form.worker_profile_id !== ''
+    && workerAlreadyRequested(form.worker_profile_id)
+);
+
+const isSelfEmployed = computed(() =>
+    authStore.user.role?.name === 'self_employed'
+    && !authStore.user.company
+);
+
+const selfEmployedWorker = computed(() =>
+    props.workers.find((worker) => worker.user_id === authStore.user.id)
+);
+
+function selfEmployedRequestForMission(mission) {
+    if (!isSelfEmployed.value || !selfEmployedWorker.value) {
+        return null;
+    }
+
+    return props.existingRequests.find((request) =>
+        String(request.mission_id) === String(mission.id)
+        && String(request.worker_profile_id) === String(selfEmployedWorker.value.id)
+    ) ?? null;
+}
+
+function selfEmployedRequestLabel(mission) {
+    const request = selfEmployedRequestForMission(mission);
+
+    if (!request) {
+        return '';
+    }
+
+    if (request.status === 'pending') {
+        return request.type === 'invite'
+            ? t('find_missions_page.mission_card.invited')
+            : t('find_missions_page.mission_card.applied');
+    }
+
+    return t(`common.statuses.${request.status}`);
+}
+
+function openRequestModal(mission) {
+    resetRequestForm();
+    selectedMission.value = mission;
 
     // Auto-select if self-employed
     if (!authStore.user.company) {
@@ -115,9 +180,7 @@ function openRequestModal(mission) {
 }
 
 function formatDate(date) {
-    if (!date) return '';
-
-    return new Date(date).toLocaleDateString(page.props.locale === 'fr' ? 'fr-CA' : 'en-CA', {
+    return formatDateOnly(date, {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
@@ -127,10 +190,7 @@ function formatDate(date) {
 function missionDuration(mission) {
     if (!mission.start_date || !mission.end_date) return '-';
 
-    const start = new Date(mission.start_date);
-    const end = new Date(mission.end_date);
-
-    const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const diff = calendarDayDifference(mission.start_date, mission.end_date);
 
     return t(
         diff === 1
@@ -140,11 +200,17 @@ function missionDuration(mission) {
     );
 }
 
+function staffingProgress(mission) {
+    return t('find_missions_page.mission_card.capacity', {
+        committed: mission.committed_worker_count ?? 0,
+        required: mission.workers ?? 0,
+    });
+}
+
 function submitRequest() {
     form.post(route('request-mission.store', selectedMission.value.id), {
         onSuccess: () => {
             showRequestModal.value = false;
-            form.reset();
         }
     });
 }
@@ -264,6 +330,18 @@ function submitRequest() {
 
                             <strong>{{ formatDate(mission.start_date) }}</strong>
                         </div>
+
+                        <div class="stat-box">
+                            <div class="stat-top">
+                                <Users class="mini-icon" />
+                                <small>{{ t('find_missions_page.mission_card.workers') }}</small>
+                            </div>
+
+                            <strong>{{ staffingProgress(mission) }}</strong>
+                            <span class="stat-secondary">
+                                {{ t('find_missions_page.mission_card.remaining_capacity', { count: mission.remaining_capacity }) }}
+                            </span>
+                        </div>
                     </div>
 
                     <!-- DESCRIPTION -->
@@ -288,13 +366,20 @@ function submitRequest() {
                         </div>
                     </div>
 
-                    <!-- FOOTER -->
-                    <div class="mission-footer">
+                        <!-- FOOTER -->
+                        <div class="mission-footer">
                         <small>
-                            {{ t('find_missions_page.mission_card.posted_by') }} {{ mission.hiring_company?.name }} <span>• {{ formatDate(mission.created_at) }}</span>
+                            {{ t('find_missions_page.mission_card.posted_by') }} {{ mission.hiring_company?.name }} <span>• {{ formatTimestamp(mission.created_at, { year: 'numeric', month: 'short', day: 'numeric' }) }}</span>
                         </small>
 
-                        <button class="btn-secondary" @click="openRequestModal(mission)">
+                        <span
+                            v-if="selfEmployedRequestForMission(mission)"
+                            class="btn-secondary mission-request-status"
+                        >
+                            {{ selfEmployedRequestLabel(mission) }}
+                        </span>
+
+                        <button v-else class="btn-secondary" @click="openRequestModal(mission)">
                             <Send class="btn-icon" />
                             {{ t('find_missions_page.mission_card.request_join') }}
                         </button>
@@ -307,7 +392,6 @@ function submitRequest() {
             <BaseModal
                 v-model="showMissionDetails"
                 :title="t('find_missions_page.details_modal.title')"
-                max-width="900px"
             >
                 <div v-if="selectedMissionDetails">
                     <div class="request-mission">
@@ -451,8 +535,9 @@ function submitRequest() {
                                 v-for="worker in filteredWorkers"
                                 :key="worker.id"
                                 :value="worker.id"
+                                :disabled="workerAlreadyRequested(worker.id)"
                             >
-                                {{ worker.name }} ({{ t(`profiles_page.jobs.${worker.job}`) }})
+                                {{ worker.name }} ({{ t(`profiles_page.jobs.${worker.job}`) }}){{ workerAlreadyRequested(worker.id) ? ` — ${t('find_missions_page.request_modal.already_requested')}` : '' }}
                             </option>
                         </select>
 
@@ -470,6 +555,10 @@ function submitRequest() {
 
                         <p v-if="form.errors.worker_profile_id" class="error">
                             {{ form.errors.worker_profile_id }}
+                        </p>
+
+                        <p v-else-if="selectedWorkerAlreadyRequested" class="error">
+                            {{ t('find_missions_page.request_modal.already_requested_for_mission') }}
                         </p>
                     </div>
 
@@ -502,7 +591,7 @@ function submitRequest() {
                         type="submit"
                         form="request-form"
                         class="btn-primary"
-                        :disabled="form.processing || !form.worker_profile_id"
+                        :disabled="form.processing || !form.worker_profile_id || selectedWorkerAlreadyRequested"
                     >
                         <Send class="btn-icon" />
                         {{ form.processing ? t('find_missions_page.request_modal.sending') : t('find_missions_page.request_modal.send') }}

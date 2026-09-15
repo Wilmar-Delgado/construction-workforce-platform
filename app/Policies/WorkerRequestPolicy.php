@@ -32,13 +32,13 @@ class WorkerRequestPolicy
     {
         return $this->isCompanyManager($user)
             && $mission->hiring_company_id === $user->company_id
-            && $mission->status === 'open'
+            && $mission->isActionableForStaffing()
             && $worker->company_id !== $user->company_id;
     }
 
     public function createApplication(User $user, Mission $mission, WorkerProfile $worker): bool
     {
-        if ($mission->status !== 'open') {
+        if (! $mission->isActionableForStaffing()) {
             return false;
         }
 
@@ -59,14 +59,20 @@ class WorkerRequestPolicy
             return false;
         }
 
-        return $action !== 'accept' || $workerRequest->mission?->status === 'open';
+        return $action !== 'accept' || $workerRequest->mission?->isActionableForStaffing();
     }
 
     public function complete(User $user, WorkerRequest $workerRequest): bool
     {
-        return $workerRequest->status === 'accepted'
+        return in_array($workerRequest->status, ['accepted', 'ongoing'], true)
             && $this->isCompanyManager($user)
-            && $workerRequest->mission?->hiring_company_id === $user->company_id;
+            && $workerRequest->mission?->hiring_company_id === $user->company_id
+            && $workerRequest->mission?->status === 'in_progress';
+    }
+
+    public function endEarly(User $user, WorkerRequest $workerRequest): bool
+    {
+        return $this->complete($user, $workerRequest);
     }
 
     private function isOriginator(User $user, WorkerRequest $workerRequest): bool

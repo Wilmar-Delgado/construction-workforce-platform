@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Mission;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
@@ -20,13 +22,17 @@ class MissionController extends Controller
         $selectedMission = null;
 
         if ($request->filled('mission')) {
-            $selectedMission = Mission::with('requirements')
+            $selectedMission = Mission::notArchived()
+                ->withCommittedWorkerCount()
+                ->with('requirements')
                 ->findOrFail($request->integer('mission'));
 
             $this->authorize('view', $selectedMission);
         }
 
-        $baseQuery = Mission::with('requirements')
+        $baseQuery = Mission::notArchived()
+            ->withCommittedWorkerCount()
+            ->with('requirements')
             ->where('hiring_company_id', auth()->user()->company_id);
 
         // =========================
@@ -60,10 +66,17 @@ class MissionController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $missions->through(function (Mission $mission): Mission {
+            $mission->setAttribute('can_delete', $mission->canBePermanentlyDeleted());
+            $mission->setAttribute('can_archive', $mission->canBeArchived());
+
+            return $mission;
+        });
+
         // =========================
         // COUNTS
         // =========================
-        $companyMissions = Mission::where(
+        $companyMissions = Mission::notArchived()->where(
             'hiring_company_id',
             auth()->user()->company_id
         );
@@ -124,7 +137,7 @@ class MissionController extends Controller
             'workers' => 'nullable|integer|min:1',
             'hourly_rate' => 'nullable|numeric|min:0',
 
-            'status' => 'required|in:draft,open,in_progress,completed,cancelled',
+            'status' => 'required|in:draft,open',
 
             'requirements' => 'nullable|array',
             'requirements.*' => 'string|max:255',
@@ -172,26 +185,34 @@ class MissionController extends Controller
             'workers' => 'nullable|integer|min:1',
             'hourly_rate' => 'nullable|numeric|min:0',
 
-            'status' => 'required|in:draft,open,in_progress,completed,cancelled',
+            'status' => 'required|in:draft,open',
 
             'requirements' => 'nullable|array',
             'requirements.*' => 'string|max:255',
         ]);
 
-        $mission->update(
-            collect($validated)->except('requirements')->toArray()
-        );
+        DB::transaction(function () use ($mission, $validated): void {
+            $lockedMission = Mission::query()
+                ->lockForUpdate()
+                ->findOrFail($mission->id);
 
-        // replace old requirements
-        $mission->requirements()->delete();
+            $this->ensureStandardUpdateIsAllowed($lockedMission, $validated);
 
-        if (!empty($validated['requirements'])) {
-            $mission->requirements()->createMany(
-                collect($validated['requirements'])->map(fn ($req) => [
-                    'name' => $req
-                ])->toArray()
+            $lockedMission->update(
+                collect($validated)->except('requirements')->toArray()
             );
-        }
+
+            // Replace old requirements only after the lifecycle/capacity checks pass.
+            $lockedMission->requirements()->delete();
+
+            if (! empty($validated['requirements'])) {
+                $lockedMission->requirements()->createMany(
+                    collect($validated['requirements'])->map(fn ($requirement) => [
+                        'name' => $requirement,
+                    ])->toArray()
+                );
+            }
+        });
 
         return redirect()->route('missions.index')->with('success', 'Mission successfully updated.');
     }
@@ -202,7 +223,19 @@ class MissionController extends Controller
 
         $this->authorize('delete', $mission);
 
-        $mission->delete();
+        DB::transaction(function () use ($mission): void {
+            $lockedMission = Mission::query()
+                ->lockForUpdate()
+                ->findOrFail($mission->id);
+
+            if (! $lockedMission->canBePermanentlyDeleted()) {
+                throw ValidationException::withMessages([
+                    'mission' => __('app.missions_page.validation.cannot_delete_mission'),
+                ]);
+            }
+
+            $lockedMission->delete();
+        });
 
         return redirect()->route('missions.index')->with('success', 'Mission successfully deleted.');
     }
@@ -211,12 +244,51 @@ class MissionController extends Controller
     {
         $this->authorize('archive', $mission);
 
-        $mission->update([
-            'archived_at' => now(),
-        ]);
+        DB::transaction(function () use ($mission): void {
+            $lockedMission = Mission::query()
+                ->lockForUpdate()
+                ->findOrFail($mission->id);
+
+            if (! $lockedMission->canBeArchived()) {
+                throw ValidationException::withMessages([
+                    'mission' => __('app.missions_page.validation.cannot_archive_mission'),
+                ]);
+            }
+
+            $lockedMission->update([
+                'archived_at' => now(),
+            ]);
+        });
 
         return redirect()
             ->route('missions.index')
             ->with('success', 'Mission successfully archived.');
+    }
+
+    private function ensureStandardUpdateIsAllowed(Mission $mission, array $validated): void
+    {
+        if (! in_array($mission->status, ['draft', 'open'], true)) {
+            throw ValidationException::withMessages([
+                'status' => __('app.missions_page.validation.lifecycle_managed_status'),
+            ]);
+        }
+
+        if ($mission->status === 'open' && $validated['status'] !== 'open') {
+            throw ValidationException::withMessages([
+                'status' => __('app.missions_page.validation.open_mission_must_remain_open'),
+            ]);
+        }
+
+        $committedWorkerCount = $mission->committedRequests()->count();
+        $requestedCapacity = $validated['workers'] ?? null;
+
+        if ($committedWorkerCount > 0
+            && ($requestedCapacity === null || (int) $requestedCapacity < $committedWorkerCount)) {
+            throw ValidationException::withMessages([
+                'workers' => __('app.missions_page.validation.capacity_below_committed', [
+                    'count' => $committedWorkerCount,
+                ]),
+            ]);
+        }
     }
 }

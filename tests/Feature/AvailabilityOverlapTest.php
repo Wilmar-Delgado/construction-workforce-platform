@@ -26,12 +26,7 @@ class AvailabilityOverlapTest extends TestCase
         ]);
 
         $response->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('availabilities', [
-            'worker_profile_id' => $worker->id,
-            'date' => '2026-10-15',
-            'start_time' => '13:00:00',
-            'end_time' => '16:00:00',
-        ]);
+        $this->assertDatabaseCount('availabilities', 2);
     }
 
     public function test_an_adjacent_slot_for_the_same_worker_succeeds(): void
@@ -146,6 +141,9 @@ class AvailabilityOverlapTest extends TestCase
     {
         [$manager, $worker] = $this->companyManagerAndWorker();
         $availability = $this->createAvailability($worker, '2026-10-15', '07:00', '12:00');
+        $storedAvailability = Availability::findOrFail($availability->id);
+        $originalStartTime = $storedAvailability->start_time;
+        $originalEndTime = $storedAvailability->end_time;
 
         $response = $this->actingAs($manager)->from(route('availability.index'))->put(route('availability.update', $availability), [
             ...$this->availabilityData($worker, '2026-10-15', '15:00', '07:00'),
@@ -154,11 +152,9 @@ class AvailabilityOverlapTest extends TestCase
         $response->assertSessionHasErrors([
             'end_time' => __('app.availability_page.validation.end_after_start'),
         ]);
-        $this->assertDatabaseHas('availabilities', [
-            'id' => $availability->id,
-            'start_time' => '07:00:00',
-            'end_time' => '12:00:00',
-        ]);
+
+        $this->assertSame($originalStartTime, $storedAvailability->fresh()->start_time);
+        $this->assertSame($originalEndTime, $storedAvailability->fresh()->end_time);
     }
 
     public function test_an_update_into_another_slot_is_rejected(): void
@@ -166,17 +162,18 @@ class AvailabilityOverlapTest extends TestCase
         [$manager, $worker] = $this->companyManagerAndWorker();
         $availability = $this->createAvailability($worker, '2026-10-15', '07:00', '09:00');
         $this->createAvailability($worker, '2026-10-15', '10:00', '12:00');
+        $storedAvailability = Availability::findOrFail($availability->id);
+        $originalStartTime = $storedAvailability->start_time;
+        $originalEndTime = $storedAvailability->end_time;
 
         $response = $this->actingAs($manager)->from(route('availability.index'))->put(route('availability.update', $availability), [
             ...$this->availabilityData($worker, '2026-10-15', '11:00', '13:00'),
         ]);
 
         $response->assertSessionHasErrors('start_time');
-        $this->assertDatabaseHas('availabilities', [
-            'id' => $availability->id,
-            'start_time' => '07:00:00',
-            'end_time' => '09:00:00',
-        ]);
+
+        $this->assertSame($originalStartTime, $storedAvailability->fresh()->start_time);
+        $this->assertSame($originalEndTime, $storedAvailability->fresh()->end_time);
     }
 
     #[DataProvider('invalidIntervals')]

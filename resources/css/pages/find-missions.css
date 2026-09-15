@@ -54,7 +54,7 @@
 
 .mission-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     background: #f3f4f6;
     border-radius: 12px;
@@ -71,6 +71,13 @@
 .stat-box strong {
     font-size: 16px;
     font-weight: 700;
+}
+
+.stat-secondary {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: #6b7280;
 }
 
 .mission-description {
@@ -91,6 +98,12 @@
 .btn-icon {
     width: 16px;
     height: 16px;
+}
+
+.mission-request-status {
+    cursor: default;
+    opacity: 0.7;
+    pointer-events: none;
 }
 
 /* ICONS */
@@ -163,6 +176,12 @@
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+@media (max-width: 992px) {
+    .mission-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 768px) {

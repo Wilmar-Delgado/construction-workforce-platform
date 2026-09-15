@@ -1,1423 +1,276 @@
 <script setup>
 import SidebarLayout from '@/Layouts/SidebarLayout.vue';
-import { Head, usePage, router } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import { useTranslate } from '@/composables/useTranslate';
+import { useDateTime } from '@/composables/useDateTime';
 import BasePagination from '@/Components/base/BasePagination.vue';
 import BaseModal from '@/Components/base/BaseModal.vue';
+import ConfirmModal from '@/Components/base/ConfirmModal.vue';
 import BaseToast from '@/Components/base/BaseToast.vue';
-import MissionSection from '@/Components/mission-management/MissionSection.vue';
-import {
-    User,
-    CalendarDays,
-    DollarSign,
-    Mail,
-    Info,
-    Eye,
-    CheckCircle2,
-    XCircle,
-    Star
-} from 'lucide-vue-next';
+import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, Eye, Info, Mail, Star, User, Users, XCircle } from 'lucide-vue-next';
 
-/* ============================= */
-/* GLOBAL / PROPS */
-/* ============================= */
 const { t } = useTranslate();
+const { formatDateOnly, formatTimestamp } = useDateTime();
 const page = usePage();
-
-/* =========================
-   PAGINATED DATA
-========================= */
-const pendingSent = computed(() => page.props.data.pending.sent.data || []);
-const pendingReceived = computed(() => page.props.data.pending.received.data || []);
-const pendingJoin = computed(() => page.props.data.pending.join.data || []);
-
-const ongoingCreated = computed(() => page.props.data.ongoing.created.data || []);
-const ongoingJoined = computed(() => page.props.data.ongoing.joined.data || []);
-
-const completedCreated = computed(() => page.props.data.completed.created.data || []);
-const completedJoined = computed(() => page.props.data.completed.joined.data || []);
-
-const activeTab = ref('pending');
-
-/* =========================
-   SECTION COLLAPSE
-========================= */
-const sectionState = ref({
-    pending_sent: true,
-    pending_received: true,
-    pending_join: true,
-
-    ongoing_created: true,
-    ongoing_joined: true,
-
-    completed_created: true,
-    completed_joined: true
-});
-
+const activeTab = ref('requests');
+const expandedLists = ref({});
 const showRequestModal = ref(false);
 const selectedRequest = ref(null);
-const requestAction = ref(null); // accept | reject
+const requestAction = ref(null);
 const acceptanceMessage = ref('');
-const rejectionReason = ref('');
-
+const rejectionMessage = ref('');
+const showRequestHistoryModal = ref(false);
+const selectedRequestHistory = ref(null);
 const showCompleteModal = ref(false);
-const selectedMission = ref(null);
-
+const selectedAssignment = ref(null);
+const assignmentResolutionAction = ref('complete');
 const missionRating = ref(0);
 const missionComment = ref('');
-
-const flashSuccess = computed(() => page.props.flash?.success);
-const flashError = computed(() => page.props.flash?.error);
+const showStopRecruitingModal = ref(false);
+const showStartMissionModal = ref(false);
+const selectedLifecycleMission = ref(null);
 const toastKey = ref(0);
 
-watch(
-    () => page.props.flash,
-    () => toastKey.value++,
-    { deep: true }
-);
+const isSelfEmployed = computed(() => page.props.auth?.user?.role?.name === 'self_employed' && page.props.auth?.user?.company_id === null);
+const missionData = computed(() => page.props.missionData ?? { tabs: {}, counts: {} });
+const activePaginator = computed(() => missionData.value.tabs?.[activeTab.value] ?? { data: [], links: [], total: 0 });
+const activeMissions = computed(() => activePaginator.value.data ?? []);
+const tabs = computed(() => [
+    ['requests', t('mission_management_page.tabs.requests')],
+    ['staffing', isSelfEmployed.value ? t('mission_management_page.tabs.assignments') : t('mission_management_page.tabs.staffing')],
+    ['in_progress', t('mission_management_page.tabs.in_progress')],
+    ['completed', t('mission_management_page.tabs.completed')],
+]);
 
-/* =========================
-   COUNTS
-========================= */
-const counts = computed(() => ({
+watch(() => page.props.flash, () => toastKey.value++, { deep: true });
 
-    pending:
-        page.props.data.pending.sent.total +
-        page.props.data.pending.received.total +
-        page.props.data.pending.join.total,
-
-    ongoing:
-        page.props.data.ongoing.created.total +
-        page.props.data.ongoing.joined.total,
-
-    completed:
-        page.props.data.completed.created.total +
-        page.props.data.completed.joined.total
-}));
-
-const isEmpty = (list) => !list?.total;
-
-/* =========================
-   ACTIONS
-========================= */
-function toggleSection(section) {
-    sectionState.value[section] = !sectionState.value[section];
+const statusLabel = (status) => t(`common.statuses.${status}`);
+const dateFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+const formatDate = (date) => formatDateOnly(date, dateFormatOptions);
+const formatTimestampDate = (timestamp) => formatTimestamp(timestamp, dateFormatOptions);
+const workerContext = (worker) => worker?.company?.name ?? t('common.self_employed');
+const listKey = (mission) => `${activeTab.value}:${mission.id}`;
+const isListExpanded = (mission) => expandedLists.value[listKey(mission)] ?? true;
+function toggleList(mission) { expandedLists.value[listKey(mission)] = !isListExpanded(mission); }
+function relationshipLabel(mission) { return mission.management_context?.is_own_mission ? t('mission_management_page.tabs.your_mission') : t('mission_management_page.tabs.external_assignment'); }
+function relationshipClass(mission) { return mission.management_context?.is_own_mission ? 'your-mission' : 'external-assignment'; }
+function staffingProgress(mission) { return t('mission_management_page.labels.capacity', { committed: mission.committed_worker_count ?? 0, required: mission.workers ?? 0 }); }
+function remainingCapacity(mission) { return t('mission_management_page.labels.remaining', { count: mission.remaining_capacity ?? 0 }); }
+function recruitingState(mission) { return mission.management_context?.recruiting_state === 'staffing_closed' ? t('mission_management_page.labels.staffing_closed') : t('mission_management_page.labels.recruiting'); }
+function listLabel() {
+    return {
+        requests: t('mission_management_page.labels.requests'),
+        staffing: t('mission_management_page.labels.assigned_workers'),
+        in_progress: t('mission_management_page.labels.assignments'),
+        completed: isSelfEmployed.value ? t('mission_management_page.sections.completed_assignments') : t('mission_management_page.labels.worker_outcomes'),
+    }[activeTab.value];
 }
+function emptyTitle() {
+    return {
+        requests: t('mission_management_page.empty_states.no_requests'),
+        staffing: isSelfEmployed.value
+            ? t('mission_management_page.empty_states.no_assignments')
+            : t('mission_management_page.empty_states.no_staffing_missions'),
+        in_progress: t('mission_management_page.empty_states.no_in_progress_missions'),
+        completed: t('mission_management_page.empty_states.no_completed_missions'),
+    }[activeTab.value];
+}
+function emptyDescription() {
+    return {
+        requests: isSelfEmployed.value
+            ? t('mission_management_page.empty_states.self_employed_requests_description')
+            : t('mission_management_page.empty_states.requests_description'),
+        staffing: isSelfEmployed.value
+            ? t('mission_management_page.empty_states.assignments_description')
+            : t('mission_management_page.empty_states.staffing_description'),
+        in_progress: t('mission_management_page.empty_states.in_progress_description'),
+        completed: t('mission_management_page.empty_states.completed_description'),
+    }[activeTab.value];
+}
+const requestTypeLabel = (request) => request.type === 'invite' ? t('mission_management_page.labels.invitation') : t('mission_management_page.labels.application');
+const directionLabel = (request) => request.management_context?.direction === 'incoming' ? t('mission_management_page.labels.incoming') : t('mission_management_page.labels.outgoing');
+const requestResponseDateLabel = (request) => request.status === 'rejected'
+    ? t('mission_management_page.labels.rejected_on')
+    : t('mission_management_page.labels.cancelled_on');
+const outcomeDate = (request) => request.status === 'ended_early' ? request.ended_at : request.completed_at;
+const outcomeDateLabel = (request) => request.status === 'ended_early' ? t('mission_management_page.labels.ended_on') : t('mission_management_page.labels.completed_on');
+const reviewerRoleLabel = (reviewer) => reviewer?.role?.name ? t(`mission_management_page.roles.${reviewer.role.name}`) : '';
 
-function acceptRequest(req) {
-    selectedRequest.value = req;
-    requestAction.value = 'accept';
+function requestCreatorName(request) {
+    return request.requester?.name ?? request.worker?.user?.name ?? request.worker?.name ?? t('mission_management_page.response_modal.company_contact_fallback');
+}
+function requestCreatorRoleLabel(request) { return request.requester?.role?.name ? t(`mission_management_page.roles.${request.requester.role.name}`) : t('common.self_employed'); }
+function requestIsSelfEmployed(request) { return request.requester?.role?.name === 'self_employed'; }
+function withMission(mission, request) { return { ...request, mission }; }
 
-    const isSelfEmployed = !req.worker.company_id;
+function openRequestModal(mission, request, action) {
+    selectedRequest.value = withMission(mission, request);
+    requestAction.value = action;
+    const contact = requestCreatorName(selectedRequest.value);
 
-    if (isSelfEmployed) {
-        acceptanceMessage.value = t(
-            'mission_management_page.response_modal.acceptance_message_self_employed',
-            { worker: req.worker.name, mission: req.mission.title }
-        );
+    if (action === 'reject') {
+        rejectionMessage.value = requestIsSelfEmployed(selectedRequest.value)
+            ? t('mission_management_page.response_modal.rejection_message_self_employed', { contact, mission: mission.title })
+            : t('mission_management_page.response_modal.rejection_message_company', { contact, worker: request.worker.name, mission: mission.title });
     } else {
-        const contactName = req.worker.company?.owner?.name ?? t('mission_management_page.response_modal.company_contact_fallback');
-        acceptanceMessage.value = t(
-            'mission_management_page.response_modal.acceptance_message_company',
-            { contact: contactName, worker: req.worker.name, mission: req.mission.title }
-        );
+        acceptanceMessage.value = requestIsSelfEmployed(selectedRequest.value)
+            ? t('mission_management_page.response_modal.acceptance_message_self_employed', { contact, mission: mission.title })
+            : t('mission_management_page.response_modal.acceptance_message_company', { contact, worker: request.worker.name, mission: mission.title });
     }
     showRequestModal.value = true;
 }
-
-function rejectRequest(req) {
-    selectedRequest.value = req;
-    requestAction.value = 'reject';
-
-    rejectionReason.value = '';
-
-    showRequestModal.value = true;
-}
-
 function confirmRequestAction() {
-    router.post(`/mission-management/requests/${selectedRequest.value.id}/respond`,
-        {
-            action: requestAction.value,
-            message: acceptanceMessage.value,
-            reason: rejectionReason.value
-        },
-        {
-            preserveScroll: true,
-
-            onSuccess: () => {
-                showRequestModal.value = false;
-            }
-        }
-    );
+    router.post(route('mission-management.respond', selectedRequest.value.id), {
+        action: requestAction.value,
+        message: requestAction.value === 'reject' ? rejectionMessage.value : acceptanceMessage.value,
+    }, { preserveScroll: true, onSuccess: () => { showRequestModal.value = false; selectedRequest.value = null; } });
 }
-
-function completeMission(req) {
-    selectedMission.value = req;
-
+function openRequestHistoryModal(mission, request) { selectedRequestHistory.value = withMission(mission, request); showRequestHistoryModal.value = true; }
+function openAssignmentModal(mission, request, action) {
+    selectedAssignment.value = withMission(mission, request);
+    assignmentResolutionAction.value = action;
     missionRating.value = 0;
     missionComment.value = '';
-
     showCompleteModal.value = true;
 }
-
-function completeMissionRequest() {
-    router.post(
-        `/mission-management/requests/${selectedMission.value.id}/complete`,
-        {
-            rating: missionRating.value,
-            comment: missionComment.value
-        },
-        {
-            preserveScroll: true,
-
-            onSuccess: () => {
-                showCompleteModal.value = false;
-            }
-        }
-    );
+function confirmAssignmentAction() {
+    router.post(route(assignmentResolutionAction.value === 'end_early' ? 'mission-management.end-early' : 'mission-management.complete', selectedAssignment.value.id), {
+        rating: missionRating.value,
+        comment: missionComment.value,
+    }, { preserveScroll: true, onSuccess: () => { showCompleteModal.value = false; selectedAssignment.value = null; } });
 }
-
-function viewOwnMission(req) {
-    router.get(route('missions.index'), {
-        mission: req.mission.id,
-    });
+function openStopRecruitingModal(mission) { selectedLifecycleMission.value = mission; showStopRecruitingModal.value = true; }
+function openStartMissionModal(mission) { selectedLifecycleMission.value = mission; showStartMissionModal.value = true; }
+function stopRecruiting() { router.post(route('mission-management.close-recruiting', selectedLifecycleMission.value.id), {}, { preserveScroll: true, onSuccess: () => { showStopRecruitingModal.value = false; selectedLifecycleMission.value = null; } }); }
+function startMission() { router.post(route('mission-management.start', selectedLifecycleMission.value.id), {}, { preserveScroll: true, onSuccess: () => { showStartMissionModal.value = false; selectedLifecycleMission.value = null; } }); }
+function viewMission(mission, request = null) {
+    router.get(route(mission.management_context?.is_own_mission ? 'missions.index' : 'find-missions.index'), { mission: mission.id, ...(request ? { request: request.id } : {}) });
 }
-
-function viewExternalMission(req) {
-    router.get(route('find-missions.index'), {
-        mission: req.mission.id,
-        request: req.id,
-    });
-}
-
-function viewWorkerProfile(req) {
-    router.get(route('find-workers.index'), {
-        worker: req.worker.id,
-        request: req.id,
-    });
-}
-
-function formatDate(date) {
-
-    if (!date) {
-        return '';
-    }
-
-    return new Date(date).toLocaleDateString(page.props.locale === 'fr' ? 'fr-CA' : 'en-CA', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-}
-
-function statusLabel(status) {
-    return t(`common.statuses.${status}`);
-}
-
-const formatPhone = (phone) => {
-    if (!phone) return '';
-
-    const digits = phone.replace(/\D/g, '');
-
-    if (digits.length === 10) {
-        return `+1 ${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-    }
-
-    return `+1 ${digits}`;
-};
+function viewWorker(mission, request) { router.get(route('find-workers.index'), { worker: request.worker.id, request: request.id, mission: mission.id }); }
 </script>
 
 <template>
     <Head :title="t('mission_management_page.title')" />
-
     <SidebarLayout>
-        <BaseToast
-            :key="'success-' + toastKey"
-            :message="flashSuccess"
-            type="success"
-        />
-
-        <BaseToast
-            :key="'error-' + toastKey"
-            :message="flashError"
-            type="error"
-        />
-        <template #title>
-            {{ t('mission_management_page.title') }}
-        </template>
+        <BaseToast :key="`success-${toastKey}`" :message="page.props.flash?.success" type="success" />
+        <BaseToast :key="`error-${toastKey}`" :message="page.props.flash?.error" type="error" />
+        <template #title>{{ t('mission_management_page.title') }}</template>
 
         <div class="mission-management-page-container">
-            <!-- Header -->
-            <div class="page-header">
-                <h2>{{ t('mission_management_page.subtitle') }}</h2>
-            </div>
-
-            <!-- TABS -->
-            <div class="tabs">
-                <button
-                    v-for="tab in [
-                        { key: 'pending', label: t('mission_management_page.tabs.requests') },
-                        { key: 'ongoing', label: t('mission_management_page.tabs.active') },
-                        { key: 'completed', label: t('mission_management_page.tabs.completed') }
-                    ]"
-                    :key="tab.key"
-                    :class="{ active: activeTab === tab.key }"
-                    @click="activeTab = tab.key"
-                >
-                    {{ tab.label }}
-                    ({{ counts[tab.key] }})
+            <div class="page-header"><h2>{{ t('mission_management_page.subtitle') }}</h2></div>
+            <div class="tabs" role="tablist">
+                <button v-for="[key, label] in tabs" :key="key" type="button" :class="{ active: activeTab === key }" :aria-selected="activeTab === key" @click="activeTab = key">
+                    {{ label }} ({{ missionData.counts?.[key] ?? 0 }})
                 </button>
             </div>
 
-            <!-- ======================== -->
-            <!-- PENDING -->
-            <!-- ======================== -->
-            <div v-if="activeTab === 'pending'">
-                <!-- REQUESTS SENT -->
-                <MissionSection
-                    :title="t('mission_management_page.tabs.awaiting_response_invitations')"
-                    :count="page.props.data.pending.sent.total"
-                    :expanded="sectionState.pending_sent"
-                    :empty="isEmpty(page.props.data.pending.sent)"
-                    :empty-title="t('mission_management_page.empty_states.no_sent_requests')"
-                    :empty-description="t('mission_management_page.empty_states.sent_requests_description')"
-                    @toggle="toggleSection('pending_sent')"
-                >
-                            <div class="missions-grid">
-                                <div v-for="req in pendingSent" :key="req.id" class="mission-card">
-                                    <!-- HEADER -->
-                                    <div class="mission-top">
-
-                                        <h4 class="mission-title">
-                                            {{ req.mission.title }}
-                                        </h4>
-
-                                        <div class="mission-top-actions">
-
-                                            <span class="status-badge" :class="req.status">
-                                                {{ statusLabel(req.status) }}
-                                            </span>
-
-                                            <button
-                                                class="view-btn"
-                                                :title="t('mission_management_page.actions.view_worker_profile')"
-                                                :aria-label="t('mission_management_page.actions.view_worker_profile')"
-                                                @click="viewWorkerProfile(req)"
-                                            >
-                                                <Eye class="mini-icon" />
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- DESCRIPTION -->
-                                    <p class="mission-description">
-                                        {{ req.mission.description }}
-                                    </p>
-
-                                    <!-- DETAILS -->
-                                    <div class="request-details">
-
-                                        <div class="detail-item">
-                                            <User class="mini-icon" />
-
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.requested_worker') }}</small>
-
-                                                <p>
-                                                    {{ req.worker.name }}
-                                                    <!-- <span>
-                                                        - {{ req.worker.job.replace('_', ' ').charAt(0).toUpperCase() + req.worker.job.replace('_', ' ').slice(1) }}
-                                                    </span> -->
-                                                    <span>
-                                                        • {{ req.worker?.company?.name ?? t('common.self_employed') }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <CalendarDays class="mini-icon" />
-
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.requested_dates') }}</small>
-
-                                                <p>
-                                                    {{ formatDate(req.mission.start_date) }}
-                                                    —
-                                                    {{ formatDate(req.mission.end_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <DollarSign class="mini-icon" />
-
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.worker_rate') }}</small>
-
-                                                <p>
-                                                    ${{ req.worker.hourly_rate ?? '--' }} {{ t('common.per_hour') }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    <!-- MESSAGE -->
-                                    <div class="message-box">
-                                        <div class="message-header">
-                                            <Info class="mini-icon" />
-                                            <small>{{ t('mission_management_page.labels.message_sent') }}</small>
-                                        </div>
-
-                                        <p>
-                                            {{
-                                                req.message ||
-                                                t('common.no_message_provided')
-                                            }}
-                                        </p>
-                                    </div>
-
-                                    <div class="status-date">
-                                        <Mail class="mini-icon" />
-                                        {{ t('mission_management_page.labels.requested_on') }}
-                                        {{ formatDate(req.created_at) }}
-                                    </div>
-
-                                    <!-- FOOTER -->
-                                    <div class="waiting-box">
-                                        ⏳ {{ t('mission_management_page.tabs.waiting_response') }}
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                    <template #pagination>
-                        <BasePagination
-                            v-if="page.props.data.pending.sent.links"
-                            :links="page.props.data.pending.sent.links"
-                        />
-                    </template>
-                </MissionSection>
-
-                <!-- REQUESTS RECEIVED -->
-                <MissionSection
-                    :title="t('mission_management_page.tabs.needs_your_response')"
-                    :count="page.props.data.pending.received.total"
-                    :expanded="sectionState.pending_received"
-                    :empty="isEmpty(page.props.data.pending.received)"
-                    :empty-title="t('mission_management_page.empty_states.no_received_requests')"
-                    :empty-description="t('mission_management_page.empty_states.received_requests_description')"
-                    @toggle="toggleSection('pending_received')"
-                >
-                            <div class="missions-grid">
-                                <div v-for="req in pendingReceived" :key="req.id" class="mission-card">
-                                    <!-- HEADER -->
-                                    <div class="mission-top">
-
-                                        <h4 class="mission-title">
-                                            {{ req.mission.title }}
-                                        </h4>
-
-                                        <div class="mission-top-actions">
-
-                                            <span class="status-badge" :class="req.status">
-                                                {{ statusLabel(req.status) }}
-                                            </span>
-
-                                            <button
-                                                class="view-btn"
-                                                :title="req.type === 'apply'
-                                                    ? t('mission_management_page.actions.view_worker_profile')
-                                                    : t('mission_management_page.actions.view_mission')"
-                                                :aria-label="req.type === 'apply'
-                                                    ? t('mission_management_page.actions.view_worker_profile')
-                                                    : t('mission_management_page.actions.view_mission')"
-                                                @click="req.type === 'apply'
-                                                    ? viewWorkerProfile(req)
-                                                    : viewExternalMission(req)"
-                                            >
-                                                <Eye class="mini-icon" />
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- DESCRIPTION -->
-                                    <p class="mission-description">
-                                        {{ req.mission.description }}
-                                    </p>
-
-                                    <!-- DETAILS -->
-                                    <div class="request-details">
-
-                                        <div class="detail-item">
-                                            <User class="mini-icon" />
-                                            <div>
-                                                <small>
-                                                    {{
-                                                        req.type === 'apply'
-                                                            ? t('mission_management_page.labels.worker')
-                                                            : t('mission_management_page.labels.requested_worker')
-                                                    }}
-                                                </small>
-                                                <p>
-                                                    {{ req.worker.name }}
-                                                    <!-- <span>
-                                                        - {{ req.worker.job.replace('_', ' ').charAt(0).toUpperCase() + req.worker.job.replace('_', ' ').slice(1) }}
-                                                    </span> -->
-                                                    <span>
-                                                        •
-                                                        {{
-                                                            req.type === 'apply'
-                                                                ? (
-                                                                    req.worker?.company?.name
-                                                                        ? req.worker.company.name
-                                                                        : t('common.self_employed')
-                                                                )
-                                                                : (
-                                                                    req.company?.name
-                                                                        ? req.company.name
-                                                                        : t('common.unknown_company')
-                                                                )
-                                                        }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <CalendarDays class="mini-icon" />
-                                            <div>
-                                                <small>
-                                                    {{
-                                                        req.type === 'apply'
-                                                            ? t('mission_management_page.labels.mission_dates')
-                                                            : t('mission_management_page.labels.requested_dates')
-                                                    }}
-                                                </small>
-                                                <p>
-                                                    {{ formatDate(req.mission.start_date) }}
-                                                    —
-                                                    {{ formatDate(req.mission.end_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <DollarSign class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.worker_rate') }}</small>
-                                                <p>
-                                                    ${{ req.worker.hourly_rate ?? '--' }} {{ t('common.per_hour') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- MESSAGE -->
-                                    <div class="message-box">
-
-                                        <div class="message-header">
-                                            <Info class="mini-icon" />
-                                            <small>{{ t('mission_management_page.labels.message_received') }}</small>
-                                        </div>
-
-                                        <p>
-                                            {{
-                                                req.message ||
-                                                t('common.no_message_provided')
-                                            }}
-                                        </p>
-                                    </div>
-
-                                    <div class="status-date">
-                                        <Mail class="mini-icon" />
-                                        {{ t('mission_management_page.labels.requested_on') }}
-                                        {{ formatDate(req.created_at) }}
-                                    </div>
-
-                                    <!-- ACTIONS -->
-                                    <div class="pending-actions">
-                                        <button @click="acceptRequest(req)" class="btn-secondary action-btn">
-                                            <CheckCircle2 class="btn-icon" />
-                                            {{ t('mission_management_page.tabs.accept') }}
-                                        </button>
-
-                                        <button @click="rejectRequest(req)" class="btn-thirdary action-btn">
-                                            <XCircle class="btn-icon" />
-                                            {{ t('mission_management_page.tabs.reject') }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                    <template #pagination>
-                        <BasePagination
-                            v-if="page.props.data.pending.received.links"
-                            :links="page.props.data.pending.received.links"
-                        />
-                    </template>
-                </MissionSection>
-
-                <!-- REQUESTS TO JOIN -->
-                <MissionSection
-                    :title="t('mission_management_page.tabs.awaiting_response_applications')"
-                    :count="page.props.data.pending.join.total"
-                    :expanded="sectionState.pending_join"
-                    :empty="isEmpty(page.props.data.pending.join)"
-                    :empty-title="t('mission_management_page.empty_states.no_join_requests')"
-                    :empty-description="t('mission_management_page.empty_states.join_requests_description')"
-                    @toggle="toggleSection('pending_join')"
-                >
-                            <div class="missions-grid">
-                                <div v-for="req in pendingJoin" :key="req.id" class="mission-card">
-                                    <!-- HEADER -->
-                                    <div class="mission-top">
-                                        <h4 class="mission-title">
-                                            {{ req.mission.title }}
-                                        </h4>
-
-                                        <div class="mission-top-actions">
-
-                                            <span class="status-badge" :class="req.status">
-                                                {{ statusLabel(req.status) }}
-                                            </span>
-
-                                            <button
-                                                class="view-btn"
-                                                :title="t('mission_management_page.actions.view_mission')"
-                                                :aria-label="t('mission_management_page.actions.view_mission')"
-                                                @click="viewExternalMission(req)"
-                                            >
-                                                <Eye class="mini-icon" />
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- DESCRIPTION -->
-                                    <div>
-                                        <p class="mission-description">
-                                            {{ req.mission.description }}
-                                        </p>
-
-                                        <div class="mission-company">
-                                            <strong>{{ t('mission_management_page.labels.company_name') }}:</strong> {{ req.mission?.hiring_company?.name }} |
-                                            <strong>{{ t('mission_management_page.labels.company_owner') }}:</strong> {{ req.mission?.hiring_company?.owner?.name }}
-                                        </div>
-                                    </div>
-
-                                    <!-- DETAILS -->
-                                    <div class="request-details">
-                                        <div class="detail-item">
-                                            <User class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.proposed_worker') }}</small>
-
-                                                <p>
-                                                    {{ req.worker.name }}
-                                                    <!-- <span>
-                                                        - {{ req.worker.job.replace('_', ' ').charAt(0).toUpperCase() + req.worker.job.replace('_', ' ').slice(1) }}
-                                                    </span> -->
-                                                    <span> 
-                                                        • {{ req.worker?.company?.name ?? t('common.self_employed') }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <CalendarDays class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.mission_dates') }}</small>
-                                                <p>
-                                                    {{ formatDate(req.mission.start_date) }}
-                                                    —
-                                                    {{ formatDate(req.mission.end_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <DollarSign class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.worker_rate') }}</small>
-                                                <p>
-                                                    ${{ req.worker.hourly_rate ?? '--' }} {{ t('common.per_hour') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- MESSAGE -->
-                                    <div class="message-box">
-                                        <div class="message-header">
-                                            <Info class="mini-icon" />
-                                            <small>{{ t('mission_management_page.labels.message_sent') }}</small>
-                                        </div>
-
-                                        <p>
-                                            {{
-                                                req.message ||
-                                                t('common.no_message_provided')
-                                            }}
-                                        </p>
-                                    </div>
-
-                                    <div class="status-date">
-                                        <Mail class="mini-icon" />
-                                        {{ t('mission_management_page.labels.requested_on') }}
-                                        {{ formatDate(req.created_at) }}
-                                    </div>
-
-                                    <!-- FOOTER -->
-                                    <div class="waiting-box">
-                                        ⏳ {{ t('mission_management_page.tabs.waiting_response') }}
-                                    </div>
-                                </div>
-                            </div>
-
-                    <template #pagination>
-                        <BasePagination
-                            v-if="page.props.data.pending.join.links"
-                            :links="page.props.data.pending.join.links"
-                        />
-                    </template>
-                </MissionSection>
-            </div>
-
-            <!-- ======================== -->
-            <!-- ONGOING -->
-            <!-- ======================== -->
-            <div v-else-if="activeTab === 'ongoing'">
-                <!-- CREATED -->
-                <MissionSection
-                    :title="t('mission_management_page.tabs.your_active_missions')"
-                    :count="page.props.data.ongoing.created.total"
-                    :expanded="sectionState.ongoing_created"
-                    :empty="!page.props.data.ongoing.created.total"
-                    :empty-title="t('mission_management_page.empty_states.no_active_missions')"
-                    :empty-description="t('mission_management_page.empty_states.active_created_description')"
-                    @toggle="toggleSection('ongoing_created')"
-                >
-                            <div class="missions-grid">
-                                <div v-for="req in ongoingCreated" :key="req.id" class="mission-card">
-
-                                    <!-- HEADER -->
-                                    <div class="mission-top">
-                                        <h4 class="mission-title">
-                                            {{ req.mission.title }}
-                                        </h4>
-
-                                        <div class="mission-top-actions">
-
-                                            <span class="relationship-badge your-mission">
-                                                {{ t('mission_management_page.tabs.your_mission') }}
-                                            </span>
-
-                                            <span class="status-badge" :class="req.status">
-                                                {{ statusLabel(req.status) }}
-                                            </span>
-
-                                            <button
-                                                class="view-btn"
-                                                :title="t('mission_management_page.actions.view_mission')"
-                                                :aria-label="t('mission_management_page.actions.view_mission')"
-                                                @click="viewOwnMission(req)"
-                                            >
-                                                <Eye class="mini-icon" />
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- DESCRIPTION -->
-                                    <p class="mission-description">
-                                        {{ req.mission.description }}
-                                    </p>
-
-                                    <!-- DETAILS -->
-                                    <div class="request-details">
-                                        <div class="detail-item">
-                                            <CalendarDays class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.mission_dates') }}</small>
-
-                                                <p>
-                                                    {{ formatDate(req.mission.start_date) }}
-                                                    —
-                                                    {{ formatDate(req.mission.end_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <User class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.assigned_worker') }}</small>
-                                                <p>
-                                                    {{ req.worker.name }}
-
-                                                    <!-- <span>
-                                                        - {{ req.worker.job.replace('_', ' ').charAt(0).toUpperCase() + req.worker.job.replace('_', ' ').slice(1) }}
-                                                    </span> -->
-
-                                                    <span>
-                                                        • {{ req.worker?.company?.name ?? t('common.self_employed') }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <DollarSign class="mini-icon" />
-
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.rate') }}</small>
-
-                                                <p>
-                                                    ${{ req.worker.hourly_rate ?? '--' }} {{ t('common.per_hour') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- MESSAGE -->
-                                    <div class="message-box">
-                                        <div class="message-header">
-                                            <Info class="mini-icon" />
-                                            <small>{{ t('mission_management_page.labels.message_received') }}</small>
-                                        </div>
-
-                                        <p>
-                                            {{
-                                                req.message ||
-                                                t('common.no_message_provided')
-                                            }}
-                                        </p>
-                                    </div>
-
-                                    <div class="status-date">
-                                        <Mail class="mini-icon" />
-                                        {{ t('mission_management_page.labels.accepted_on') }}
-                                        {{ formatDate(req.responded_at) }}
-                                    </div>
-
-                                    <!-- ACTION -->
-                                    <button @click="completeMission(req)" class="complete-btn">
-                                        {{ t('mission_management_page.actions.complete_and_rate') }}
-                                    </button>
-                                </div>
-                            </div>
-
-                    <template #pagination>
-                        <BasePagination
-                            v-if="page.props.data.ongoing.created.links"
-                            :links="page.props.data.ongoing.created.links"
-                        />
-                    </template>
-                </MissionSection>
-
-                <!-- JOINED -->
-                <MissionSection
-                    :title="t('mission_management_page.tabs.external_assignments')"
-                    :count="page.props.data.ongoing.joined.total"
-                    :expanded="sectionState.ongoing_joined"
-                    :empty="!page.props.data.ongoing.joined.total"
-                    :empty-title="t('mission_management_page.empty_states.no_active_missions')"
-                    :empty-description="t('mission_management_page.empty_states.active_joined_description')"
-                    @toggle="toggleSection('ongoing_joined')"
-                >
-                            <div class="missions-grid">
-                                <div v-for="req in ongoingJoined" :key="req.id" class="mission-card">
-
-                                    <!-- HEADER -->
-                                    <div class="mission-top">
-                                        <h4 class="mission-title">
-                                            {{ req.mission.title }}
-                                        </h4>
-
-                                        <div class="mission-top-actions">
-
-                                            <span class="relationship-badge external-assignment">
-                                                {{ t('mission_management_page.tabs.external_assignment') }}
-                                            </span>
-
-                                            <span class="status-badge" :class="req.status">
-                                                {{ statusLabel(req.status) }}
-                                            </span>
-
-                                            <button
-                                                class="view-btn"
-                                                :title="t('mission_management_page.actions.view_mission')"
-                                                :aria-label="t('mission_management_page.actions.view_mission')"
-                                                @click="viewExternalMission(req)"
-                                            >
-                                                <Eye class="mini-icon" />
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- DESCRIPTION -->
-                                    <div>
-                                        <p class="mission-description">
-                                            {{ req.mission.description }}
-                                        </p>
-
-                                        <div class="mission-company">
-                                            <strong>{{ t('mission_management_page.labels.company_name') }}:</strong> {{ req.mission?.hiring_company?.name }} |
-                                            <strong>{{ t('mission_management_page.labels.company_owner') }}:</strong> {{ req.mission?.hiring_company?.owner?.name }}
-                                        </div>
-                                    </div>
-
-                                    <!-- DETAILS -->
-                                    <div class="request-details">
-
-                                        <div class="detail-item">
-                                            <CalendarDays class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.mission_dates') }}</small>
-                                                <p>
-                                                    {{ formatDate(req.mission.start_date) }}
-                                                    —
-                                                    {{ formatDate(req.mission.end_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <User class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.assigned_worker') }}</small>
-                                                <p>
-                                                    {{ req.worker.name }}
-
-                                                    <!-- <span>
-                                                        - {{ req.worker.job.replace('_', ' ').charAt(0).toUpperCase() + req.worker.job.replace('_', ' ').slice(1) }}
-                                                    </span> -->
-
-                                                    <span>
-                                                        • {{ req.worker?.company?.name ?? t('common.self_employed') }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <DollarSign class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.rate') }}</small>
-                                                <p>
-                                                    ${{ req.worker.hourly_rate ?? '--' }} {{ t('common.per_hour') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- MESSAGE -->
-                                    <div class="message-box">
-                                        <div class="message-header">
-                                            <Info class="mini-icon" />
-                                            <small>
-                                                {{
-                                                    req.type === 'apply'
-                                                        ? t('mission_management_page.labels.application_message')
-                                                        : t('mission_management_page.labels.invitation_message')
-                                                }}
-                                            </small>
-                                        </div>
-
-                                        <p>
-                                            {{ req.message || t('common.no_message_provided') }}
-                                        </p>
-                                    </div>
-
-                                    <div class="status-date">
-                                        <Mail class="mini-icon" />
-                                        {{ t('mission_management_page.labels.accepted_on') }}
-                                        {{ formatDate(req.responded_at) }}
-                                    </div>
-
-                                    <!-- CONTACT -->
-                                    <div class="accepted-box">
-                                        {{ t('mission_management_page.states.mission_accepted') }}
-                                        {{ t('mission_management_page.labels.contact_company_owner') }}:
-                                        {{
-                                            formatPhone(
-                                                req.mission?.hiring_company?.owner?.phone
-                                            )
-                                        }}
-                                    </div>
-                                </div>
-                            </div>
-
-                    <template #pagination>
-                        <BasePagination
-                            v-if="page.props.data.ongoing.joined.links"
-                            :links="page.props.data.ongoing.joined.links"
-                        />
-                    </template>
-                </MissionSection>
-            </div>
-
-            <!-- ======================== -->
-            <!-- COMPLETED -->
-            <!-- ======================== -->
-            <div v-else-if="activeTab === 'completed'">
-
-                <!-- CREATED -->
-                <MissionSection
-                    :title="t('mission_management_page.sections.completed_created')"
-                    :count="page.props.data.completed.created.total"
-                    :expanded="sectionState.completed_created"
-                    :empty="!page.props.data.completed.created.total"
-                    :empty-title="t('mission_management_page.empty_states.no_completed_missions')"
-                    :empty-description="t('mission_management_page.empty_states.completed_created_description')"
-                    @toggle="toggleSection('completed_created')"
-                >
-                            <div class="missions-grid">
-                                <div
-                                    v-for="req in completedCreated"
-                                    :key="req.id"
-                                    class="mission-card"
-                                >
-
-                                    <!-- HEADER -->
-                                    <div class="mission-top">
-                                        <div>
-                                            <h4 class="mission-title">
-                                                {{ req.mission.title }}
-                                            </h4>
-                                            <!-- <p class="job-description">
-                                                {{ req.worker.job }}
-                                            </p> -->
-                                        </div>
-
-                                        <div class="mission-top-actions">
-                                            <span class="status-badge" :class="req.status">
-                                                {{ statusLabel(req.status) }}
-                                            </span>
-
-                                            <button
-                                                class="view-btn"
-                                                :title="t('mission_management_page.actions.view_mission')"
-                                                :aria-label="t('mission_management_page.actions.view_mission')"
-                                                @click="viewOwnMission(req)"
-                                            >
-                                                <Eye class="mini-icon" />
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- DESCRIPTION -->
-                                    <p class="mission-description">
-                                        {{ req.mission.description }}
-                                    </p>
-
-                                    <!-- DETAILS -->
-                                    <div class="request-details">
-                                        <div class="detail-item">
-                                            <CalendarDays class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.mission_dates') }}</small>
-                                                <p>
-                                                    {{ formatDate(req.mission.start_date) }}
-                                                    —
-                                                    {{ formatDate(req.mission.end_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <User class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.worker') }}</small>
-                                                <p>
-                                                    {{ req.worker.name }}
-                                                    <span>
-                                                        •
-                                                        {{
-                                                            req.worker?.company?.name ??
-                                                            t('common.self_employed')
-                                                        }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <DollarSign class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.final_rate') }}</small>
-                                                <p>
-                                                    ${{ req.worker.hourly_rate ?? '--' }} {{ t('common.per_hour') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- WORKER REVIEW -->
-                                    <div class="message-box">
-                                        <div class="message-header">
-                                            <Info class="mini-icon" />
-                                            <small>{{ t('mission_management_page.labels.worker_review') }}</small>
-                                        </div>
-
-                                        <p class="review-comment">
-                                            {{
-                                                req.rating?.feedback ||
-                                                t('mission_management_page.fallbacks.no_feedback')
-                                            }}
-                                        </p>
-
-                                        <div class="review-rating">
-                                            <Star
-                                                v-for="star in 5"
-                                                :key="star"
-                                                class="review-star"
-                                                :fill="star <= (req.rating?.score ?? 0) ? '#facc15' : 'none'"
-                                                :color="star <= (req.rating?.score ?? 0) ? '#facc15' : '#d1d5db'"
-                                            />
-
-                                            <span class="review-score">
-                                                {{ t('mission_management_page.rating.score_given', { score: req.rating?.score ?? '--' }) }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="status-date">
-                                        <Mail class="mini-icon" />
-                                        {{ t('mission_management_page.labels.completed_on') }}
-                                        {{ formatDate(req.completed_at) }}
-                                    </div>
-
-                                    <!-- FOOTER -->
-                                    <div class="accepted-box">
-                                        ✅ {{ t('mission_management_page.states.mission_completed') }}
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                    <template #pagination>
-                        <BasePagination
-                            v-if="page.props.data.completed.created.links"
-                            :links="page.props.data.completed.created.links"
-                        />
-                    </template>
-                </MissionSection>
-
-                <!-- JOINED -->
-                <MissionSection
-                    :title="t('mission_management_page.sections.completed_joined')"
-                    :count="page.props.data.completed.joined.total"
-                    :expanded="sectionState.completed_joined"
-                    :empty="!page.props.data.completed.joined.total"
-                    :empty-title="t('mission_management_page.empty_states.no_completed_missions')"
-                    :empty-description="t('mission_management_page.empty_states.completed_joined_description')"
-                    @toggle="toggleSection('completed_joined')"
-                >
-                            <div class="missions-grid">
-                                <div
-                                    v-for="req in completedJoined"
-                                    :key="req.id"
-                                    class="mission-card"
-                                >
-
-                                    <!-- HEADER -->
-                                    <div class="mission-top">
-                                        <div>
-                                            <h4 class="mission-title">
-                                                {{ req.mission.title }}
-                                            </h4>
-                                            <!-- <p class="job-description">
-                                                {{ req.worker.job }}
-                                            </p> -->
-                                        </div>
-
-                                        <div class="mission-top-actions">
-
-                                            <span class="status-badge completed">
-                                                {{ statusLabel('completed') }}
-                                            </span>
-
-                                            <button
-                                                class="view-btn"
-                                                :title="t('mission_management_page.actions.view_mission')"
-                                                :aria-label="t('mission_management_page.actions.view_mission')"
-                                                @click="viewExternalMission(req)"
-                                            >
-                                                <Eye class="mini-icon" />
-                                            </button>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- DESCRIPTION -->
-                                    <p class="mission-description">
-                                        {{ req.mission.description }}
-                                    </p>
-
-                                    <!-- DETAILS -->
-                                    <div class="request-details">
-
-                                        <div class="detail-item">
-                                            <CalendarDays class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.mission_dates') }}</small>
-                                                <p>
-                                                    {{ formatDate(req.mission.start_date) }}
-                                                    —
-                                                    {{ formatDate(req.mission.end_date) }}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <User class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.worker') }}</small>
-                                                <p>
-                                                    {{ req.worker.name }}
-                                                    <span>
-                                                        •
-                                                        {{
-                                                            req.worker?.company?.name ??
-                                                            t('common.self_employed')
-                                                        }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div class="detail-item">
-                                            <DollarSign class="mini-icon" />
-                                            <div>
-                                                <small>{{ t('mission_management_page.labels.final_rate') }}</small>
-                                                <p>
-                                                    ${{ req.worker.hourly_rate ?? '--' }} {{ t('common.per_hour') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- WORKER REVIEW -->
-                                    <div class="message-box">
-                                        <div class="message-header">
-                                            <Info class="mini-icon" />
-                                            <small>{{ t('mission_management_page.labels.worker_review') }}</small>
-                                        </div>
-
-                                        <p class="review-comment">
-                                            {{
-                                                req.rating?.feedback ||
-                                                t('mission_management_page.fallbacks.no_feedback')
-                                            }}
-                                        </p>
-
-                                        <div class="review-rating">
-                                            <Star
-                                                v-for="star in 5"
-                                                :key="star"
-                                                class="review-star"
-                                                :fill="star <= (req.rating?.score ?? 0) ? '#facc15' : 'none'"
-                                                :color="star <= (req.rating?.score ?? 0) ? '#facc15' : '#d1d5db'"
-                                            />
-
-                                            <span class="review-score">
-                                                {{ t('mission_management_page.rating.score_received', { score: req.rating?.score ?? '--' }) }}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="status-date">
-                                        <Mail class="mini-icon" />
-                                        {{ t('mission_management_page.labels.completed_on') }}
-                                        {{ formatDate(req.completed_at) }}
-                                    </div>
-
-                                    <!-- FOOTER -->
-                                    <div class="accepted-box">
-                                        ✅ {{ t('mission_management_page.states.mission_completed') }}
-                                    </div>
-
-                                </div>
-                            </div>
-
-                    <template #pagination>
-                        <BasePagination
-                            v-if="page.props.data.completed.joined.links"
-                            :links="page.props.data.completed.joined.links"
-                        />
-                    </template>
-                </MissionSection>
-            </div>
-
-            <BaseModal
-                v-model="showRequestModal"
-                :title="
-                    requestAction === 'accept'
-                        ? t('mission_management_page.response_modal.accept_title')
-                        : t('mission_management_page.response_modal.reject_title')
-                "
-                max-width="500px"
-            >
-
-                <div v-if="selectedRequest">
-                    <p>
-                        <strong>{{ t('mission_management_page.labels.mission') }}:</strong>
-                        {{ selectedRequest.mission.title }}
-                    </p>
-
-                    <p>
-                        <strong>{{ t('mission_management_page.labels.worker') }}:</strong>
-                        {{ selectedRequest.worker.name }}
-                    </p>
-
-                    <div v-if="requestAction === 'accept'">
-                        <span class="modal-note">
-                            {{ t('mission_management_page.response_modal.accept_note') }}
-                        </span>
-
-                        <label class="form-label">
-                            {{ t('mission_management_page.labels.message') }}
-                        </label>
-
-                        <textarea
-                            v-model="acceptanceMessage"
-                            rows="5"
-                            class="form-textarea"
-                            :placeholder="t('mission_management_page.response_modal.acceptance_placeholder')"
-                        />
+            <div v-if="activeMissions.length" class="missions-grid">
+                <article v-for="mission in activeMissions" :key="mission.id" class="mission-card">
+                    <header class="mission-top">
+                        <div>
+                            <h3 class="mission-title">{{ mission.title }}</h3>
+                            <p v-if="mission.description" class="mission-description">{{ mission.description }}</p>
+                        </div>
+                        <div class="mission-top-actions">
+                            <span class="relationship-badge" :class="relationshipClass(mission)">{{ relationshipLabel(mission) }}</span>
+                            <button v-if="mission.management_context?.can_view_mission" type="button" class="view-btn" :title="t('mission_management_page.actions.view_mission')" :aria-label="t('mission_management_page.actions.view_mission')" @click="viewMission(mission)"><Eye class="mini-icon" /></button>
+                        </div>
+                    </header>
+
+                    <p v-if="mission.hiring_company?.name" class="mission-company"><strong>{{ t('mission_management_page.labels.company') }}:</strong> {{ mission.hiring_company.name }}</p>
+                    <div class="mission-meta-grid">
+                        <div class="detail-item"><CalendarDays class="mini-icon" /><div><small>{{ t('mission_management_page.labels.mission_dates') }}</small><p>{{ formatDate(mission.start_date) }} — {{ formatDate(mission.end_date) }}</p></div></div>
+                        <div class="detail-item"><Users class="mini-icon" /><div><small>{{ t('mission_management_page.labels.staffing_progress') }}</small><p>{{ staffingProgress(mission) }}</p><span>{{ remainingCapacity(mission) }}</span></div></div>
+                        <div v-if="activeTab === 'staffing'" class="detail-item"><Info class="mini-icon" /><div><small>{{ t('mission_management_page.labels.recruiting') }}</small><p>{{ recruitingState(mission) }}</p></div></div>
                     </div>
 
-                    <div v-if="requestAction === 'reject'">
-                        <span class="modal-note">
-                            {{ t('mission_management_page.response_modal.reject_note') }}
-                        </span>
-
-                        <label class="form-label">
-                            {{ t('mission_management_page.labels.reason_optional') }}
-                        </label>
-
-                        <textarea
-                            v-model="rejectionReason"
-                            rows="5"
-                            class="form-textarea"
-                            :placeholder="t('mission_management_page.response_modal.rejection_placeholder')"
-                        />
+                    <div v-if="activeTab === 'staffing' && (mission.management_context?.can_stop_recruiting || mission.management_context?.can_start_mission)" class="mission-level-actions">
+                        <button v-if="mission.management_context?.can_stop_recruiting" type="button" class="btn-thirdary action-btn" @click="openStopRecruitingModal(mission)">{{ t('mission_management_page.actions.stop_recruiting') }}</button>
+                        <button v-if="mission.management_context?.can_start_mission" type="button" class="btn-secondary action-btn" @click="openStartMissionModal(mission)">{{ t('mission_management_page.actions.start_mission') }}</button>
                     </div>
-                </div>
-                <template #footer>
-                    <button
-                        class="btn-thirdary"
-                        @click="showRequestModal = false"
-                    >
-                        {{ t('common.cancel') }}
-                    </button>
 
-                    <button
-                        v-if="requestAction === 'accept'"
-                        class="btn-secondary"
-                        @click="confirmRequestAction"
-                    >
-                        {{ t('mission_management_page.response_modal.confirm_accept') }}
-                    </button>
-
-                    <button
-                        v-else
-                        class="btn-danger"
-                        @click="confirmRequestAction"
-                    >
-                        {{ t('mission_management_page.response_modal.confirm_reject') }}
-                    </button>
-                </template>
-            </BaseModal>
-
-            <BaseModal
-                v-model="showCompleteModal"
-                :title="t('mission_management_page.completion_modal.title')"
-                max-width="500px"
-            >
-                <div v-if="selectedMission">
-                    <p>
-                        <strong>{{ t('mission_management_page.labels.mission') }}:</strong>
-                        {{ selectedMission.mission.title }}
-                    </p>
-
-                    <p>
-                        <strong>{{ t('mission_management_page.labels.worker') }}:</strong>
-                        {{ selectedMission.worker.name }}
-                    </p>
-
-                    <p class="modal-note">
-                        {{
-                            selectedMission.worker.job
-                                ?.replace('_',' ')
-                                .replace(/\b\w/g, c => c.toUpperCase())
-                        }}
-
-                        •
-
-                        {{ selectedMission.worker?.company?.name ?? t('common.self_employed') }}
-                    </p>
-
-                    <label class="form-label">
-                        {{ t('mission_management_page.completion_modal.rating_label') }}
-                    </label>
-
-                    <div class="rating-stars">
-
-                        <button
-                            v-for="star in 5"
-                            :key="star"
-                            type="button"
-                            class="star-btn"
-                            @click="missionRating = star"
-                        >
-                            <Star
-                                :fill="star <= missionRating ? '#facc15' : 'none'"
-                                :color="star <= missionRating ? '#facc15' : '#d1d5db'"
-                            />
+                    <section class="nested-list">
+                        <button type="button" class="nested-list-header" :aria-expanded="isListExpanded(mission)" @click="toggleList(mission)">
+                            <span>{{ listLabel() }} ({{ mission.management_requests?.length ?? 0 }})</span>
+                            <ChevronUp v-if="isListExpanded(mission)" class="mini-icon" /><ChevronDown v-else class="mini-icon" />
                         </button>
+                        <div v-show="isListExpanded(mission)" class="nested-list-content">
+                            <article v-for="request in mission.management_requests" :key="request.id" class="worker-row">
+                                <div class="worker-row-main">
+                                    <div class="worker-name"><User class="mini-icon" /><div><strong>{{ request.worker.name }}</strong><span>{{ workerContext(request.worker) }}</span></div></div>
+                                    <div class="worker-row-state"><span class="status-badge" :class="request.status">{{ statusLabel(request.status) }}</span><span v-if="activeTab === 'requests'" class="request-type">{{ requestTypeLabel(request) }} · {{ directionLabel(request) }}</span></div>
+                                    <div class="worker-row-meta">
+                                        <template v-if="activeTab === 'requests'">
+                                            <template v-if="request.status === 'rejected'">
+                                                <span v-if="request.responded_at">{{ t('mission_management_page.labels.rejected_on') }} {{ formatTimestampDate(request.responded_at) }}</span>
+                                                <p>{{ request.rejection_message || t('common.no_message_provided') }}</p>
+                                            </template>
+                                            <template v-else>
+                                                <span>{{ t('mission_management_page.labels.requested_on') }} {{ formatTimestampDate(request.created_at) }}</span>
+                                                <span v-if="request.status === 'cancelled' && request.responded_at">{{ requestResponseDateLabel(request) }} {{ formatTimestampDate(request.responded_at) }}</span>
+                                                <p>{{ request.message || t('common.no_message_provided') }}</p>
+                                            </template>
+                                        </template>
+                                        <template v-else><span>{{ t('mission_management_page.labels.rate') }}: ${{ request.worker.hourly_rate ?? t('common.not_available') }} {{ t('common.per_hour') }}</span><span v-if="activeTab === 'completed' || request.status === 'completed' || request.status === 'ended_early'">{{ outcomeDateLabel(request) }} {{ formatTimestampDate(outcomeDate(request)) }}</span></template>
+                                    </div>
+                                </div>
+                                <div v-if="request.rating" class="worker-review">
+                                    <div class="review-rating"><Star v-for="star in 5" :key="star" class="review-star" :fill="star <= request.rating.score ? '#facc15' : 'none'" :color="star <= request.rating.score ? '#facc15' : '#d1d5db'" /></div>
+                                    <p>{{ request.rating.feedback || t('mission_management_page.fallbacks.no_feedback') }}</p>
+                                    <span v-if="request.rating.reviewer">{{ t('mission_management_page.labels.reviewed_by') }}: {{ request.rating.reviewer.name }}<template v-if="reviewerRoleLabel(request.rating.reviewer)"> — {{ reviewerRoleLabel(request.rating.reviewer) }}</template></span>
+                                </div>
+                                <div class="worker-row-actions">
+                                    <button type="button" class="view-btn" :title="t('mission_management_page.actions.view_worker_profile')" :aria-label="t('mission_management_page.actions.view_worker_profile')" @click="viewWorker(mission, request)"><Eye class="mini-icon" /></button>
+                                    <button v-if="activeTab === 'requests' && request.status === 'rejected'" type="button" class="view-btn" :title="t('mission_management_page.actions.view_request_history')" :aria-label="t('mission_management_page.actions.view_request_history')" @click="openRequestHistoryModal(mission, request)"><Info class="mini-icon" /></button>
+                                    <template v-if="activeTab === 'requests' && request.management_context?.can_respond">
+                                        <button type="button" class="btn-secondary action-btn" @click="openRequestModal(mission, request, 'accept')"><CheckCircle2 class="btn-icon" />{{ t('mission_management_page.tabs.accept') }}</button>
+                                        <button type="button" class="btn-thirdary action-btn" @click="openRequestModal(mission, request, 'reject')"><XCircle class="btn-icon" />{{ t('mission_management_page.tabs.reject') }}</button>
+                                    </template>
+                                    <span v-else-if="activeTab === 'requests' && request.management_context?.waiting_for_response" class="waiting-state"><Mail class="mini-icon" />{{ t('mission_management_page.tabs.waiting_response') }}</span>
+                                    <template v-if="activeTab === 'in_progress'">
+                                        <button v-if="request.management_context?.can_complete" type="button" class="btn-secondary action-btn" @click="openAssignmentModal(mission, request, 'complete')">{{ t('mission_management_page.actions.complete_and_rate') }}</button>
+                                        <button v-else-if="request.management_context?.can_end_early" type="button" class="btn-thirdary action-btn" @click="openAssignmentModal(mission, request, 'end_early')">{{ t('mission_management_page.actions.end_assignment_and_rate') }}</button>
+                                    </template>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+                </article>
+            </div>
+            <div v-else class="empty-state"><h3>{{ emptyTitle() }}</h3><p>{{ emptyDescription() }}</p></div>
+            <BasePagination v-if="activePaginator.links?.length" :links="activePaginator.links" />
 
-                    </div>
-
-                    <label class="form-label">
-                        {{ t('mission_management_page.completion_modal.comments_label') }}
-                    </label>
-
-                    <textarea
-                        v-model="missionComment"
-                        rows="4"
-                        class="form-textarea"
-                        :placeholder="t('mission_management_page.completion_modal.comments_placeholder')"
-                    />
+            <BaseModal v-model="showRequestModal" :title="requestAction === 'accept' ? t('mission_management_page.response_modal.accept_title') : t('mission_management_page.response_modal.reject_title')">
+                <div v-if="selectedRequest">
+                    <p><strong>{{ t('mission_management_page.labels.mission') }}:</strong> {{ selectedRequest.mission.title }}</p>
+                    <template v-if="!requestIsSelfEmployed(selectedRequest)"><p><strong>{{ t('mission_management_page.labels.company') }}:</strong> {{ selectedRequest.company?.name }}</p><p><strong>{{ requestCreatorRoleLabel(selectedRequest) }}:</strong> {{ requestCreatorName(selectedRequest) }}</p><p><strong>{{ t('mission_management_page.labels.worker_offered') }}:</strong> {{ selectedRequest.worker.name }}</p></template>
+                    <p v-else><strong>{{ t('mission_management_page.labels.worker') }}:</strong> {{ selectedRequest.worker.name }} — {{ t('common.self_employed') }}</p>
+                    <template v-if="requestAction === 'accept'"><span class="modal-note">{{ t('mission_management_page.response_modal.accept_note', { contact: requestCreatorName(selectedRequest) }) }}</span><label class="form-label">{{ t('mission_management_page.labels.message') }}</label><textarea v-model="acceptanceMessage" rows="5" class="form-textarea" :placeholder="t('mission_management_page.response_modal.acceptance_placeholder')" /></template>
+                    <template v-else><span class="modal-note">{{ t('mission_management_page.response_modal.reject_note', { contact: requestCreatorName(selectedRequest) }) }}</span><label class="form-label">{{ t('mission_management_page.labels.message') }}</label><textarea v-model="rejectionMessage" rows="5" class="form-textarea" :placeholder="t('mission_management_page.response_modal.rejection_placeholder')" /></template>
                 </div>
-
-                <template #footer>
-                    <button
-                        class="btn-thirdary"
-                        @click="showCompleteModal = false"
-                    >
-                        {{ t('common.cancel') }}
-                    </button>
-
-                    <button
-                        class="btn-secondary"
-                        @click="completeMissionRequest"
-                    >
-                        {{ t('mission_management_page.actions.complete_mission') }}
-                    </button>
-                </template>
+                <template #footer><button type="button" class="btn-thirdary" @click="showRequestModal = false">{{ t('common.cancel') }}</button><button v-if="requestAction === 'accept'" type="button" class="btn-secondary" @click="confirmRequestAction">{{ t('mission_management_page.response_modal.confirm_accept') }}</button><button v-else type="button" class="btn-danger" @click="confirmRequestAction">{{ t('mission_management_page.response_modal.confirm_reject') }}</button></template>
             </BaseModal>
+
+            <BaseModal v-model="showRequestHistoryModal" :title="t('mission_management_page.request_history_modal.title')">
+                <div v-if="selectedRequestHistory">
+                    <p><strong>{{ t('mission_management_page.labels.original_request') }}</strong></p>
+                    <p>{{ t('mission_management_page.labels.requested_on') }} {{ formatTimestampDate(selectedRequestHistory.created_at) }}</p>
+                    <p>{{ selectedRequestHistory.message || t('common.no_message_provided') }}</p>
+                    <p><strong>{{ t('mission_management_page.labels.rejection') }}</strong></p>
+                    <p v-if="selectedRequestHistory.responded_at">{{ t('mission_management_page.labels.rejected_on') }} {{ formatTimestampDate(selectedRequestHistory.responded_at) }}</p>
+                    <p>{{ selectedRequestHistory.rejection_message || t('common.no_message_provided') }}</p>
+                </div>
+                <template #footer><button type="button" class="btn-thirdary" @click="showRequestHistoryModal = false">{{ t('common.close') }}</button></template>
+            </BaseModal>
+
+            <BaseModal v-model="showCompleteModal" :title="assignmentResolutionAction === 'end_early' ? t('mission_management_page.completion_modal.end_early_title') : t('mission_management_page.completion_modal.title')">
+                <div v-if="selectedAssignment"><p><strong>{{ t('mission_management_page.labels.mission') }}:</strong> {{ selectedAssignment.mission.title }}</p><p><strong>{{ t('mission_management_page.labels.worker') }}:</strong> {{ selectedAssignment.worker.name }}</p><p class="modal-note">{{ workerContext(selectedAssignment.worker) }}</p><label class="form-label">{{ t('mission_management_page.completion_modal.rating_label') }}</label><div class="rating-stars"><button v-for="star in 5" :key="star" type="button" class="star-btn" @click="missionRating = star"><Star :fill="star <= missionRating ? '#facc15' : 'none'" :color="star <= missionRating ? '#facc15' : '#d1d5db'" /></button></div><label class="form-label">{{ t('mission_management_page.completion_modal.comments_label') }}</label><textarea v-model="missionComment" rows="4" class="form-textarea" :placeholder="t('mission_management_page.completion_modal.comments_placeholder')" /></div>
+                <template #footer><button type="button" class="btn-thirdary" @click="showCompleteModal = false">{{ t('common.cancel') }}</button><button type="button" class="btn-secondary" @click="confirmAssignmentAction">{{ assignmentResolutionAction === 'end_early' ? t('mission_management_page.actions.end_assignment') : t('mission_management_page.actions.complete_mission') }}</button></template>
+            </BaseModal>
+
+            <ConfirmModal v-model="showStopRecruitingModal" :title="t('mission_management_page.recruiting_modal.title')" :message="t('mission_management_page.recruiting_modal.message')" :subtitle="t('mission_management_page.recruiting_modal.subtitle')" :item-name="selectedLifecycleMission?.title" :confirm-text="t('mission_management_page.recruiting_modal.confirm')" :cancel-text="t('common.cancel')" @confirm="stopRecruiting" />
+            <ConfirmModal v-model="showStartMissionModal" :title="t('mission_management_page.start_modal.title')" :message="t('mission_management_page.start_modal.message')" :subtitle="t('mission_management_page.start_modal.subtitle')" :item-name="selectedLifecycleMission?.title" :confirm-text="t('mission_management_page.start_modal.confirm')" :cancel-text="t('common.cancel')" @confirm="startMission" />
         </div>
     </SidebarLayout>
 </template>

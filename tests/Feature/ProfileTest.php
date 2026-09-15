@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -13,6 +14,9 @@ class ProfileTest extends TestCase
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();
+
+        $this->assertTrue(Route::has('home'));
+        $this->assertFalse(Route::has('dashboard'));
 
         $response = $this
             ->actingAs($user)

@@ -121,7 +121,7 @@ class AvailabilityController extends Controller
 
         DB::transaction(function () use ($validated) {
             $this->ensureDoesNotOverlap($validated);
-            $this->ensureNoActiveMissionAssignment($validated);
+            $this->ensureNoCommittedMissionAssignment($validated);
 
             Availability::create($validated);
         });
@@ -139,7 +139,7 @@ class AvailabilityController extends Controller
 
         DB::transaction(function () use ($availability, $validated) {
             $this->ensureDoesNotOverlap($validated, $availability);
-            $this->ensureNoActiveMissionAssignment($validated);
+            $this->ensureNoCommittedMissionAssignment($validated);
 
             $availability->update($validated);
         });
@@ -205,15 +205,15 @@ class AvailabilityController extends Controller
         }
     }
 
-    private function ensureNoActiveMissionAssignment(array $validated): void
+    private function ensureNoCommittedMissionAssignment(array $validated): void
     {
         $hasActiveAssignment = WorkerRequest::query()
             ->where('worker_profile_id', $validated['worker_profile_id'])
             ->whereIn('status', ['accepted', 'ongoing'])
             ->whereHas('mission', function ($query) use ($validated) {
-                $query->where('status', 'in_progress')
-                    ->where('start_date', '<=', $validated['date'])
-                    ->where('end_date', '>=', $validated['date']);
+                $query->whereIn('status', ['open', 'in_progress'])
+                    ->whereDate('start_date', '<=', $validated['date'])
+                    ->whereDate('end_date', '>=', $validated['date']);
             })
             ->exists();
 

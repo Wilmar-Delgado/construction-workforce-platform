@@ -11,6 +11,7 @@ import { useTranslate } from '@/composables/useTranslate';
 import { useUserRole } from '@/composables/useUserRole';
 import { usePermissions } from '@/composables/usePermissions';
 import { useDataTable } from '@/composables/useDataTable';
+import { mergeMultiValueInput } from '@/composables/useMultiValueInput';
 import { Edit2, Trash2, Plus } from 'lucide-vue-next';
 
 const { t } = useTranslate();
@@ -55,7 +56,7 @@ const columns = [
 const workers = computed(() => page.props.workerProfiles.data || []);
 const pagination = computed(() => page.props.workerProfiles);
 const filters = computed(() => page.props.filters);
-const hasProfile = page.props.hasWorkerProfile;
+const hasProfile = computed(() => page.props.hasWorkerProfile);
 
 const flashSuccess = computed(() => page.props.flash?.success);
 const flashError = computed(() => page.props.flash?.error);
@@ -101,17 +102,13 @@ function ratingDisplay(worker) {
 // FORM HELPERS
 // =========================
 function addCertificate() {
-    if (newCertificate.value.trim()) {
-        form.certifications.push(newCertificate.value.trim());
-        newCertificate.value = '';
-    }
+    form.certifications = mergeMultiValueInput(form.certifications, newCertificate.value);
+    newCertificate.value = '';
 }
 
 function addSkill() {
-    if (newSkill.value.trim()) {
-        form.skills.push(newSkill.value.trim());
-        newSkill.value = '';
-    }
+    form.skills = mergeMultiValueInput(form.skills, newSkill.value);
+    newSkill.value = '';
 }
 
 function removeCertificate(index) {
@@ -126,6 +123,9 @@ function removeSkill(index) {
 // CRUD ACTIONS
 // =========================
 function submitWorker() {
+    addCertificate();
+    addSkill();
+
     if (action.value === 'Create') {
         form.post(route('worker-profiles.store'), {
             onSuccess: resetModal
@@ -150,6 +150,9 @@ function editWorker(worker) {
     form.company = worker.company?.name ?? companyName;
     form.certifications = worker.certifications?.map(c => c.name) ?? [];
     form.skills = worker.skills?.map(s => s.name) ?? [];
+
+    newCertificate.value = '';
+    newSkill.value = '';
 
     showModal.value = true;
 }
@@ -177,6 +180,8 @@ function resetModal() {
 
     action.value = 'Create';
     editingWorkerId.value = null;
+    newCertificate.value = '';
+    newSkill.value = '';
 }
 </script>
 
@@ -355,7 +360,6 @@ function resetModal() {
         <BaseModal
             v-if="showModal"
             v-model="showModal"
-            max-width="900px"
             :title="action === 'Create'
                 ? t('profiles_page.add_modal.title')
                 : t('profiles_page.edit_modal.title', { name: form.name })"
@@ -405,7 +409,12 @@ function resetModal() {
                     <label>{{ t('profiles_page.add_modal.certifications') }}</label>
 
                     <div class="input-with-button">
-                        <input v-model="newCertificate" @keyup.enter="addCertificate" :disabled="form.processing" />
+                        <input
+                            v-model="newCertificate"
+                            :placeholder="t('profiles_page.add_modal.certifications_placeholder')"
+                            @keydown.enter.prevent="addCertificate"
+                            :disabled="form.processing"
+                        />
                         <button type="button" @click="addCertificate">+</button>
                     </div>
 
@@ -422,7 +431,12 @@ function resetModal() {
                     <label>{{ t('profiles_page.add_modal.skills') }}</label>
 
                     <div class="input-with-button">
-                        <input v-model="newSkill" @keyup.enter="addSkill" :disabled="form.processing" />
+                        <input
+                            v-model="newSkill"
+                            :placeholder="t('profiles_page.add_modal.skills_placeholder')"
+                            @keydown.enter.prevent="addSkill"
+                            :disabled="form.processing"
+                        />
                         <button type="button" @click="addSkill">+</button>
                     </div>
 

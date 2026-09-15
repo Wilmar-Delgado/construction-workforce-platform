@@ -1,6 +1,6 @@
 <script setup>
 import SidebarLayout from '@/Layouts/SidebarLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { useAuthStore } from '@/stores/auth';
 import { useTranslate } from '@/composables/useTranslate';
 import { ref } from 'vue';
@@ -9,7 +9,17 @@ import axios from 'axios';
 const { t } = useTranslate();
 const authStore = useAuthStore(); 
 
+const props = defineProps({
+    timezoneOptions: {
+        type: Object,
+        default: () => ({}),
+    },
+});
+
 const availableLanguages = ['en', 'fr'];
+const supportedTimezoneIds = Object.keys(props.timezoneOptions);
+const savedTimezone = authStore.user.timezone ?? 'UTC';
+const selectedTimezone = supportedTimezoneIds.includes(savedTimezone) ? savedTimezone : 'UTC';
 
 const personalInfo = ref({
     name: authStore.userName,
@@ -19,11 +29,11 @@ const personalInfo = ref({
 });
 
 const notifications = ref({
-    email: authStore.user.notification_email ?? true,
-    sms: authStore.user.notification_sms ?? false,
+    email: authStore.user.email_notifications ?? true,
+    sms: authStore.user.sms_notifications ?? false,
     missionAlerts: authStore.user.mission_alerts ?? true,
     language: authStore.user.language ?? 'en',
-    timezone: authStore.user.timezone ?? 'UTC',
+    timezone: selectedTimezone,
 });
 
 async function savePersonalInfo() {
@@ -37,7 +47,12 @@ async function savePersonalInfo() {
 
 async function saveNotifications() {
     try {
-        await axios.post('/settings/notifications', notifications.value);
+        const { data } = await axios.post('/settings/notifications', notifications.value);
+        authStore.setUser({
+            ...authStore.user,
+            ...data.user,
+        });
+        router.reload({ only: ['auth'], preserveScroll: true });
         alert(t('settings_page.notifications.success'));
     } catch (error) {
         console.error('Error saving notification preferences:', error);
@@ -164,8 +179,13 @@ async function deleteAccount() {
                             {{ t('settings_page.notifications.timezone') }}
                         </label>
                         <select v-model="notifications.timezone">
-                            <option value="Europe/Paris">{{ t('settings_page.notifications.timezone_options.paris') }}</option>
-                            <option value="UTC">{{ t('settings_page.notifications.timezone_options.utc') }}</option>
+                            <option
+                                v-for="(labelKey, timezone) in timezoneOptions"
+                                :key="timezone"
+                                :value="timezone"
+                            >
+                                {{ t(`settings_page.notifications.timezone_options.${labelKey}`) }}
+                            </option>
                         </select>
                     </div>
 

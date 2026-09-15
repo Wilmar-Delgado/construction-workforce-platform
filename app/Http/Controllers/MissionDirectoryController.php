@@ -31,7 +31,8 @@ class MissionDirectoryController extends Controller
 
             $this->authorize('view', $workerRequest);
 
-            $mission = Mission::with(['hiringCompany.owner', 'requirements'])
+            $mission = Mission::withCommittedWorkerCount()
+                ->with(['hiringCompany.owner', 'requirements'])
                 ->findOrFail($workerRequest->mission_id);
 
             abort_if($mission->hiring_company_id === $user->company_id, 404);
@@ -40,6 +41,7 @@ class MissionDirectoryController extends Controller
         }
 
         $query = Mission::query()
+            ->notArchived()
             ->select([
                 'id',
                 'hiring_company_id',
@@ -54,14 +56,16 @@ class MissionDirectoryController extends Controller
                 'end_date',
                 'hourly_rate',
                 'status',
+                'recruiting_closed_at',
                 'created_at',
             ])
+            ->withCommittedWorkerCount()
             ->with([
                 'hiringCompany:id,name',
                 'requirements:id,mission_id,name',
             ])
             ->where('hiring_company_id', '!=', $user->company_id)
-            ->whereIn('status', ['open']);
+            ->actionableForStaffing($user);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -85,7 +89,8 @@ class MissionDirectoryController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $locations = Mission::select('city')
+        $locations = Mission::notArchived()
+            ->select('city')
             ->distinct()
             ->pluck('city');
 
@@ -108,11 +113,19 @@ class MissionDirectoryController extends Controller
 
         $workers = $workersQuery->get();
 
+        $existingRequests = WorkerRequest::query()
+            ->select(['mission_id', 'worker_profile_id', 'type', 'status'])
+            ->whereIn('mission_id', $missions->getCollection()->pluck('id'))
+            ->whereIn('worker_profile_id', $workers->pluck('id'))
+            ->orderBy('id')
+            ->get();
+
         return Inertia::render('FindMissions', [
             'missions' => $missions,
             'locations' => $locations,
             'filters' => $request->only(['search', 'job', 'location']),
             'workers' => $workers,
+            'existingRequests' => $existingRequests,
             'selectedMission' => $selectedMission,
         ]);
     }
@@ -132,6 +145,9 @@ class MissionDirectoryController extends Controller
             'end_date' => $mission->end_date,
             'hourly_rate' => $mission->hourly_rate,
             'status' => $mission->status,
+            'recruiting_closed_at' => $mission->recruiting_closed_at,
+            'committed_worker_count' => $mission->committed_worker_count,
+            'remaining_capacity' => $mission->remaining_capacity,
             'hiring_company' => [
                 'name' => $mission->hiringCompany?->name,
             ],

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Mail\MissionRequestCreated;
 use App\Models\Mission;
 use App\Models\MissionRequest;
-use App\Models\User;
 use App\Models\WorkerProfile;
 use App\Models\WorkerRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -32,12 +31,10 @@ class MissionRequestController extends Controller
 
         $user = auth()->user();
 
-        // Prevent duplicate requests
+        // A worker has one durable request record per mission, regardless of request type or status.
         $alreadyExists = MissionRequest::where([
             'mission_id' => $mission->id,
             'worker_profile_id' => $worker->id,
-            'type' => 'apply',
-            'status' => 'pending',
         ])->exists();
 
         if ($alreadyExists) {
@@ -73,18 +70,11 @@ class MissionRequestController extends Controller
             'requester',
         ]);
 
-        // Send email to company owner of the hiring company
-        $companyOwner = User::where(
-            'company_id',
-            $mission->hiring_company_id
-        )
-        ->whereHas('role', function ($q) {
-            $q->where('name', 'company_owner');
-        })
-        ->first();
+        // Send email to the owner recorded for the mission's hiring company.
+        $companyOwner = $mission->hiringCompany?->owner;
 
         if ($companyOwner) {
-            Mail::to('gabhenriquezmor@gmail.com')
+            Mail::to($companyOwner->email)
                 ->send(new MissionRequestCreated($requestModel));
         }
 

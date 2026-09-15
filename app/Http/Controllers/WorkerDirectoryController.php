@@ -88,9 +88,12 @@ class WorkerDirectoryController extends Controller {
             ->distinct()
             ->pluck('job');
 
-        $missions = Mission::where('hiring_company_id', $user->company_id)
-            ->whereIn('status', ['draft', 'open'])
-            ->select('id', 'title')
+        $missions = Mission::query()
+            ->notArchived()
+            ->where('hiring_company_id', $user->company_id)
+            ->select('id', 'title', 'workers', 'recruiting_closed_at', 'start_date')
+            ->withCommittedWorkerCount()
+            ->actionableForStaffing($user)
             ->orderBy('title')
             ->get();
 

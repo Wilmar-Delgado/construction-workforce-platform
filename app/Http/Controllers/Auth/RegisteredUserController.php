@@ -10,19 +10,27 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
+    private const PUBLIC_REGISTRATION_ROLE_NAMES = [
+        'company_owner',
+        'planning_manager',
+        'self_employed',
+    ];
+
     /**
      * Display the registration view.
      */
     public function create(): Response
     {
-        // Get all roles except 'administrator'
-        $roles = Role::where('name', '!=', 'administrator')->get();
+        $roles = Role::query()
+            ->whereIn('name', self::PUBLIC_REGISTRATION_ROLE_NAMES)
+            ->get();
 
         return Inertia::render('Auth/Register', [
             'roles' => $roles,
@@ -36,10 +44,15 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $publicRoleIds = Role::query()
+            ->whereIn('name', self::PUBLIC_REGISTRATION_ROLE_NAMES)
+            ->pluck('id')
+            ->all();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'role_id' => 'required|exists:roles,id',
+            'role_id' => ['required', Rule::in($publicRoleIds)],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 

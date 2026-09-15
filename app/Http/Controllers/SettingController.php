@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SettingController extends Controller
 {
@@ -39,19 +40,30 @@ class SettingController extends Controller
             'sms' => 'boolean',
             'missionAlerts' => 'boolean',
             'language' => 'required|string',
-            'timezone' => 'required|string',
+            'timezone' => [
+                'required',
+                'string',
+                Rule::in(array_keys(config('timezones.supported'))),
+            ],
         ]);
 
         $user->update([
-            'notification_email' => $validated['email'],
-            'notification_sms' => $validated['sms'],
+            'email_notifications' => $validated['email'],
+            'sms_notifications' => $validated['sms'],
             'mission_alerts' => $validated['missionAlerts'],
             'language' => $validated['language'],
             'timezone' => $validated['timezone'],
         ]);
 
         return response()->json([
-            'message' => 'Notification preferences updated successfully.'
+            'message' => 'Notification preferences updated successfully.',
+            'user' => $user->fresh()->only([
+                'email_notifications',
+                'sms_notifications',
+                'mission_alerts',
+                'language',
+                'timezone',
+            ]),
         ]);
     }
 

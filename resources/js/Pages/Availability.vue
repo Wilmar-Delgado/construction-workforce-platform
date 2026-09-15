@@ -7,9 +7,13 @@ import AvailabilityCalendar from '@/Components/availability/AvailabilityCalendar
 import { Head, usePage, useForm } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { useTranslate } from '@/composables/useTranslate';
+import { useDateTime } from '@/composables/useDateTime';
+import { useUserRole } from '@/composables/useUserRole';
 import { Plus } from 'lucide-vue-next';
 
 const { t } = useTranslate();
+const { formatDateOnly } = useDateTime();
+const { isSelfEmployed } = useUserRole();
 const page = usePage();
 const workers = computed(() => page.props.workerProfiles || []);
 const hasSingleWorker = computed(() => workers.value.length === 1);
@@ -134,12 +138,7 @@ function resetModal() {
 }
 
 function formatDate(date) {
-    if (!date) return '';
-
-    return new Date(`${date}T00:00:00`).toLocaleDateString(
-        page.props.locale === 'fr' ? 'fr-CA' : 'en-CA',
-        { year: 'numeric', month: '2-digit', day: '2-digit' }
-    );
+    return formatDateOnly(date, { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 </script>
@@ -167,7 +166,7 @@ function formatDate(date) {
 
         <!-- Header -->
         <div class="page-header">
-            <h2>{{ hasSingleWorker ? t('availability_page.subtitle_self') : t('availability_page.subtitle_company') }}</h2>
+            <h2>{{ isSelfEmployed ? t('availability_page.subtitle_self') : t('availability_page.subtitle_company') }}</h2>
             <button @click="openCreateAvailability" class="btn-primary">
                 <Plus class="icon" /> {{ t('availability_page.add_availability') }}
             </button>
