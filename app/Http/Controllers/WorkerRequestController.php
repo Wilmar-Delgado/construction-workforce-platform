@@ -9,6 +9,7 @@ use App\Models\WorkerRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use App\Mail\WorkerRequestCreated;
 
 class WorkerRequestController extends Controller
@@ -30,6 +31,12 @@ class WorkerRequestController extends Controller
         );
 
         $mission = Mission::findOrFail($validated['mission_id']);
+
+        if (! $worker->isOperationallyAvailable()) {
+            throw ValidationException::withMessages([
+                'worker' => __('app.find_workers_page.request_modal.archived_worker_cannot_receive_request'),
+            ]);
+        }
 
         $this->authorize('createInvite', [WorkerRequest::class, $mission, $worker]);
 

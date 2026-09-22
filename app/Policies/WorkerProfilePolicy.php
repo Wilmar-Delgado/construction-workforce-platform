@@ -40,6 +40,11 @@ class WorkerProfilePolicy
         return $this->managesProfile($user, $workerProfile);
     }
 
+    public function archive(User $user, WorkerProfile $workerProfile): bool
+    {
+        return $this->managesProfile($user, $workerProfile);
+    }
+
     private function managesProfile(User $user, WorkerProfile $workerProfile): bool
     {
         if ($workerProfile->company_id !== null) {

@@ -48,17 +48,19 @@ class WorkerDirectoryController extends Controller {
             ];
         }
 
-        $query = WorkerProfile::with([
-            'skills',
-            'certifications',
-            'company'
-        ])
-        ->withAvg('ratings', 'score')
-        ->withCount('ratings')
-        ->where(function ($q) use ($user) {
-            $q->where('company_id', '!=', $user->company_id)
-            ->orWhereNull('company_id');
-        });
+        $query = WorkerProfile::query()
+            ->notArchived()
+            ->with([
+                'skills',
+                'certifications',
+                'company',
+            ])
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
+            ->where(function ($q) use ($user) {
+                $q->where('company_id', '!=', $user->company_id)
+                    ->orWhereNull('company_id');
+            });
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -84,7 +86,9 @@ class WorkerDirectoryController extends Controller {
             ->paginate(9)
             ->withQueryString();
 
-        $jobs = WorkerProfile::select('job')
+        $jobs = WorkerProfile::query()
+            ->notArchived()
+            ->select('job')
             ->distinct()
             ->pluck('job');
 

@@ -94,7 +94,9 @@ class MissionDirectoryController extends Controller
             ->distinct()
             ->pluck('city');
 
-        $workersQuery = WorkerProfile::select('id', 'user_id', 'name', 'job');
+        $workersQuery = WorkerProfile::query()
+            ->notArchived()
+            ->select('id', 'user_id', 'name', 'job');
 
         if ($user->role?->name === 'administrator') {
             // Administrators can access worker profiles across companies.

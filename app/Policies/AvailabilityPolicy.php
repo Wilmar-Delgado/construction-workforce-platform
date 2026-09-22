@@ -28,12 +28,15 @@ class AvailabilityPolicy
 
     public function create(User $user, WorkerProfile $workerProfile): bool
     {
-        return $this->managesProfile($user, $workerProfile);
+        return $workerProfile->isOperationallyAvailable()
+            && $this->managesProfile($user, $workerProfile);
     }
 
     public function update(User $user, Availability $availability, WorkerProfile $targetProfile): bool
     {
-        return $this->managesProfile($user, $availability->workerProfile)
+        return $availability->workerProfile?->isOperationallyAvailable()
+            && $targetProfile->isOperationallyAvailable()
+            && $this->managesProfile($user, $availability->workerProfile)
             && $this->managesProfile($user, $targetProfile);
     }
 

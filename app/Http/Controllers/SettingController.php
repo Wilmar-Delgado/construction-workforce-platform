@@ -67,14 +67,4 @@ class SettingController extends Controller
         ]);
     }
 
-    public function deleteAccount(Request $request)
-    {
-        $user = Auth::user();
-        // Optionally, you can add password confirmation here
-        $user->delete();
-
-        return response()->json([
-            'message' => 'Account deleted successfully.'
-        ]);
-    }
 }

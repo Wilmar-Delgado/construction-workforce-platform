@@ -55,4 +55,14 @@ class EmailVerificationTest extends TestCase
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
+
+    public function test_inactive_user_cannot_access_email_verification_routes(): void
+    {
+        $user = User::factory()->unverified()->create(['is_active' => false]);
+
+        $response = $this->actingAs($user)->get('/verify-email');
+
+        $response->assertRedirect(route('login', absolute: false));
+        $this->assertGuest();
+    }
 }

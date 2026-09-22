@@ -12,7 +12,7 @@ import { useUserRole } from '@/composables/useUserRole';
 import { usePermissions } from '@/composables/usePermissions';
 import { useDataTable } from '@/composables/useDataTable';
 import { mergeMultiValueInput } from '@/composables/useMultiValueInput';
-import { Edit2, Trash2, Plus } from 'lucide-vue-next';
+import { Archive, Pencil, Trash2, Plus } from 'lucide-vue-next';
 
 const { t } = useTranslate();
 
@@ -89,6 +89,9 @@ const { handleSort } = useDataTable('worker-profiles.index', filters);
 
 const showDeleteModal = ref(false);
 const deletingWorker = ref(null);
+const showArchiveModal = ref(false);
+const archivingWorker = ref(null);
+const archiveForm = useForm({});
 
 function ratingDisplay(worker) {
     if (worker.rating === null || worker.rating === undefined) {
@@ -170,6 +173,20 @@ function confirmDeleteWorker() {
     });
 }
 
+function archiveWorker(worker) {
+    archivingWorker.value = worker;
+    showArchiveModal.value = true;
+}
+
+function confirmArchiveWorker() {
+    archiveForm.put(route('worker-profiles.archive', archivingWorker.value.id), {
+        onSuccess: () => {
+            showArchiveModal.value = false;
+            archivingWorker.value = null;
+        },
+    });
+}
+
 function resetModal() {
     showModal.value = false;
 
@@ -224,7 +241,7 @@ function resetModal() {
             </button>
 
             <!-- SELF-EMPLOYED -->
-            <template v-else>
+            <div v-else class="page-header-actions">
                 <button 
                     v-if="!hasProfile"
                     @click="resetModal(); showModal = true" 
@@ -233,14 +250,31 @@ function resetModal() {
                     <Plus class="icon" /> {{ t('profiles_page.create_profile') }}
                 </button>
 
-                <button 
-                    v-else
-                    @click="editWorker(workers[0])"
-                    class="btn-primary"
-                >
-                    <Edit2 class="icon" /> {{ t('profiles_page.edit_profile') }}
-                </button>
-            </template>
+                <template v-else>
+                    <button 
+                        @click="editWorker(workers[0])"
+                        class="btn-primary"
+                    >
+                        <Pencil class="icon" /> {{ t('profiles_page.edit_profile') }}
+                    </button>
+
+                    <button
+                        v-if="workers[0]?.can_archive"
+                        @click="archiveWorker(workers[0])"
+                        class="btn-thirdary"
+                    >
+                        <Archive class="icon" /> {{ t('profiles_page.archive_modal.action') }}
+                    </button>
+
+                    <button
+                        v-if="workers[0]?.can_delete"
+                        @click="deleteWorker(workers[0])"
+                        class="btn-danger"
+                    >
+                        <Trash2 class="icon" /> {{ t('profiles_page.delete_modal.action') }}
+                    </button>
+                </template>
+            </div>
         </div>
 
         <!-- SELF-EMPLOYED VIEW -->
@@ -329,9 +363,20 @@ function resetModal() {
                     </td>
                     <td class="actions" style="text-align: right;">
                         <button @click="editWorker(worker)" class="table-icon-btn blue">
-                            <Edit2 class="table-icon" />
+                            <Pencil class="table-icon" />
                         </button>
-                        <button @click="deleteWorker(worker)" class="table-icon-btn danger">
+                        <button
+                            v-if="worker.can_archive"
+                            @click="archiveWorker(worker)"
+                            class="table-icon-btn blue"
+                        >
+                            <Archive class="table-icon" />
+                        </button>
+                        <button
+                            v-if="worker.can_delete"
+                            @click="deleteWorker(worker)"
+                            class="table-icon-btn danger"
+                        >
                             <Trash2 class="table-icon" />
                         </button>
                     </td>
@@ -354,6 +399,17 @@ function resetModal() {
             danger
             :loading="form.processing"
             @confirm="confirmDeleteWorker"
+        />
+
+        <ConfirmModal
+            v-model="showArchiveModal"
+            :title="t('profiles_page.archive_modal.title')"
+            :message="t('profiles_page.archive_modal.message')"
+            :item-name="archivingWorker?.name"
+            :confirm-text="t('profiles_page.archive_modal.confirm')"
+            :cancel-text="t('profiles_page.archive_modal.cancel')"
+            :loading="archiveForm.processing"
+            @confirm="confirmArchiveWorker"
         />
 
         <!-- EDIT/CREATE MODAL -->

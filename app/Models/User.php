@@ -57,6 +57,7 @@ class User extends Authenticatable
             'email_notifications' => 'boolean',
             'sms_notifications' => 'boolean',
             'mission_alerts' => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -78,5 +79,10 @@ class User extends Authenticatable
     public function workerProfiles()
     {
         return $this->hasMany(WorkerProfile::class);
+    }
+
+    public function canBeDeactivated(): bool
+    {
+        return ! $this->ownedCompany()->exists();
     }
 }

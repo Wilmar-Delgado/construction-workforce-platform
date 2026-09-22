@@ -269,9 +269,24 @@ return [
 
         'delete_modal' => [
             'title' => 'Delete Worker Profile',
-            'message' => 'Are you sure you want to delete this worker profile? This action cannot be undone.',
+            'message' => 'Permanently delete this unused worker profile? This action cannot be undone.',
+            'action' => 'Delete',
             'confirm' => 'Yes, delete it',
             'cancel' => 'Cancel',
+        ],
+
+        'archive_modal' => [
+            'title' => 'Archive Worker Profile',
+            'message' => 'Archive this worker profile? Its mission, request, and rating history will be preserved.',
+            'action' => 'Archive',
+            'confirm' => 'Yes, archive it',
+            'cancel' => 'Cancel',
+        ],
+
+        'validation' => [
+            'cannot_delete_worker' => 'Only unarchived worker profiles without business history can be permanently deleted.',
+            'cannot_archive_worker' => 'Only worker profiles with resolved history and no active work or requests can be archived.',
+            'cannot_edit_archived_worker' => 'Archived worker profiles cannot be edited.',
         ],
     ],
 
@@ -311,6 +326,7 @@ return [
             'mission_assignment_conflict' => 'This worker is already assigned to a mission on this date.',
             'calendar_range_too_large' => 'The calendar range cannot exceed :days days.',
             'worker_not_available' => 'The selected worker is not available to you.',
+            'archived_worker_cannot_receive_availability' => 'Archived workers cannot receive new or updated availability.',
         ],
 
         'add_modal' => [
@@ -391,6 +407,7 @@ return [
             'choose_mission' => 'Choose a mission for this worker',
             'mission_desc' => 'Optional Message (e.g. specific tasks, project details, etc.)',
             'already_requested' => 'Already Requested',
+            'archived_worker_cannot_receive_request' => 'Archived workers cannot receive new requests.',
             'sending' => 'Sending Request...',
             'send' => 'Send Request',
             'cancel' => 'Cancel',
@@ -424,6 +441,7 @@ return [
             'request_join' => 'Request to Join',
             'applied' => 'Applied',
             'invited' => 'Invited',
+            'active_profile_required' => 'Active worker profile required',
         ],
 
         'request_modal' => [
@@ -438,6 +456,10 @@ return [
             'sending' => 'Sending Application...',
             'send' => 'Send Application',
             'cancel' => 'Cancel',
+        ],
+
+        'validation' => [
+            'archived_worker_cannot_request' => 'Archived workers cannot submit new mission applications.',
         ],
 
         'details_modal' => [
@@ -849,10 +871,12 @@ return [
 
         'danger_zone' => [
             'title' => 'Danger Zone',
-            'subtitle' => 'Irreversible and destructive actions',
-            'delete_account' => 'Delete Account',
-            'confirm' => 'Are you sure you want to delete your account? This cannot be undone.',
-            'deleted_alert' => 'Account deleted. Redirecting to homepage.',
+            'subtitle' => 'Deactivate access to your account',
+            'deactivate_account' => 'Deactivate Account',
+            'deactivate_modal_title' => 'Deactivate your account?',
+            'deactivate_modal_description' => 'Enter your password to deactivate your account. You will be signed out on all devices.',
+            'password' => 'Password',
+            'owner_cannot_deactivate' => 'Company owners cannot deactivate their account while they own a company.',
         ],
 
         'common' => [

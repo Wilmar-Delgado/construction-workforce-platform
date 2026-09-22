@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Models\WorkerProfile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -47,5 +48,46 @@ class WorkerProfilesPageTest extends TestCase
                 ->has('workerProfiles.data', 1)
                 ->where('workerProfiles.data.0.user_id', $user->id)
             );
+    }
+
+    public function test_self_employed_user_with_only_an_archived_profile_is_treated_as_having_no_active_profile(): void
+    {
+        $user = User::factory()->create([
+            'role_id' => Role::firstOrCreate(['name' => 'self_employed'])->id,
+            'company_id' => null,
+        ]);
+
+        WorkerProfile::create([
+            'user_id' => $user->id,
+            'company_id' => null,
+            'name' => $user->name,
+            'job' => 'Electrician',
+            'years_experience' => 5,
+            'hourly_rate' => 40,
+            'archived_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('worker-profiles.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('WorkerProfiles')
+                ->where('hasWorkerProfile', false)
+                ->has('workerProfiles.data', 0)
+            );
+
+        $this->actingAs($user)
+            ->post(route('worker-profiles.store'), [
+                'name' => $user->name,
+                'job' => 'Electrician',
+                'experience' => 5,
+                'rate' => 40,
+                'certifications' => [],
+                'skills' => [],
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, WorkerProfile::notArchived()
+            ->where('user_id', $user->id)
+            ->count());
     }
 }

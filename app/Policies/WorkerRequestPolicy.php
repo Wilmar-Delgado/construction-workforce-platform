@@ -33,12 +33,13 @@ class WorkerRequestPolicy
         return $this->isCompanyManager($user)
             && $mission->hiring_company_id === $user->company_id
             && $mission->isActionableForStaffing()
+            && $worker->isOperationallyAvailable()
             && $worker->company_id !== $user->company_id;
     }
 
     public function createApplication(User $user, Mission $mission, WorkerProfile $worker): bool
     {
-        if (! $mission->isActionableForStaffing()) {
+        if (! $mission->isActionableForStaffing() || ! $worker->isOperationallyAvailable()) {
             return false;
         }
 

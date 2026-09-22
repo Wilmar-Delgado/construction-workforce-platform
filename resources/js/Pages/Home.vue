@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useTranslate } from '@/composables/useTranslate';
 import { useUserRole } from '@/composables/useUserRole';
 import { usePermissions } from '@/composables/usePermissions';
-import { TrendingUp, Calendar, Edit2, Users, Briefcase, UserPlus, Search } from 'lucide-vue-next';
+import { TrendingUp, Calendar, Pencil, Users, Briefcase, UserPlus, Search } from 'lucide-vue-next';
 
 const { t } = useTranslate();
 const { isSelfEmployed } = useUserRole();
@@ -110,7 +110,7 @@ const openSettings = () => {
                     <!-- Create / Edit Profile -->
                     <div class="action-card" @click="openProfiles">
                         <div class="action-icon">
-                            <component :is="hasProfile ? Edit2 : UserPlus" class="icon" />
+                            <component :is="hasProfile ? Pencil : UserPlus" class="icon" />
                         </div>
 
                         <h3>

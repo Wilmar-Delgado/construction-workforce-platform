@@ -1,6 +1,7 @@
 <script setup>
 import SidebarLayout from '@/Layouts/SidebarLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import BaseModal from '@/Components/base/BaseModal.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useTranslate } from '@/composables/useTranslate';
 import { ref } from 'vue';
@@ -13,6 +14,10 @@ const props = defineProps({
     timezoneOptions: {
         type: Object,
         default: () => ({}),
+    },
+    canDeactivateAccount: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -34,6 +39,11 @@ const notifications = ref({
     missionAlerts: authStore.user.mission_alerts ?? true,
     language: authStore.user.language ?? 'en',
     timezone: selectedTimezone,
+});
+
+const showDeactivationModal = ref(false);
+const deactivationForm = useForm({
+    password: '',
 });
 
 async function savePersonalInfo() {
@@ -63,16 +73,24 @@ async function changePassword() {
     console.log('Redirect to change password');
 }
 
-async function deleteAccount() {
-    if (confirm(t('settings_page.danger_zone.confirm'))) {
-        try {
-            await axios.post('/settings/delete-account');
-            alert(t('settings_page.danger_zone.deleted_alert'));
-            window.location.href = '/';
-        } catch (error) {
-            console.error('Error deleting account:', error);
-        }
-    }
+function openDeactivationModal() {
+    deactivationForm.clearErrors();
+    deactivationForm.reset();
+    showDeactivationModal.value = true;
+}
+
+function closeDeactivationModal() {
+    showDeactivationModal.value = false;
+    deactivationForm.clearErrors();
+    deactivationForm.reset();
+}
+
+function deactivateAccount() {
+    deactivationForm.delete(route('profile.destroy'), {
+        preserveScroll: true,
+        onSuccess: closeDeactivationModal,
+        onFinish: () => deactivationForm.reset('password'),
+    });
 }
 </script>
 
@@ -199,10 +217,54 @@ async function deleteAccount() {
                 <h3 class="card-title text-red-600">{{ t('settings_page.danger_zone.title') }}</h3>
                 <p class="card-subtitle">{{ t('settings_page.danger_zone.subtitle') }}</p>
                 <div class="card-body">
-                    <button @click="deleteAccount" class="btn-danger">{{ t('settings_page.danger_zone.delete_account') }}</button>
+                    <template v-if="canDeactivateAccount">
+                        <button @click="openDeactivationModal" class="btn-danger">
+                            {{ t('settings_page.danger_zone.deactivate_account') }}
+                        </button>
+                    </template>
+                    <p v-else class="setting-desc">
+                        {{ t('settings_page.danger_zone.owner_cannot_deactivate') }}
+                    </p>
                 </div>
             </div>
         </div>
+
+        <BaseModal
+            v-model="showDeactivationModal"
+            :title="t('settings_page.danger_zone.deactivate_modal_title')"
+            max-width="480px"
+            @close="closeDeactivationModal"
+        >
+            <p>{{ t('settings_page.danger_zone.deactivate_modal_description') }}</p>
+            <label for="deactivation-password">
+                {{ t('settings_page.danger_zone.password') }}
+            </label>
+            <input
+                id="deactivation-password"
+                v-model="deactivationForm.password"
+                type="password"
+                :placeholder="t('settings_page.danger_zone.password')"
+                @keyup.enter="deactivateAccount"
+            />
+            <p v-if="deactivationForm.errors.password" class="text-red-600 text-sm">
+                {{ deactivationForm.errors.password }}
+            </p>
+            <p v-if="deactivationForm.errors.account" class="text-red-600 text-sm">
+                {{ deactivationForm.errors.account }}
+            </p>
+            <template #footer>
+                <button class="btn-secondary" @click="closeDeactivationModal">
+                    {{ t('common.cancel') }}
+                </button>
+                <button
+                    class="btn-danger"
+                    :disabled="deactivationForm.processing"
+                    @click="deactivateAccount"
+                >
+                    {{ t('settings_page.danger_zone.deactivate_account') }}
+                </button>
+            </template>
+        </BaseModal>
     </SidebarLayout>
 </template>
 

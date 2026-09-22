@@ -80,7 +80,9 @@ class HomeController extends Controller
 
                 'pending_requests' => $pendingTotal,
 
-                'active_workers' => WorkerProfile::where('company_id', $companyId)
+                'active_workers' => WorkerProfile::query()
+                    ->notArchived()
+                    ->where('company_id', $companyId)
                     ->count(),
 
                 'total_missions' => Mission::where('hiring_company_id', $companyId)

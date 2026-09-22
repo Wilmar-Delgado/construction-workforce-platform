@@ -30,6 +30,18 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class);
     }
 
+    public function test_inactive_user_cannot_receive_a_password_reset_link(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create(['is_active' => false]);
+
+        $response = $this->post('/forgot-password', ['email' => $user->email]);
+
+        $response->assertSessionHas('status');
+        Notification::assertNothingSent();
+    }
+
     public function test_reset_password_screen_can_be_rendered(): void
     {
         Notification::fake();
@@ -69,5 +81,31 @@ class PasswordResetTest extends TestCase
 
             return true;
         });
+    }
+
+    public function test_deactivated_user_cannot_reset_a_password_with_a_previously_issued_token(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $originalPassword = $user->password;
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+        $user->forceFill(['is_active' => false])->save();
+
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+            $response = $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+            $response->assertSessionHasErrors('email');
+
+            return true;
+        });
+
+        $this->assertSame($originalPassword, $user->fresh()->password);
     }
 }

@@ -10,6 +10,7 @@ use App\Models\WorkerRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class MissionRequestController extends Controller
 {
@@ -26,6 +27,12 @@ class MissionRequestController extends Controller
         $worker = WorkerProfile::findOrFail(
             $validated['worker_profile_id']
         );
+
+        if (! $worker->isOperationallyAvailable()) {
+            throw ValidationException::withMessages([
+                'worker_profile_id' => __('app.find_missions_page.validation.archived_worker_cannot_request'),
+            ]);
+        }
 
         $this->authorize('createApplication', [WorkerRequest::class, $mission, $worker]);
 

@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class WorkerProfile extends Model
 {
@@ -17,6 +18,11 @@ class WorkerProfile extends Model
         'job',
         'years_experience',
         'hourly_rate',
+        'archived_at',
+    ];
+
+    protected $casts = [
+        'archived_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -56,6 +62,73 @@ class WorkerProfile extends Model
     public function ratings()
     {
         return $this->hasMany(Rating::class, 'worker_profile_id');
+    }
+
+    public function requests()
+    {
+        return $this->hasMany(WorkerRequest::class, 'worker_profile_id');
+    }
+
+    /**
+     * Legacy direct worker-to-mission references still need retention protection.
+     */
+    public function directMissions()
+    {
+        return $this->hasMany(Mission::class, 'worker_profile_id');
+    }
+
+    public function availabilities()
+    {
+        return $this->hasMany(Availability::class, 'worker_profile_id');
+    }
+
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function hasBusinessHistory(): bool
+    {
+        return $this->requests()->exists()
+            || $this->ratings()->exists()
+            || $this->directMissions()->exists();
+    }
+
+    public function hasActiveBusinessActivity(): bool
+    {
+        return $this->requests()
+            ->whereIn('status', ['pending', 'accepted', 'ongoing'])
+            ->exists()
+            || $this->directMissions()
+                ->whereIn('status', ['draft', 'open', 'in_progress'])
+                ->exists();
+    }
+
+    public function canBePermanentlyDeleted(): bool
+    {
+        return $this->archived_at === null
+            && ! $this->hasBusinessHistory();
+    }
+
+    public function canBeArchived(): bool
+    {
+        return $this->archived_at === null
+            && $this->hasBusinessHistory()
+            && ! $this->hasActiveBusinessActivity();
+    }
+
+    /**
+     * Archived profiles remain available to historical relationships, but may
+     * not participate in new operational workflows.
+     */
+    public function isOperationallyAvailable(): bool
+    {
+        return $this->archived_at === null;
     }
 
     /**

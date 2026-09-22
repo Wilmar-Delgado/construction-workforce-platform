@@ -262,9 +262,24 @@ return [
 
         'delete_modal' => [
             'title' => 'Supprimer le profil du travailleur',
-            'message' => 'Êtes-vous sûr de vouloir supprimer ce profil de travailleur? Cette action est irréversible.',
+            'message' => 'Supprimer définitivement ce profil de travailleur inutilisé ? Cette action est irréversible.',
+            'action' => 'Supprimer',
             'confirm' => 'Oui, supprimer',
             'cancel' => 'Annuler',
+        ],
+
+        'archive_modal' => [
+            'title' => 'Archiver le profil du travailleur',
+            'message' => 'Archiver ce profil de travailleur ? Son historique de missions, de demandes et d’évaluations sera préservé.',
+            'action' => 'Archiver',
+            'confirm' => 'Oui, archiver',
+            'cancel' => 'Annuler',
+        ],
+
+        'validation' => [
+            'cannot_delete_worker' => 'Seuls les profils de travailleurs non archivés sans historique d’activité peuvent être supprimés définitivement.',
+            'cannot_archive_worker' => 'Seuls les profils avec un historique résolu et sans travail ou demande active peuvent être archivés.',
+            'cannot_edit_archived_worker' => 'Les profils de travailleurs archivés ne peuvent pas être modifiés.',
         ],
     ],
 
@@ -317,6 +332,7 @@ return [
             'mission_assignment_conflict' => 'Ce travailleur est déjà affecté à une mission à cette date.',
             'calendar_range_too_large' => 'La période du calendrier ne peut pas dépasser :days jours.',
             'worker_not_available' => 'Le travailleur sélectionné ne vous est pas accessible.',
+            'archived_worker_cannot_receive_availability' => 'Les travailleurs archivés ne peuvent pas recevoir de nouvelles disponibilités ni de mises à jour.',
         ],
 
         'edit_modal' => [
@@ -385,6 +401,7 @@ return [
             'mission_desc' => 'Message facultatif (p. ex. tâches précises ou détails du projet)',
             'choose_mission' => 'Choisissez une mission pour ce travailleur',
             'already_requested' => 'Déjà demandée',
+            'archived_worker_cannot_receive_request' => 'Les travailleurs archivés ne peuvent pas recevoir de nouvelles demandes.',
             'sending' => 'Envoi de la demande...',
 
             'send' => 'Envoyer la demande',
@@ -419,6 +436,7 @@ return [
             'request_join' => 'Demander à rejoindre',
             'applied' => 'Candidature envoyée',
             'invited' => 'Invitation reçue',
+            'active_profile_required' => 'Un profil de travailleur actif est requis',
         ],
 
         'request_modal' => [
@@ -433,6 +451,10 @@ return [
             'sending' => 'Envoi de la candidature...',
             'send' => 'Envoyer la candidature',
             'cancel' => 'Annuler',
+        ],
+
+        'validation' => [
+            'archived_worker_cannot_request' => 'Les travailleurs archivés ne peuvent pas soumettre de nouvelles candidatures.',
         ],
 
         'details_modal' => [
@@ -844,10 +866,12 @@ return [
 
         'danger_zone' => [
             'title' => 'Zone de danger',
-            'subtitle' => 'Actions irréversibles et destructrices',
-            'delete_account' => 'Supprimer le compte',
-            'confirm' => 'Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.',
-            'deleted_alert' => 'Compte supprimé. Redirection vers la page d’accueil.',
+            'subtitle' => 'Désactiver l’accès à votre compte',
+            'deactivate_account' => 'Désactiver le compte',
+            'deactivate_modal_title' => 'Désactiver votre compte ?',
+            'deactivate_modal_description' => 'Saisissez votre mot de passe pour désactiver votre compte. Vous serez déconnecté de tous vos appareils.',
+            'password' => 'Mot de passe',
+            'owner_cannot_deactivate' => 'Les propriétaires d’entreprise ne peuvent pas désactiver leur compte tant qu’ils possèdent une entreprise.',
         ],
 
         'common' => [

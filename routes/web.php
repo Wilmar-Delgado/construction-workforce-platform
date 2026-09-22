@@ -38,7 +38,7 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'active', 'verified'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -70,6 +70,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('worker-profiles', WorkerProfileController::class)
         ->only(['index', 'store', 'update', 'destroy']);
+    Route::put('/worker-profiles/{workerProfile}/archive', [WorkerProfileController::class, 'archive'])
+        ->name('worker-profiles.archive');
 
     /*
     |--------------------------------------------------------------------------
@@ -141,6 +143,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/settings', fn () => Inertia::render('Settings', [
         'timezoneOptions' => config('timezones.supported'),
+        'canDeactivateAccount' => request()->user()->canBeDeactivated(),
     ]))->name('settings');
 
     Route::post('/settings/personal', [SettingController::class, 'updatePersonalInfo'])
@@ -148,10 +151,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/settings/notifications', [SettingController::class, 'updateNotifications'])
         ->name('settings.notifications.update');
-
-    Route::delete('/settings/delete-account', [SettingController::class, 'deleteAccount'])
-        ->name('settings.delete_account');
-
 
     /*
     |--------------------------------------------------------------------------

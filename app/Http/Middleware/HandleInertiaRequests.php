@@ -22,7 +22,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user() ? $request->user()->load(['company', 'role']) : null,
             ],
 
-            'hasWorkerProfile' => $request->user() ? $request->user()->workerProfiles()->exists() : false,
+            'hasWorkerProfile' => $request->user()
+                ? $request->user()->workerProfiles()->notArchived()->exists()
+                : false,
             
             'locale' => App::getLocale(),
             'translations' => trans('app'),

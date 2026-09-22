@@ -8,6 +8,8 @@ use App\Models\WorkerProfile;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +25,9 @@ class WorkerProfileController extends Controller
         $sortDirection = $request->get('direction', 'asc');
         $user = auth()->user();
 
-        $workerProfilesQuery = WorkerProfile::with(['company', 'skills', 'certifications'])
+        $workerProfilesQuery = WorkerProfile::query()
+            ->notArchived()
+            ->with(['company', 'skills', 'certifications'])
             ->withAvg('ratings', 'score')
             ->withCount('ratings');
 
@@ -41,6 +45,13 @@ class WorkerProfileController extends Controller
             ->orderBy($sortField, $sortDirection)
             ->paginate(10)
             ->withQueryString();
+
+        $workerProfiles->through(function (WorkerProfile $workerProfile): WorkerProfile {
+            $workerProfile->setAttribute('can_delete', $workerProfile->canBePermanentlyDeleted());
+            $workerProfile->setAttribute('can_archive', $workerProfile->canBeArchived());
+
+            return $workerProfile;
+        });
 
         return Inertia::render('WorkerProfiles', [
             'workerProfiles' => $workerProfiles,
@@ -114,6 +125,12 @@ class WorkerProfileController extends Controller
     {
         $this->authorize('update', $workerProfile);
 
+        if (! $workerProfile->isOperationallyAvailable()) {
+            throw ValidationException::withMessages([
+                'worker_profile' => [__('app.profiles_page.validation.cannot_edit_archived_worker')],
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'company' => 'nullable|string|max:255',
@@ -172,8 +189,43 @@ class WorkerProfileController extends Controller
     {
         $this->authorize('delete', $workerProfile);
 
-        $workerProfile->delete();
+        DB::transaction(function () use ($workerProfile): void {
+            $lockedWorkerProfile = WorkerProfile::query()
+                ->lockForUpdate()
+                ->findOrFail($workerProfile->id);
+
+            if (! $lockedWorkerProfile->canBePermanentlyDeleted()) {
+                throw ValidationException::withMessages([
+                    'worker_profile' => [__('app.profiles_page.validation.cannot_delete_worker')],
+                ]);
+            }
+
+            $lockedWorkerProfile->delete();
+        });
 
         return redirect()->route('worker-profiles.index')->with('success', 'Worker profile deleted successfully.');
+    }
+
+    public function archive(WorkerProfile $workerProfile): RedirectResponse
+    {
+        $this->authorize('archive', $workerProfile);
+
+        DB::transaction(function () use ($workerProfile): void {
+            $lockedWorkerProfile = WorkerProfile::query()
+                ->lockForUpdate()
+                ->findOrFail($workerProfile->id);
+
+            if (! $lockedWorkerProfile->canBeArchived()) {
+                throw ValidationException::withMessages([
+                    'worker_profile' => [__('app.profiles_page.validation.cannot_archive_worker')],
+                ]);
+            }
+
+            $lockedWorkerProfile->update([
+                'archived_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('worker-profiles.index')->with('success', 'Worker profile archived successfully.');
     }
 }

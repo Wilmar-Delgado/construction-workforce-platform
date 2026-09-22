@@ -117,6 +117,8 @@ class AvailabilityController extends Controller
 
         $workerProfile = WorkerProfile::findOrFail($validated['worker_profile_id']);
 
+        $this->ensureWorkerIsOperationallyAvailable($workerProfile);
+
         $this->authorize('create', [Availability::class, $workerProfile]);
 
         DB::transaction(function () use ($validated) {
@@ -134,6 +136,9 @@ class AvailabilityController extends Controller
         $validated = $this->validateAvailability($request);
 
         $targetProfile = WorkerProfile::findOrFail($validated['worker_profile_id']);
+
+        $this->ensureWorkerIsOperationallyAvailable($availability->workerProfile);
+        $this->ensureWorkerIsOperationallyAvailable($targetProfile);
 
         $this->authorize('update', [$availability, $targetProfile]);
 
@@ -226,7 +231,7 @@ class AvailabilityController extends Controller
 
     private function authorizedWorkerProfilesQuery(User $user)
     {
-        $query = WorkerProfile::query();
+        $query = WorkerProfile::query()->notArchived();
 
         if ($user->role?->name === 'administrator') {
             return $query;
@@ -246,5 +251,14 @@ class AvailabilityController extends Controller
         }
 
         return $query->whereRaw('1 = 0');
+    }
+
+    private function ensureWorkerIsOperationallyAvailable(WorkerProfile $workerProfile): void
+    {
+        if (! $workerProfile->isOperationallyAvailable()) {
+            throw ValidationException::withMessages([
+                'worker_profile_id' => __('app.availability_page.validation.archived_worker_cannot_receive_availability'),
+            ]);
+        }
     }
 }

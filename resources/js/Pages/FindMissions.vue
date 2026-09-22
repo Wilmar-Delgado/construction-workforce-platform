@@ -136,6 +136,10 @@ const selfEmployedWorker = computed(() =>
     props.workers.find((worker) => worker.user_id === authStore.user.id)
 );
 
+const selfEmployedNeedsActiveProfile = computed(() =>
+    isSelfEmployed.value && !selfEmployedWorker.value
+);
+
 function selfEmployedRequestForMission(mission) {
     if (!isSelfEmployed.value || !selfEmployedWorker.value) {
         return null;
@@ -377,6 +381,13 @@ function submitRequest() {
                             class="btn-secondary mission-request-status"
                         >
                             {{ selfEmployedRequestLabel(mission) }}
+                        </span>
+
+                        <span
+                            v-else-if="selfEmployedNeedsActiveProfile"
+                            class="btn-secondary mission-request-status"
+                        >
+                            {{ t('find_missions_page.mission_card.active_profile_required') }}
                         </span>
 
                         <button v-else class="btn-secondary" @click="openRequestModal(mission)">

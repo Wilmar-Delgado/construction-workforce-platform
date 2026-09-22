@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -20,9 +21,27 @@ class SettingsTimezoneTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Settings')
+                ->where('canDeactivateAccount', true)
                 ->where('timezoneOptions.America/Edmonton', 'mountain')
                 ->where('timezoneOptions.UTC', 'utc')
                 ->has('timezoneOptions', 8));
+    }
+
+    public function test_settings_reports_that_a_company_owner_cannot_deactivate(): void
+    {
+        $owner = User::factory()->create();
+        $company = Company::create([
+            'name' => 'Settings Company',
+            'owner_id' => $owner->id,
+        ]);
+        $owner->update(['company_id' => $company->id]);
+
+        $this->actingAs($owner)
+            ->get(route('settings'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Settings')
+                ->where('canDeactivateAccount', false));
     }
 
     public function test_a_supported_timezone_and_notification_preferences_persist(): void

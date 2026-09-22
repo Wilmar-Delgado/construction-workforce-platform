@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -65,9 +67,18 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_user_can_deactivate_their_account_with_their_password(): void
     {
         $user = User::factory()->create();
+
+        DB::table('sessions')->insert([
+            'id' => 'secondary-session',
+            'user_id' => $user->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'PHPUnit',
+            'payload' => 'test-payload',
+            'last_activity' => now()->timestamp,
+        ]);
 
         $response = $this
             ->actingAs($user)
@@ -80,10 +91,13 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $this->assertFalse($user->fresh()->is_active);
+        $this->assertDatabaseMissing('sessions', [
+            'id' => 'secondary-session',
+        ]);
     }
 
-    public function test_correct_password_must_be_provided_to_delete_account(): void
+    public function test_correct_password_must_be_provided_to_deactivate_account(): void
     {
         $user = User::factory()->create();
 
@@ -98,6 +112,41 @@ class ProfileTest extends TestCase
             ->assertSessionHasErrors('password')
             ->assertRedirect('/profile');
 
-        $this->assertNotNull($user->fresh());
+        $this->assertTrue($user->fresh()->is_active);
+    }
+
+    public function test_company_owner_cannot_deactivate_their_account(): void
+    {
+        $owner = User::factory()->create();
+        $company = Company::create([
+            'name' => 'Owner Company',
+            'owner_id' => $owner->id,
+        ]);
+
+        $owner->update(['company_id' => $company->id]);
+
+        $response = $this
+            ->actingAs($owner)
+            ->from('/settings')
+            ->delete('/profile', [
+                'password' => 'password',
+            ]);
+
+        $response
+            ->assertSessionHasErrors('account')
+            ->assertRedirect('/settings');
+
+        $this->assertTrue($owner->fresh()->is_active);
+        $this->assertDatabaseHas('companies', ['id' => $company->id]);
+    }
+
+    public function test_inactive_user_is_signed_out_of_an_existing_protected_session(): void
+    {
+        $user = User::factory()->create(['is_active' => false]);
+
+        $response = $this->actingAs($user)->get('/home');
+
+        $response->assertRedirect(route('login', absolute: false));
+        $this->assertGuest();
     }
 }
