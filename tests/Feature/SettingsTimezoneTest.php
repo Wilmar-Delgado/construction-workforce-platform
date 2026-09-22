@@ -75,6 +75,23 @@ class SettingsTimezoneTest extends TestCase
         ]);
     }
 
+    public function test_notification_preferences_use_a_flash_success_for_inertia_submissions(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withHeader('X-Inertia', 'true')
+            ->post(route('settings.notifications.update'), [
+                'email' => true,
+                'sms' => false,
+                'missionAlerts' => true,
+                'language' => 'en',
+                'timezone' => 'America/Edmonton',
+            ])
+            ->assertRedirect(route('settings'))
+            ->assertSessionHas('success', __('app.settings_page.notifications.success'));
+    }
+
     public function test_an_unsupported_timezone_is_rejected_without_changing_preferences(): void
     {
         $user = User::factory()->create([

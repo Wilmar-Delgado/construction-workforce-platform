@@ -48,4 +48,45 @@ class PasswordUpdateTest extends TestCase
             ->assertSessionHasErrors('current_password')
             ->assertRedirect('/profile');
     }
+
+    public function test_password_confirmation_must_match(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/settings')
+            ->put('/password', [
+                'current_password' => 'password',
+                'password' => 'new-password',
+                'password_confirmation' => 'different-password',
+            ]);
+
+        $response
+            ->assertSessionHasErrors('password')
+            ->assertRedirect('/settings');
+
+        $this->assertTrue(Hash::check('password', $user->refresh()->password));
+    }
+
+    public function test_password_update_from_settings_persists_and_flashes_success(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->from('/settings')
+            ->put('/password', [
+                'current_password' => 'password',
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/settings')
+            ->assertSessionHas('success', __('app.settings_page.security.password_updated'));
+
+        $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+    }
 }

@@ -1,14 +1,15 @@
 <script setup>
 import SidebarLayout from '@/Layouts/SidebarLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import BaseModal from '@/Components/base/BaseModal.vue';
+import BaseToast from '@/Components/base/BaseToast.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useTranslate } from '@/composables/useTranslate';
-import { ref } from 'vue';
-import axios from 'axios';
+import { computed, ref, watch } from 'vue';
 
 const { t } = useTranslate();
 const authStore = useAuthStore(); 
+const page = usePage();
 
 const props = defineProps({
     timezoneOptions: {
@@ -26,14 +27,15 @@ const supportedTimezoneIds = Object.keys(props.timezoneOptions);
 const savedTimezone = authStore.user.timezone ?? 'UTC';
 const selectedTimezone = supportedTimezoneIds.includes(savedTimezone) ? savedTimezone : 'UTC';
 
-const personalInfo = ref({
+const personalInfo = useForm({
     name: authStore.userName,
     email: authStore.user.email,
     phone: authStore.user.phone ?? '',
-    company: authStore.user.company?.name ?? '',
 });
 
-const notifications = ref({
+const companyName = authStore.user.company?.name ?? '';
+
+const notifications = useForm({
     email: authStore.user.email_notifications ?? true,
     sms: authStore.user.sms_notifications ?? false,
     missionAlerts: authStore.user.mission_alerts ?? true,
@@ -46,31 +48,61 @@ const deactivationForm = useForm({
     password: '',
 });
 
-async function savePersonalInfo() {
-    try {
-        await axios.post('/settings/personal', personalInfo.value);
-        alert(t('settings_page.personal.success'));
-    } catch (error) {
-        console.error('Error saving personal info:', error);
-    }
+const showPasswordForm = ref(false);
+const passwordForm = useForm({
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+});
+
+const flashSuccess = computed(() => page.props.flash?.success);
+const flashError = computed(() => page.props.flash?.error);
+const toastKey = ref(0);
+
+watch(
+    () => page.props.flash,
+    () => toastKey.value++,
+    { deep: true },
+);
+
+function savePersonalInfo() {
+    personalInfo.put(route('settings.personal.update'), {
+        preserveScroll: true,
+    });
 }
 
-async function saveNotifications() {
-    try {
-        const { data } = await axios.post('/settings/notifications', notifications.value);
-        authStore.setUser({
-            ...authStore.user,
-            ...data.user,
-        });
-        router.reload({ only: ['auth'], preserveScroll: true });
-        alert(t('settings_page.notifications.success'));
-    } catch (error) {
-        console.error('Error saving notification preferences:', error);
-    }
+function saveNotifications() {
+    notifications.post(route('settings.notifications.update'), {
+        preserveScroll: true,
+    });
 }
 
-async function changePassword() {
-    console.log('Redirect to change password');
+function showPasswordUpdateForm() {
+    passwordForm.clearErrors();
+    passwordForm.reset();
+    showPasswordForm.value = true;
+}
+
+function hidePasswordUpdateForm() {
+    showPasswordForm.value = false;
+    passwordForm.clearErrors();
+    passwordForm.reset();
+}
+
+function updatePassword() {
+    passwordForm.put(route('password.update'), {
+        preserveScroll: true,
+        onSuccess: hidePasswordUpdateForm,
+        onError: () => {
+            if (passwordForm.errors.current_password) {
+                passwordForm.reset('current_password');
+            }
+
+            if (passwordForm.errors.password) {
+                passwordForm.reset('password', 'password_confirmation');
+            }
+        },
+    });
 }
 
 function openDeactivationModal() {
@@ -98,6 +130,18 @@ function deactivateAccount() {
     <Head :title="t('settings_page.title')" />
 
     <SidebarLayout>
+        <BaseToast
+            :key="'success-' + toastKey"
+            :message="flashSuccess"
+            type="success"
+        />
+
+        <BaseToast
+            :key="'error-' + toastKey"
+            :message="flashError"
+            type="error"
+        />
+
         <template #title>
             {{ t('settings_page.title') }}
         </template>
@@ -112,21 +156,36 @@ function deactivateAccount() {
                         <div class="form-field">
                             <label>{{ t('settings_page.personal.name') }}</label>
                             <input v-model="personalInfo.name" />
+                            <p v-if="personalInfo.errors.name" class="text-red-600 text-sm">
+                                {{ personalInfo.errors.name }}
+                            </p>
                         </div>
                         <div class="form-field">
                             <label>{{ t('settings_page.personal.email') }}</label>
                             <input v-model="personalInfo.email" />
+                            <p v-if="personalInfo.errors.email" class="text-red-600 text-sm">
+                                {{ personalInfo.errors.email }}
+                            </p>
                         </div>
                         <div class="form-field">
                             <label>{{ t('settings_page.personal.phone') }}</label>
                             <input v-model="personalInfo.phone" />
+                            <p v-if="personalInfo.errors.phone" class="text-red-600 text-sm">
+                                {{ personalInfo.errors.phone }}
+                            </p>
                         </div>
-                        <div v-if="personalInfo.company" class="form-field">
+                        <div v-if="companyName" class="form-field">
                             <label>{{ t('settings_page.personal.company') }}</label>
-                            <input :value="personalInfo.company" disabled class="disabled-field" />
+                            <input :value="companyName" disabled class="disabled-field" />
                         </div>
                     </div>
-                    <button @click="savePersonalInfo" class="btn-secondary mt-4">{{ t('settings_page.personal.save_changes') }}</button>
+                    <button
+                        class="btn-secondary mt-4"
+                        :disabled="personalInfo.processing"
+                        @click="savePersonalInfo"
+                    >
+                        {{ t('settings_page.personal.save_changes') }}
+                    </button>
                 </div>
             </div>
 
@@ -135,7 +194,77 @@ function deactivateAccount() {
                 <h3 class="card-title">{{ t('settings_page.security.title') }}</h3>
                 <p class="card-subtitle">{{ t('settings_page.security.subtitle') }}</p>
                 <div class="card-body">
-                    <button @click="changePassword" class="btn-thirdary">{{ t('settings_page.security.change_password') }}</button>
+                    <button
+                        v-if="!showPasswordForm"
+                        class="btn-thirdary"
+                        @click="showPasswordUpdateForm"
+                    >
+                        {{ t('settings_page.security.change_password') }}
+                    </button>
+
+                    <form v-else class="password-form" @submit.prevent="updatePassword">
+                        <div class="form-field">
+                            <label for="current-password">
+                                {{ t('settings_page.security.current_password') }}
+                            </label>
+                            <input
+                                id="current-password"
+                                v-model="passwordForm.current_password"
+                                type="password"
+                                autocomplete="current-password"
+                            />
+                            <p v-if="passwordForm.errors.current_password" class="text-red-600 text-sm">
+                                {{ passwordForm.errors.current_password }}
+                            </p>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="new-password">
+                                {{ t('settings_page.security.new_password') }}
+                            </label>
+                            <input
+                                id="new-password"
+                                v-model="passwordForm.password"
+                                type="password"
+                                autocomplete="new-password"
+                            />
+                            <p v-if="passwordForm.errors.password" class="text-red-600 text-sm">
+                                {{ passwordForm.errors.password }}
+                            </p>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="new-password-confirmation">
+                                {{ t('settings_page.security.confirm_new_password') }}
+                            </label>
+                            <input
+                                id="new-password-confirmation"
+                                v-model="passwordForm.password_confirmation"
+                                type="password"
+                                autocomplete="new-password"
+                            />
+                            <p v-if="passwordForm.errors.password_confirmation" class="text-red-600 text-sm">
+                                {{ passwordForm.errors.password_confirmation }}
+                            </p>
+                        </div>
+
+                        <div class="password-actions">
+                            <button
+                                class="btn-secondary"
+                                :disabled="passwordForm.processing"
+                                type="submit"
+                            >
+                                {{ t('settings_page.security.update_password') }}
+                            </button>
+                            <button
+                                class="btn-thirdary"
+                                type="button"
+                                @click="hidePasswordUpdateForm"
+                            >
+                                {{ t('settings_page.security.hide') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -208,7 +337,13 @@ function deactivateAccount() {
                     </div>
 
                 </div>
-                    <button @click="saveNotifications" class="btn-secondary mt-2">{{ t('settings_page.notifications.save') }}</button>
+                    <button
+                        class="btn-secondary mt-2"
+                        :disabled="notifications.processing"
+                        @click="saveNotifications"
+                    >
+                        {{ t('settings_page.notifications.save') }}
+                    </button>
                 </div>
             </div>
 
@@ -325,5 +460,16 @@ function deactivateAccount() {
 .setting-desc {
     font-size: 12px;
     color: #6b7280;
+}
+
+.password-form {
+    display: grid;
+    gap: 16px;
+}
+
+.password-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 </style>

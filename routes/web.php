@@ -146,7 +146,7 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
         'canDeactivateAccount' => request()->user()->canBeDeactivated(),
     ]))->name('settings');
 
-    Route::post('/settings/personal', [SettingController::class, 'updatePersonalInfo'])
+    Route::put('/settings/personal', [SettingController::class, 'updatePersonalInfo'])
         ->name('settings.personal.update');
 
     Route::post('/settings/notifications', [SettingController::class, 'updateNotifications'])

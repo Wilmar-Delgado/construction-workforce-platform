@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class SettingController extends Controller
@@ -11,29 +13,36 @@ class SettingController extends Controller
     /**
      * Update personal information
      */
-    public function updatePersonalInfo(Request $request)
+    public function updatePersonalInfo(ProfileUpdateRequest $request): RedirectResponse
     {
-        $user = Auth::user();
+        $user = $request->user();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+        $personalDetails = $request->validate([
             'phone' => 'nullable|string|max:50',
         ]);
 
-        $user->update($validated);
-
-        return response()->json([
-            'message' => 'Personal information updated successfully.'
+        $user->fill([
+            ...$request->validated(),
+            'phone' => $personalDetails['phone'] ?? null,
         ]);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return redirect()
+            ->route('settings')
+            ->with('success', __('app.settings_page.personal.success'));
     }
 
     /**
      * Update notification & preference settings
      */
-    public function updateNotifications(Request $request)
+    public function updateNotifications(Request $request): RedirectResponse|JsonResponse
     {
-        $user = Auth::user();
+        $user = $request->user();
 
         $validated = $request->validate([
             'email' => 'boolean',
@@ -55,16 +64,24 @@ class SettingController extends Controller
             'timezone' => $validated['timezone'],
         ]);
 
-        return response()->json([
-            'message' => 'Notification preferences updated successfully.',
-            'user' => $user->fresh()->only([
-                'email_notifications',
-                'sms_notifications',
-                'mission_alerts',
-                'language',
-                'timezone',
-            ]),
+        $updatedUser = $user->fresh()->only([
+            'email_notifications',
+            'sms_notifications',
+            'mission_alerts',
+            'language',
+            'timezone',
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Notification preferences updated successfully.',
+                'user' => $updatedUser,
+            ]);
+        }
+
+        return redirect()
+            ->route('settings')
+            ->with('success', __('app.settings_page.notifications.success'));
     }
 
 }

@@ -837,6 +837,12 @@ return [
             'title' => 'Mot de passe & Sécurité',
             'subtitle' => 'Gérez votre mot de passe et vos paramètres de sécurité',
             'change_password' => 'Changer le mot de passe',
+            'hide' => 'Masquer',
+            'current_password' => 'Mot de passe actuel',
+            'new_password' => 'Nouveau mot de passe',
+            'confirm_new_password' => 'Confirmer le nouveau mot de passe',
+            'update_password' => 'Mettre à jour le mot de passe',
+            'password_updated' => 'Mot de passe mis à jour.',
         ],
 
         'notifications' => [
