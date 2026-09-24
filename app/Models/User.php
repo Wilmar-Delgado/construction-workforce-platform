@@ -86,4 +86,25 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return ! $this->ownedCompany()->exists();
     }
+
+    public function hasCompanyOperationalContext(): bool
+    {
+        return $this->company_id !== null
+            && in_array($this->role?->name, ['company_owner', 'planning_manager'], true);
+    }
+
+    public function isSelfEmployed(): bool
+    {
+        return $this->company_id === null
+            && $this->role?->name === 'self_employed';
+    }
+
+    public function canEstablishCompany(): bool
+    {
+        return $this->is_active
+            && $this->hasVerifiedEmail()
+            && $this->role?->name === 'company_owner'
+            && $this->company_id === null
+            && ! $this->ownedCompany()->exists();
+    }
 }

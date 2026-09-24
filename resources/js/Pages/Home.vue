@@ -1,6 +1,7 @@
 <script setup>
 import SidebarLayout from '@/Layouts/SidebarLayout.vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useTranslate } from '@/composables/useTranslate';
 import { useUserRole } from '@/composables/useUserRole';
@@ -8,18 +9,32 @@ import { usePermissions } from '@/composables/usePermissions';
 import { TrendingUp, Calendar, Pencil, Users, Briefcase, UserPlus, Search } from 'lucide-vue-next';
 
 const { t } = useTranslate();
-const { isSelfEmployed } = useUserRole();
+const { isSelfEmployed, isAdministrator } = useUserRole();
 const { can } = usePermissions();
 
 const page = usePage();
 const authStore = useAuthStore();
 const statsData = page.props.stats;
-const stats = [
-    { key: 'ongoing_missions', value: statsData.ongoing_missions, icon: TrendingUp},
-    { key: 'pending_requests', value: statsData.pending_requests, icon: Calendar},
-    { key: 'active_workers', value: statsData.active_workers, icon: Users},
-    { key: 'total_missions', value: statsData.total_missions, icon: Briefcase},
-];
+const stats = computed(() => {
+    const commonStats = [
+        { key: 'ongoing_missions', value: statsData.ongoing_missions, icon: TrendingUp },
+        { key: 'pending_requests', value: statsData.pending_requests, icon: Calendar },
+    ];
+
+    if (isSelfEmployed.value) {
+        return [
+            ...commonStats,
+            { key: 'completed_missions', value: statsData.completed_missions, icon: Users },
+            { key: 'total_applications', value: statsData.total_applications, icon: Briefcase },
+        ];
+    }
+
+    return [
+        ...commonStats,
+        { key: 'active_workers', value: statsData.active_workers, icon: Users },
+        { key: 'total_missions', value: statsData.total_missions, icon: Briefcase },
+    ];
+});
 const hasProfile = page.props.hasWorkerProfile;
 
 const openFindMissions = () => {
@@ -106,7 +121,7 @@ const openSettings = () => {
                 </template>
 
                 <!-- Self-employed -->
-                <template v-else>
+                <template v-else-if="isSelfEmployed">
                     <!-- Create / Edit Profile -->
                     <div class="action-card" @click="openProfiles">
                         <div class="action-icon">
@@ -144,9 +159,41 @@ const openSettings = () => {
             <div class="quick-access">
                 <h4>{{ t('home_page.quick_access') }}</h4>
                 <div class="quick-buttons">
-                    <button @click="openMissionManagement">{{ t('home_page.mission_hub') }}</button>
-                    <button @click="openProfiles">{{ isSelfEmployed ? t('home_page.manage_profile') : t('home_page.manage_profiles') }}</button>
-                    <button @click="isSelfEmployed ? openFindMissions() : openMissions()">{{ isSelfEmployed ? t('find_missions') : t('home_page.manage_missions') }}</button>
+                    <button
+                        v-if="can('view_mission_management')"
+                        @click="openMissionManagement"
+                    >
+                        {{ t('home_page.mission_hub') }}
+                    </button>
+
+                    <button
+                        v-if="isSelfEmployed || can('manage_workers')"
+                        @click="openProfiles"
+                    >
+                        {{ isSelfEmployed ? t('home_page.manage_profile') : t('home_page.manage_profiles') }}
+                    </button>
+
+                    <button
+                        v-if="isSelfEmployed"
+                        @click="openFindMissions"
+                    >
+                        {{ t('find_missions') }}
+                    </button>
+
+                    <button
+                        v-else-if="can('create_missions')"
+                        @click="openMissions"
+                    >
+                        {{ t('home_page.manage_missions') }}
+                    </button>
+
+                    <button
+                        v-if="isAdministrator"
+                        @click="openFindworkers"
+                    >
+                        {{ t('find_workers') }}
+                    </button>
+
                     <button @click="openSettings">{{ t('home_page.settings') }}</button>
                 </div>
             </div>

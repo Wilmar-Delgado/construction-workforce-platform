@@ -14,8 +14,25 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         $companyId = $user->company_id;
+        $isCompanyOperator = $user->hasCompanyOperationalContext();
+        $isSelfEmployed = $user->isSelfEmployed();
 
-        $isSelfEmployed = !$companyId;
+        if (! $isCompanyOperator && ! $isSelfEmployed) {
+            return Inertia::render('Home', [
+                'stats' => [
+                    'ongoing_missions' => 0,
+                    'pending_requests' => 0,
+                    'active_workers' => 0,
+                    'total_missions' => 0,
+                ],
+            ]);
+        }
+
+        if ($isSelfEmployed) {
+            return Inertia::render('Home', [
+                'stats' => $this->selfEmployedStats($user),
+            ]);
+        }
 
         // ========================
         // PENDING REQUESTS
@@ -89,5 +106,51 @@ class HomeController extends Controller
                     ->count(),
             ]
         ]);
+    }
+
+    private function selfEmployedStats($user): array
+    {
+        $workerScope = function ($query) use ($user): void {
+            $query
+                ->notArchived()
+                ->whereNull('company_id')
+                ->where('user_id', $user->id);
+        };
+
+        return [
+            'ongoing_missions' => WorkerRequest::query()
+                ->where('status', 'ongoing')
+                ->whereHas('worker', $workerScope)
+                ->whereHas('mission', fn ($query) => $query->where('status', 'in_progress'))
+                ->count(),
+
+            'pending_requests' => WorkerRequest::query()
+                ->where('status', 'pending')
+                ->whereHas('worker', $workerScope)
+                ->where(function ($query) use ($user) {
+                    $query
+                        ->where('type', 'invite')
+                        ->orWhere(function ($applicationQuery) use ($user) {
+                            $applicationQuery
+                                ->where('type', 'apply')
+                                ->where('requested_by', $user->id);
+                        });
+                })
+                ->count(),
+
+            'completed_missions' => WorkerRequest::query()
+                ->whereIn('status', ['completed', 'ended_early'])
+                ->whereHas('worker', function ($query) use ($user): void {
+                    $query
+                        ->whereNull('company_id')
+                        ->where('user_id', $user->id);
+                })
+                ->count(),
+
+            'total_applications' => WorkerRequest::query()
+                ->where('type', 'apply')
+                ->where('requested_by', $user->id)
+                ->count(),
+        ];
     }
 }

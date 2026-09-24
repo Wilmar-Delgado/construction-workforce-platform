@@ -66,6 +66,13 @@ class WorkerProfileController extends Controller
     {
         $this->authorize('create', WorkerProfile::class);
 
+        if (! $request->user()->hasCompanyOperationalContext()
+            && ! $request->user()->isSelfEmployed()) {
+            throw ValidationException::withMessages([
+                'company' => [__('app.common.validation.company_context_required')],
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'company' => 'nullable|string|max:255',

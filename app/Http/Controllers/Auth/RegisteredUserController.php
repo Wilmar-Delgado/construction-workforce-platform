@@ -19,7 +19,6 @@ class RegisteredUserController extends Controller
 {
     private const PUBLIC_REGISTRATION_ROLE_NAMES = [
         'company_owner',
-        'planning_manager',
         'self_employed',
     ];
 
@@ -69,7 +68,7 @@ class RegisteredUserController extends Controller
 
         $role = $user->role->name;
 
-        if (in_array($role, ['company_owner', 'planning_manager'])) {
+        if ($role === 'company_owner') {
             return redirect()->route('company.onboarding');
         }
 

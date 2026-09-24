@@ -39,6 +39,9 @@ return [
             'open' => 'Open',
             'in_progress' => 'In progress',
         ],
+        'validation' => [
+            'company_context_required' => 'A company context is required for this action.',
+        ],
     ],
 
     //:: Post Registration Onboarding
@@ -50,6 +53,9 @@ return [
             'phone' => 'Phone',
             'address' => 'Address',
             'create' => 'Create Company',
+            'validation' => [
+                'not_eligible' => 'You are not eligible to create a company.',
+            ],
         ],
     ],
 
@@ -161,6 +167,8 @@ return [
             'pending_requests' => 'Pending Requests',
             'active_workers' => 'Active Workers',
             'total_missions' => 'Total Missions',
+            'completed_missions' => 'Completed Missions',
+            'total_applications' => 'Total Applications',
             'ongoing' => 'Ongoing',
             'pending' => 'Pending',
             'workers' => 'Workers',

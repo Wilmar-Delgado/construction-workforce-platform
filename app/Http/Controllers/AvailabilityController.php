@@ -118,6 +118,7 @@ class AvailabilityController extends Controller
         $workerProfile = WorkerProfile::findOrFail($validated['worker_profile_id']);
 
         $this->ensureWorkerIsOperationallyAvailable($workerProfile);
+        $this->ensureAdministratorHasCompanyContext($request);
 
         $this->authorize('create', [Availability::class, $workerProfile]);
 
@@ -139,6 +140,7 @@ class AvailabilityController extends Controller
 
         $this->ensureWorkerIsOperationallyAvailable($availability->workerProfile);
         $this->ensureWorkerIsOperationallyAvailable($targetProfile);
+        $this->ensureAdministratorHasCompanyContext($request);
 
         $this->authorize('update', [$availability, $targetProfile]);
 
@@ -152,8 +154,10 @@ class AvailabilityController extends Controller
         return redirect()->route('availability.index')->with('success', 'Availability slot updated successfully.');
     }
 
-    public function destroy(Availability $availability): RedirectResponse
+    public function destroy(Request $request, Availability $availability): RedirectResponse
     {
+        $this->ensureAdministratorHasCompanyContext($request);
+
         $this->authorize('delete', $availability);
 
         $availability->delete();
@@ -258,6 +262,16 @@ class AvailabilityController extends Controller
         if (! $workerProfile->isOperationallyAvailable()) {
             throw ValidationException::withMessages([
                 'worker_profile_id' => __('app.availability_page.validation.archived_worker_cannot_receive_availability'),
+            ]);
+        }
+    }
+
+    private function ensureAdministratorHasCompanyContext(Request $request): void
+    {
+        if ($request->user()->role?->name === 'administrator'
+            && $request->user()->company_id === null) {
+            throw ValidationException::withMessages([
+                'company' => [__('app.common.validation.company_context_required')],
             ]);
         }
     }

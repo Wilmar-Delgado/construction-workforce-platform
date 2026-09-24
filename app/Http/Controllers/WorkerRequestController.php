@@ -38,6 +38,12 @@ class WorkerRequestController extends Controller
             ]);
         }
 
+        if (! $request->user()->hasCompanyOperationalContext()) {
+            throw ValidationException::withMessages([
+                'company' => [__('app.common.validation.company_context_required')],
+            ]);
+        }
+
         $this->authorize('createInvite', [WorkerRequest::class, $mission, $worker]);
 
         $companyId = auth()->user()->company_id;

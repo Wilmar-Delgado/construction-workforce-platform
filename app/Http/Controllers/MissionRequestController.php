@@ -34,6 +34,13 @@ class MissionRequestController extends Controller
             ]);
         }
 
+        if ($request->user()->role?->name === 'administrator'
+            && $request->user()->company_id === null) {
+            throw ValidationException::withMessages([
+                'company' => [__('app.common.validation.company_context_required')],
+            ]);
+        }
+
         $this->authorize('createApplication', [WorkerRequest::class, $mission, $worker]);
 
         $user = auth()->user();

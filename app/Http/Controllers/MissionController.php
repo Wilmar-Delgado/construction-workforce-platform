@@ -116,6 +116,8 @@ class MissionController extends Controller
     {
         $this->authorize('create', Mission::class);
 
+        $this->ensureCompanyOperationalContext($request);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -158,6 +160,15 @@ class MissionController extends Controller
         }
 
         return redirect()->route('missions.index')->with('success', 'Mission successfully created.');
+    }
+
+    private function ensureCompanyOperationalContext(Request $request): void
+    {
+        if (! $request->user()->hasCompanyOperationalContext()) {
+            throw ValidationException::withMessages([
+                'company' => [__('app.common.validation.company_context_required')],
+            ]);
+        }
     }
 
     public function update(Request $request, Mission $mission): RedirectResponse

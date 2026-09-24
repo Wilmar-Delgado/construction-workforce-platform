@@ -90,7 +90,7 @@ const submit = () => {
                         :key="role.id"
                         :value="role.id"
                     >
-                        {{ role.name }}
+                        {{ t(`mission_management.roles.${role.name}`) }}
                     </option>
                 </select>
 

@@ -10,6 +10,7 @@ import BaseToast from '@/Components/base/BaseToast.vue';
 import { useTranslate } from '@/composables/useTranslate';
 import { useDateTime } from '@/composables/useDateTime';
 import { useFilters } from '@/composables/useFilters';
+import { usePermissions } from '@/composables/usePermissions';
 import { jobOptions } from '@/constants/jobs';
 import {
     Building2,
@@ -27,6 +28,7 @@ import {
 /* GLOBAL / PROPS */
 /* ============================= */
 const { t } = useTranslate();
+const { can } = usePermissions();
 const { calendarDayDifference, formatDateOnly, formatTimestamp } = useDateTime();
 const page = usePage();
 const authStore = useAuthStore();
@@ -390,7 +392,11 @@ function submitRequest() {
                             {{ t('find_missions_page.mission_card.active_profile_required') }}
                         </span>
 
-                        <button v-else class="btn-secondary" @click="openRequestModal(mission)">
+                        <button
+                            v-else-if="can('apply_to_missions')"
+                            class="btn-secondary"
+                            @click="openRequestModal(mission)"
+                        >
                             <Send class="btn-icon" />
                             {{ t('find_missions_page.mission_card.request_join') }}
                         </button>

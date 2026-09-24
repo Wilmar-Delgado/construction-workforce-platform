@@ -10,11 +10,13 @@ import BaseFilters from '@/Components/base/BaseFilters.vue';
 import BaseToast from '@/Components/base/BaseToast.vue';
 import { useTranslate } from '@/composables/useTranslate';
 import { useFilters } from '@/composables/useFilters';
+import { usePermissions } from '@/composables/usePermissions';
 
 /* ============================= */
 /* GLOBAL / PROPS */
 /* ============================= */
 const { t } = useTranslate();
+const { can } = usePermissions();
 const page = usePage();
 const authStore = useAuthStore();
 
@@ -237,7 +239,11 @@ function submitRequest() {
                             <Eye class="icon" />{{ t('find_workers_page.view_profile') }}
                         </button>
 
-                        <button @click="openRequest(worker)" class="btn-secondary">
+                        <button
+                            v-if="can('invite_workers')"
+                            @click="openRequest(worker)"
+                            class="btn-secondary"
+                        >
                             <Send class="icon" />{{ t('find_workers_page.request') }}
                         </button>
                     </div>

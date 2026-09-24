@@ -5,7 +5,9 @@ export function useUserRole() {
     const user = usePage().props.auth.user;
 
     const isSelfEmployed = computed(() => user.role?.name === 'self_employed');
-    const isCompany = computed(() => !isSelfEmployed.value);
+    const isAdministrator = computed(() => user.role?.name === 'administrator');
+    const isCompany = computed(() => user.company_id !== null
+        && ['company_owner', 'planning_manager'].includes(user.role?.name));
 
-    return { isSelfEmployed, isCompany };
+    return { isSelfEmployed, isAdministrator, isCompany };
 }

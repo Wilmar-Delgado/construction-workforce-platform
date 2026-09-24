@@ -52,6 +52,7 @@ const topbarOrganizationLabel = computed(() => {
                 </Link>
 
                 <Link
+                    v-if="isSelfEmployed || can('manage_workers')"
                     :href="route('worker-profiles.index')"
                     class="nav-link"
                     :class="{ active: $page.url.startsWith('/worker-profiles') }"
@@ -62,6 +63,7 @@ const topbarOrganizationLabel = computed(() => {
                 </Link>
 
                 <Link
+                    v-if="isSelfEmployed || can('manage_availability')"
                     :href="route('availability.index')"
                     class="nav-link"
                     :class="{ active: $page.url.startsWith('/availability') }"
@@ -100,6 +102,7 @@ const topbarOrganizationLabel = computed(() => {
                 </Link>
 
                 <Link
+                    v-if="can('view_mission_management')"
                     :href="route('mission-management.index')"
                     class="nav-link"
                     :class="{ active: $page.url.startsWith('/mission-management') }"

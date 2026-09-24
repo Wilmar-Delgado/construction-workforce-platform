@@ -55,7 +55,7 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/onboarding/company', fn () => Inertia::render('Onboarding/Company'))
+    Route::get('/onboarding/company', [CompanyController::class, 'create'])
         ->name('company.onboarding');
 
     Route::post('/onboarding/company', [CompanyController::class, 'store'])

@@ -36,6 +36,9 @@ return [
             'open' => 'Ouverte',
             'in_progress' => 'En cours',
         ],
+        'validation' => [
+            'company_context_required' => 'Un contexte d’entreprise est requis pour cette action.',
+        ],
     ],
 
     //:: Post Registration Onboarding
@@ -47,6 +50,9 @@ return [
             'phone' => 'Téléphone',
             'address' => 'Adresse',
             'create' => "Créer l'entreprise",
+            'validation' => [
+                'not_eligible' => 'Vous n’êtes pas autorisé à créer une entreprise.',
+            ],
         ],
     ],
 
@@ -158,6 +164,8 @@ return [
             'pending_requests' => 'Demandes en attente',
             'active_workers' => 'Travailleurs actifs',
             'total_missions' => 'Total des missions',
+            'completed_missions' => 'Missions terminées',
+            'total_applications' => 'Total des candidatures',
             'ongoing' => 'En cours',
             'pending' => 'En attente',
             'workers' => 'Travailleurs',
