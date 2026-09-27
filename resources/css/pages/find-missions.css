@@ -10,6 +10,10 @@
 /* =====================================================
    MISSIONS LIST
 ===================================================== */
+.request-mission {
+    margin-bottom: 6px;
+}
+
 .missions-list {
     display: flex;
     flex-direction: column;

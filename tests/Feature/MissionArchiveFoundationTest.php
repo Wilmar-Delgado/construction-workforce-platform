@@ -129,7 +129,7 @@ class MissionArchiveFoundationTest extends TestCase
             );
     }
 
-    public function test_non_archived_completed_missions_expose_the_mission_view_capability_in_management_history(): void
+    public function test_completed_missions_do_not_expose_the_mission_view_capability_in_management_history(): void
     {
         [$hiringManager] = $this->companyManager('Hiring Company');
         [$lendingManager, $lendingCompany] = $this->companyManager('Lending Company');
@@ -156,7 +156,7 @@ class MissionArchiveFoundationTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('MissionManagement')
                 ->where('missionData.tabs.completed.data.0.id', $mission->id)
-                ->where('missionData.tabs.completed.data.0.management_context.can_view_mission', true)
+                ->where('missionData.tabs.completed.data.0.management_context.can_view_mission', false)
             );
     }
 

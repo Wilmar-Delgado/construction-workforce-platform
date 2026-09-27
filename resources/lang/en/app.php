@@ -83,6 +83,8 @@ return [
             'email' => 'Email',
             'role' => 'Select Role',
             'role_placeholder' => 'Select your role',
+            'company_owner' => 'Company Owner',
+            'self_employed' => 'Self-Employed',
             'password' => 'Password',
             'confirm_password' => 'Confirm Password',
             'already_registered' => 'Already registered?',
@@ -739,6 +741,14 @@ return [
             'start_mission' => 'Start Mission',
         ],
 
+        'details_modal' => [
+            'load_error' => 'Unable to load mission details. Please try again.',
+        ],
+
+        'worker_details_modal' => [
+            'load_error' => 'Unable to load worker details. Please try again.',
+        ],
+
         'roles' => [
             'administrator' => 'Administrator',
             'company_owner' => 'Company Owner',
@@ -832,6 +842,67 @@ return [
     ],
 
     //:: Settings Page
+    'company_team' => [
+        'title' => 'Company Team',
+        'subtitle' => 'Manage planning managers for :company.',
+        'add_planning_manager' => 'Add Planning Manager',
+        'pending_invitations' => 'Pending Invitations',
+        'pending' => 'Pending',
+        'expires_at' => 'Expires :date',
+        'cancel_invitation' => 'Cancel Invitation',
+        'remove' => 'Remove',
+        'cancel' => 'Cancel',
+        'roles' => [
+            'company_owner' => 'Company Owner',
+            'planning_manager' => 'Planning Manager',
+        ],
+        'invite_modal' => [
+            'title' => 'Invite a Planning Manager',
+            'name' => 'Full Name',
+            'email' => 'Email Address',
+            'send' => 'Send Invitation',
+        ],
+        'cancel_invitation_modal' => [
+            'title' => 'Cancel this invitation?',
+            'message' => 'This invitation link will no longer be usable.',
+        ],
+        'remove_member_modal' => [
+            'title' => 'Remove this planning manager?',
+            'message' => 'This removes company access and deactivates the account. Historical records will be preserved.',
+        ],
+        'accept' => [
+            'title' => 'Join the Company Team',
+            'subtitle' => 'Set a password to join :company as a Planning Manager.',
+            'name' => 'Name',
+            'email' => 'Email',
+            'password' => 'Password',
+            'password_confirmation' => 'Confirm Password',
+            'submit' => 'Accept Invitation',
+        ],
+        'email' => [
+            'subject' => 'You are invited to join a company team',
+            'heading' => 'You are invited to join :company',
+            'introduction' => ':inviter invited you to join their company team.',
+            'company' => 'Company',
+            'inviter' => 'Invited by',
+            'role' => 'Role',
+            'accept' => 'Accept Invitation',
+            'expires' => 'This invitation expires on :date.',
+        ],
+        'validation' => [
+            'existing_user' => 'An account already exists with this email address.',
+            'active_invitation' => 'An active invitation already exists for this email address.',
+            'invalid_invitation' => 'This invitation is invalid, expired, cancelled, or already accepted.',
+            'invalid_company_owner' => 'This company no longer has an eligible owner.',
+        ],
+        'success' => [
+            'invitation_sent' => 'Planning Manager invitation sent.',
+            'invitation_cancelled' => 'Planning Manager invitation cancelled.',
+            'member_removed' => 'Planning Manager removed from the company.',
+            'invitation_accepted' => 'Welcome to the company team.',
+        ],
+    ],
+
     'settings_page' => [
         'title' => 'Settings',
 

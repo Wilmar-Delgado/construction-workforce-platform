@@ -1,6 +1,7 @@
 <script setup>
 import SidebarLayout from '@/Layouts/SidebarLayout.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import { computed, ref, watch } from 'vue';
 import { useTranslate } from '@/composables/useTranslate';
 import { useDateTime } from '@/composables/useDateTime';
@@ -8,6 +9,8 @@ import BasePagination from '@/Components/base/BasePagination.vue';
 import BaseModal from '@/Components/base/BaseModal.vue';
 import ConfirmModal from '@/Components/base/ConfirmModal.vue';
 import BaseToast from '@/Components/base/BaseToast.vue';
+import MissionDetails from '@/Components/missions/MissionDetails.vue';
+import WorkerProfileDetails from '@/Components/workers/WorkerProfileDetails.vue';
 import {
     CalendarDays,
     CheckCircle2,
@@ -42,6 +45,13 @@ const missionComment = ref('');
 const showStopRecruitingModal = ref(false);
 const showStartMissionModal = ref(false);
 const selectedLifecycleMission = ref(null);
+const showMissionDetailsModal = ref(false);
+const selectedMissionDetails = ref(null);
+const detailsLoading = ref(false);
+const showWorkerDetailsModal = ref(false);
+const selectedWorkerDetails = ref(null);
+const workerDetailsLoading = ref(false);
+const detailsError = ref('');
 const toastKey = ref(0);
 
 const isSelfEmployed = computed(
@@ -327,22 +337,66 @@ function startMission() {
         },
     );
 }
-function viewMission(mission, request = null) {
-    router.get(
-        route(
-            mission.management_context?.is_own_mission
-                ? 'missions.index'
-                : 'find-missions.index',
-        ),
-        { mission: mission.id, ...(request ? { request: request.id } : {}) },
-    );
+function viewMission(mission) {
+    const isOwnMission = mission.management_context?.is_own_mission;
+    const request = mission.management_requests?.[0];
+
+    if (!isOwnMission && !request) return;
+
+    detailsLoading.value = true;
+    detailsError.value = '';
+
+    axios
+        .get(route('mission-management.missions.details', mission.id), {
+            params: isOwnMission ? {} : { request: request.id },
+        })
+        .then(({ data }) => {
+            selectedMissionDetails.value = data.mission;
+            showMissionDetailsModal.value = true;
+        })
+        .catch(() => {
+            detailsError.value = t(
+                'mission_management_page.details_modal.load_error',
+            );
+        })
+        .finally(() => {
+            detailsLoading.value = false;
+        });
 }
-function viewWorker(mission, request) {
-    router.get(route('find-workers.index'), {
-        worker: request.worker.id,
-        request: request.id,
-        mission: mission.id,
-    });
+function closeMissionDetailsModal() {
+    showMissionDetailsModal.value = false;
+    selectedMissionDetails.value = null;
+}
+function viewWorker(request) {
+    workerDetailsLoading.value = true;
+    detailsError.value = '';
+
+    axios
+        .get(
+            route(
+                'mission-management.workers.details',
+                request.worker.id,
+            ),
+            {
+                params: { request: request.id },
+            },
+        )
+        .then(({ data }) => {
+            selectedWorkerDetails.value = data.worker;
+            showWorkerDetailsModal.value = true;
+        })
+        .catch(() => {
+            detailsError.value = t(
+                'mission_management_page.worker_details_modal.load_error',
+            );
+        })
+        .finally(() => {
+            workerDetailsLoading.value = false;
+        });
+}
+function closeWorkerDetailsModal() {
+    showWorkerDetailsModal.value = false;
+    selectedWorkerDetails.value = null;
 }
 </script>
 
@@ -356,7 +410,7 @@ function viewWorker(mission, request) {
         />
         <BaseToast
             :key="`error-${toastKey}`"
-            :message="page.props.flash?.error"
+            :message="detailsError || page.props.flash?.error"
             type="error"
         />
         <template #title>
@@ -404,6 +458,7 @@ function viewWorker(mission, request) {
                             >
                             <button
                                 v-if="
+                                    activeTab !== 'completed' &&
                                     mission.management_context?.can_view_mission
                                 "
                                 type="button"
@@ -418,6 +473,7 @@ function viewWorker(mission, request) {
                                         'mission_management_page.actions.view_mission',
                                     )
                                 "
+                                :disabled="detailsLoading"
                                 @click="viewMission(mission)"
                             >
                                 <Eye class="mini-icon" />
@@ -736,7 +792,8 @@ function viewWorker(mission, request) {
                                                 'mission_management_page.actions.view_worker_profile',
                                             )
                                         "
-                                        @click="viewWorker(mission, request)"
+                                        :disabled="workerDetailsLoading"
+                                        @click="viewWorker(request)"
                                     >
                                         <Eye class="mini-icon" />
                                     </button>
@@ -881,6 +938,38 @@ function viewWorker(mission, request) {
                 v-if="activePaginator.links?.length"
                 :links="activePaginator.links"
             />
+
+        <BaseModal
+            v-model="showMissionDetailsModal"
+                :title="t('find_missions_page.details_modal.title')"
+                @close="closeMissionDetailsModal"
+            >
+                <MissionDetails
+                    v-if="selectedMissionDetails"
+                    :mission="selectedMissionDetails"
+                />
+
+                <template #footer>
+                    <button
+                        type="button"
+                        class="btn-thirdary"
+                        @click="closeMissionDetailsModal"
+                    >
+                        {{ t('common.close') }}
+                    </button>
+                </template>
+        </BaseModal>
+
+        <BaseModal
+            v-model="showWorkerDetailsModal"
+            :title="t('find_workers_page.profile_modal.title')"
+            @close="closeWorkerDetailsModal"
+        >
+            <WorkerProfileDetails
+                v-if="selectedWorkerDetails"
+                :worker="selectedWorkerDetails"
+            />
+        </BaseModal>
 
             <BaseModal
                 v-model="showRequestModal"

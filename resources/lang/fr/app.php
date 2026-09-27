@@ -80,6 +80,8 @@ return [
             'email' => 'Adresse e-mail',
             'role' => 'Sélectionner un rôle',
             'role_placeholder' => 'Sélectionnez votre rôle',
+            'company_owner' => 'Propriétaire d’entreprise',
+            'self_employed' => 'Travailleur autonome',
             'password' => 'Mot de passe',
             'confirm_password' => 'Confirmer le mot de passe',
             'already_registered' => 'Déjà inscrit ?',
@@ -734,6 +736,14 @@ return [
             'start_mission' => 'Démarrer la mission',
         ],
 
+        'details_modal' => [
+            'load_error' => 'Impossible de charger les détails de la mission. Veuillez réessayer.',
+        ],
+
+        'worker_details_modal' => [
+            'load_error' => 'Impossible de charger les détails du travailleur. Veuillez réessayer.',
+        ],
+
         'roles' => [
             'administrator' => 'Administrateur',
             'company_owner' => 'Propriétaire de l’entreprise',
@@ -827,6 +837,67 @@ return [
     ],
 
     //:: Settings Page
+    'company_team' => [
+        'title' => 'Équipe de l’entreprise',
+        'subtitle' => 'Gérez les gestionnaires de planification de :company.',
+        'add_planning_manager' => 'Ajouter un gestionnaire de planification',
+        'pending_invitations' => 'Invitations en attente',
+        'pending' => 'En attente',
+        'expires_at' => 'Expire le :date',
+        'cancel_invitation' => 'Annuler l’invitation',
+        'remove' => 'Retirer',
+        'cancel' => 'Annuler',
+        'roles' => [
+            'company_owner' => 'Propriétaire de l’entreprise',
+            'planning_manager' => 'Gestionnaire de planification',
+        ],
+        'invite_modal' => [
+            'title' => 'Inviter un gestionnaire de planification',
+            'name' => 'Nom complet',
+            'email' => 'Adresse courriel',
+            'send' => 'Envoyer l’invitation',
+        ],
+        'cancel_invitation_modal' => [
+            'title' => 'Annuler cette invitation ?',
+            'message' => 'Ce lien d’invitation ne pourra plus être utilisé.',
+        ],
+        'remove_member_modal' => [
+            'title' => 'Retirer ce gestionnaire de planification ?',
+            'message' => 'Cette action retire l’accès à l’entreprise et désactive le compte. Les dossiers historiques seront préservés.',
+        ],
+        'accept' => [
+            'title' => 'Joindre l’équipe de l’entreprise',
+            'subtitle' => 'Définissez un mot de passe pour joindre :company comme gestionnaire de planification.',
+            'name' => 'Nom',
+            'email' => 'Courriel',
+            'password' => 'Mot de passe',
+            'password_confirmation' => 'Confirmer le mot de passe',
+            'submit' => 'Accepter l’invitation',
+        ],
+        'email' => [
+            'subject' => 'Vous êtes invité à joindre une équipe d’entreprise',
+            'heading' => 'Vous êtes invité à joindre :company',
+            'introduction' => ':inviter vous a invité à joindre son équipe d’entreprise.',
+            'company' => 'Entreprise',
+            'inviter' => 'Invité par',
+            'role' => 'Rôle',
+            'accept' => 'Accepter l’invitation',
+            'expires' => 'Cette invitation expire le :date.',
+        ],
+        'validation' => [
+            'existing_user' => 'Un compte existe déjà avec cette adresse courriel.',
+            'active_invitation' => 'Une invitation active existe déjà pour cette adresse courriel.',
+            'invalid_invitation' => 'Cette invitation est invalide, expirée, annulée ou déjà acceptée.',
+            'invalid_company_owner' => 'Cette entreprise n’a plus de propriétaire admissible.',
+        ],
+        'success' => [
+            'invitation_sent' => 'Invitation au poste de gestionnaire de planification envoyée.',
+            'invitation_cancelled' => 'Invitation au poste de gestionnaire de planification annulée.',
+            'member_removed' => 'Gestionnaire de planification retiré de l’entreprise.',
+            'invitation_accepted' => 'Bienvenue dans l’équipe de l’entreprise.',
+        ],
+    ],
+
     'settings_page' => [
         'title' => 'Paramètres',
 

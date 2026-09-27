@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CompanyTeamController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MissionController;
 use App\Http\Controllers\MissionDirectoryController;
@@ -124,6 +125,10 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
 
     Route::resource('mission-management', MissionManagementController::class)
         ->only(['index']);
+    Route::get('/mission-management/missions/{mission}/details', [MissionManagementController::class, 'details'])
+        ->name('mission-management.missions.details');
+    Route::get('/mission-management/workers/{workerProfile}/details', [MissionManagementController::class, 'workerDetails'])
+        ->name('mission-management.workers.details');
     Route::post('/mission-management/requests/{workerRequest}/respond', [MissionManagementController::class, 'respond'])
         ->name('mission-management.respond');
     Route::post('/mission-management/requests/{workerRequest}/complete', [MissionManagementController::class, 'complete'])
@@ -144,6 +149,7 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
     Route::get('/settings', fn () => Inertia::render('Settings', [
         'timezoneOptions' => config('timezones.supported'),
         'canDeactivateAccount' => request()->user()->canBeDeactivated(),
+        'companyTeam' => app(CompanyTeamController::class)->payloadFor(request()->user()),
     ]))->name('settings');
 
     Route::put('/settings/personal', [SettingController::class, 'updatePersonalInfo'])
@@ -151,6 +157,13 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
 
     Route::post('/settings/notifications', [SettingController::class, 'updateNotifications'])
         ->name('settings.notifications.update');
+
+    Route::post('/company-team/invitations', [CompanyTeamController::class, 'storeInvitation'])
+        ->name('company-team.invitations.store');
+    Route::post('/company-team/invitations/{invitation}/cancel', [CompanyTeamController::class, 'cancelInvitation'])
+        ->name('company-team.invitations.cancel');
+    Route::delete('/company-team/members/{user}', [CompanyTeamController::class, 'destroyMember'])
+        ->name('company-team.members.destroy');
 
     /*
     |--------------------------------------------------------------------------

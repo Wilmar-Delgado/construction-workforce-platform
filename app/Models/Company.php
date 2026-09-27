@@ -33,4 +33,24 @@ class Company extends Model
     {
         return $this->hasMany(Mission::class, 'hiring_company_id');
     }
+
+    public function members()
+    {
+        return $this->hasMany(User::class);
+    }
+
+    public function invitations()
+    {
+        return $this->hasMany(CompanyInvitation::class);
+    }
+
+    public function hasValidOwner(): bool
+    {
+        $owner = $this->owner()->with('role')->first();
+
+        return $owner !== null
+            && $owner->is_active
+            && $owner->company_id === $this->id
+            && $owner->role?->name === 'company_owner';
+    }
 }

@@ -3,6 +3,7 @@ import SidebarLayout from '@/Layouts/SidebarLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import BaseModal from '@/Components/base/BaseModal.vue';
 import BaseToast from '@/Components/base/BaseToast.vue';
+import CompanyTeamSection from '@/Components/company-team/CompanyTeamSection.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useTranslate } from '@/composables/useTranslate';
 import { computed, ref, watch } from 'vue';
@@ -19,6 +20,10 @@ const props = defineProps({
     canDeactivateAccount: {
         type: Boolean,
         default: false,
+    },
+    companyTeam: {
+        type: Object,
+        default: null,
     },
 });
 
@@ -346,6 +351,11 @@ function deactivateAccount() {
                     </button>
                 </div>
             </div>
+
+            <CompanyTeamSection
+                v-if="companyTeam"
+                :team="companyTeam"
+            />
 
             <!-- Danger Zone -->
             <div class="card border-red-400">

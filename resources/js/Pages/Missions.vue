@@ -65,25 +65,29 @@ watch(
 const showModal = ref(false);
 const newRequirement = ref('');
 const editingMissionId = ref(null);
-const form = useForm({
-    title: '',
-    description: '',
-    start_date: '',
-    end_date: '',
-    city: '',
-    province: 'AB',
-    country: 'Canada',
-    address_line_1: '',
-    address_line_2: '',
-    postal_code: '',
-    site_name: '',
-    directions: '',
-    job_type: '',
-    workers: '',
-    hourly_rate: '',
-    status: 'draft',
-    requirements: [],
-});
+function createMissionDefaults() {
+    return {
+        title: '',
+        description: '',
+        start_date: '',
+        end_date: '',
+        city: '',
+        province: 'AB',
+        country: 'Canada',
+        address_line_1: '',
+        address_line_2: '',
+        postal_code: '',
+        site_name: '',
+        directions: '',
+        job_type: '',
+        workers: '',
+        hourly_rate: '',
+        status: 'draft',
+        requirements: [],
+    };
+}
+
+const form = useForm(createMissionDefaults());
 
 const userId = page.props.auth?.user?.id;
 const storageKey = `missionsViewMode_${userId}`;
@@ -206,14 +210,14 @@ function submitMission() {
             onError: (errors) => {
                 console.log(errors);
             },
-            onSuccess: resetModal
+            onSuccess: closeMissionModal
         });
     } else {
         form.put(route('missions.update', editingMissionId.value), {
             onError: (errors) => {
                 console.log(errors);
             },
-            onSuccess: resetModal
+            onSuccess: closeMissionModal
         });
     }
 }
@@ -222,6 +226,7 @@ function populateMissionForm(mission) {
     editingMissionId.value = mission.id;
 
     form.reset();
+    form.clearErrors();
 
     form.title = mission.title;
     form.description = mission.description;
@@ -260,15 +265,13 @@ function viewMission(mission) {
     showModal.value = true;
 }
 
-watch(
-    () => page.props.selectedMission,
-    (mission) => {
-        if (mission) {
-            viewMission(mission);
-        }
-    },
-    { immediate: true }
-);
+function openCreateModal() {
+    resetMissionForm();
+
+    editingMissionId.value = null;
+    modalMode.value = 'create';
+    showModal.value = true;
+}
 
 function duplicateMission(mission) {
     populateMissionForm(mission);
@@ -318,35 +321,20 @@ function confirmArchiveMission() {
     });
 }
 
-function resetModal() {
-    showModal.value = false;
-
-    form.defaults({
-        title: '',
-        description: '',
-        start_date: '',
-        end_date: '',
-        city: '',
-        province: 'AB',
-        country: 'Canada',
-        address_line_1: '',
-        address_line_2: '',
-        postal_code: '',
-        site_name: '',
-        directions: '',
-        job_type: '',
-        workers: '',
-        hourly_rate: '',
-        status: 'draft',
-        requirements: [],
-    });
+function resetMissionForm() {
+    form.defaults(createMissionDefaults());
 
     form.reset();
     form.clearErrors();
     newRequirement.value = '';
+}
 
-    modalMode.value = 'Create';
+function closeMissionModal() {
+    showModal.value = false;
+    resetMissionForm();
+
     editingMissionId.value = null;
+    modalMode.value = 'create';
 }
 </script>
 
@@ -373,7 +361,7 @@ function resetModal() {
         <!-- Header -->
         <div class="page-header">
             <h2>{{ t('missions_page.subtitle') }}</h2>
-            <button @click="resetModal(); showModal = true" class="btn-primary">
+            <button @click="openCreateModal" class="btn-primary">
                 <Plus class="icon" /> {{ t('missions_page.create_mission') }}
             </button>
         </div>
@@ -653,7 +641,7 @@ function resetModal() {
         <!-- EDIT/CREATE MODAL -->
         <BaseModal
             v-model="showModal"
-            @close="form.reset()"
+            @close="closeMissionModal"
             :title="modalMode === 'create'
                 ? t('missions_page.add_modal.title')
                 : modalMode === 'edit'
@@ -832,7 +820,7 @@ function resetModal() {
                             : t('missions_page.edit_modal.save')) 
                     }}
                 </button>
-                <button type="button" class="btn-thirdary" @click="showModal=false">
+                <button type="button" class="btn-thirdary" @click="closeMissionModal">
                     {{ modalMode === 'view' ? t('common.close') : t('common.cancel') }}
                 </button>
             </template>

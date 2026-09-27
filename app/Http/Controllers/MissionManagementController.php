@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Mission;
 use App\Models\Rating;
 use App\Models\User;
+use App\Models\WorkerProfile;
 use App\Models\WorkerRequest;
 use App\Support\MissionBusinessDateResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -301,6 +303,203 @@ class MissionManagementController extends Controller
     }
 
     /**
+     * Returns the read-only details for a mission already visible to the
+     * current Mission Management user. External missions require the visible
+     * request that establishes the viewer's relationship to the mission.
+     */
+    public function details(Request $request, Mission $mission): JsonResponse
+    {
+        abort_if(
+            $mission->archived_at !== null || $mission->status === 'completed',
+            404,
+        );
+
+        $user = $request->user();
+        $isOwnMission = $user->company_id !== null
+            && $mission->hiring_company_id === $user->company_id;
+        $workerRequest = null;
+
+        if ($isOwnMission) {
+            $this->authorize('view', $mission);
+        } else {
+            $request->validate([
+                'request' => ['required', 'integer'],
+            ]);
+
+            $workerRequest = WorkerRequest::findOrFail($request->integer('request'));
+
+            abort_unless(
+                $workerRequest->mission_id === $mission->id
+                    && in_array(
+                        $workerRequest->status,
+                        [
+                            'pending',
+                            'accepted',
+                            'ongoing',
+                            'completed',
+                            'rejected',
+                            'cancelled',
+                            'ended_early',
+                        ],
+                        true,
+                    ),
+                404,
+            );
+
+            $this->authorize('view', $workerRequest);
+        }
+
+        $mission->load([
+            'hiringCompany:id,name,owner_id',
+            'hiringCompany.owner:id,name,phone',
+            'requirements:id,mission_id,name',
+        ])->loadCount([
+            'requests as committed_worker_count' => fn (Builder $requests) => $requests
+                ->whereIn('status', Mission::COMMITTED_REQUEST_STATUSES),
+        ]);
+
+        return response()->json([
+            'mission' => $this->missionDetailsPayload(
+                $mission,
+                $workerRequest,
+                $isOwnMission,
+            ),
+        ]);
+    }
+
+    /**
+     * Returns a worker profile only through an authorized Mission Management
+     * request relationship. This deliberately does not apply notArchived(),
+     * because archived profiles remain available in authorized history.
+     */
+    public function workerDetails(
+        Request $request,
+        WorkerProfile $workerProfile,
+    ): JsonResponse {
+        $request->validate([
+            'request' => ['required', 'integer'],
+        ]);
+
+        $workerRequest = WorkerRequest::findOrFail(
+            $request->integer('request'),
+        );
+
+        abort_unless(
+            $workerRequest->worker_profile_id === $workerProfile->id
+                && in_array(
+                    $workerRequest->status,
+                    [
+                        'pending',
+                        'accepted',
+                        'ongoing',
+                        'completed',
+                        'rejected',
+                        'cancelled',
+                        'ended_early',
+                    ],
+                    true,
+                ),
+            404,
+        );
+
+        $this->authorize('view', $workerRequest);
+
+        $workerProfile
+            ->load([
+                'skills:id,name',
+                'certifications:id,name',
+                'company:id,name',
+            ])
+            ->loadAvg('ratings', 'score')
+            ->loadCount('ratings');
+
+        return response()->json([
+            'worker' => $this->workerDetailsPayload($workerProfile),
+        ]);
+    }
+
+    private function missionDetailsPayload(
+        Mission $mission,
+        ?WorkerRequest $workerRequest,
+        bool $isOwnMission,
+    ): array {
+        $payload = [
+            'id' => $mission->id,
+            'title' => $mission->title,
+            'description' => $mission->description,
+            'city' => $mission->city,
+            'province' => $mission->province,
+            'country' => $mission->country,
+            'job_type' => $mission->job_type,
+            'workers' => $mission->workers,
+            'start_date' => $mission->start_date,
+            'end_date' => $mission->end_date,
+            'hourly_rate' => $mission->hourly_rate,
+            'committed_worker_count' => $mission->committed_worker_count,
+            'remaining_capacity' => $mission->remaining_capacity,
+            'hiring_company' => [
+                'name' => $mission->hiringCompany?->name,
+            ],
+            'requirements' => $mission->requirements
+                ->map(fn ($requirement) => [
+                    'id' => $requirement->id,
+                    'name' => $requirement->name,
+                ])
+                ->values(),
+        ];
+
+        $canViewOperationalDetails = $isOwnMission
+            || in_array(
+                $workerRequest?->status,
+                ['accepted', 'ongoing', 'completed'],
+                true,
+            );
+
+        if ($canViewOperationalDetails) {
+            $payload['operational_details'] = [
+                'site_name' => $mission->site_name,
+                'address_line_1' => $mission->address_line_1,
+                'address_line_2' => $mission->address_line_2,
+                'postal_code' => $mission->postal_code,
+                'directions' => $mission->directions,
+                'contact_name' => $mission->hiringCompany?->owner?->name,
+                'contact_phone' => $mission->hiringCompany?->owner?->phone,
+            ];
+        }
+
+        return $payload;
+    }
+
+    private function workerDetailsPayload(WorkerProfile $workerProfile): array
+    {
+        return [
+            'id' => $workerProfile->id,
+            'name' => $workerProfile->name,
+            'job' => $workerProfile->job,
+            'years_experience' => $workerProfile->years_experience,
+            'hourly_rate' => $workerProfile->hourly_rate,
+            'rating' => $workerProfile->rating,
+            'ratings_count' => $workerProfile->ratings_count,
+            'company' => $workerProfile->company ? [
+                'id' => $workerProfile->company->id,
+                'name' => $workerProfile->company->name,
+            ] : null,
+            'skills' => $workerProfile->skills
+                ->map(fn ($skill) => [
+                    'id' => $skill->id,
+                    'name' => $skill->name,
+                ])
+                ->values(),
+            'certifications' => $workerProfile->certifications
+                ->map(fn ($certification) => [
+                    'id' => $certification->id,
+                    'name' => $certification->name,
+                ])
+                ->values(),
+        ];
+    }
+
+    /**
      * Mission-root payload for the mission-centric management redesign.
      *
      * Every paginator is rooted in missions, so a mission and its relevant
@@ -532,7 +731,8 @@ class MissionManagementController extends Controller
                 'recruiting_state' => $mission->recruiting_closed_at === null ? 'recruiting' : 'staffing_closed',
                 'can_stop_recruiting' => $this->canStopRecruiting($user, $mission),
                 'can_start_mission' => $this->canStartMission($user, $mission),
-                'can_view_mission' => $mission->archived_at === null,
+                'can_view_mission' => $mission->archived_at === null
+                    && $mission->status !== 'completed',
             ];
 
             $requests = $mission->requests;

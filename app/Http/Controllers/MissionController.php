@@ -19,17 +19,6 @@ class MissionController extends Controller
     {
         $this->authorize('viewAny', Mission::class);
 
-        $selectedMission = null;
-
-        if ($request->filled('mission')) {
-            $selectedMission = Mission::notArchived()
-                ->withCommittedWorkerCount()
-                ->with('requirements')
-                ->findOrFail($request->integer('mission'));
-
-            $this->authorize('view', $selectedMission);
-        }
-
         $baseQuery = Mission::notArchived()
             ->withCommittedWorkerCount()
             ->with('requirements')
@@ -83,7 +72,6 @@ class MissionController extends Controller
 
         return Inertia::render('Missions', [
             'missions' => $missions,
-            'selectedMission' => $selectedMission,
 
             'filters' => [
                 'search' => $request->search,

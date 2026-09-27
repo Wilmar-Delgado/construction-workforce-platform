@@ -28,7 +28,6 @@ const props = defineProps({
     filters: Object,
     missions: Array,
     existingRequests: Array,
-    selectedWorker: Object,
 });
 
 /* ============================= */
@@ -65,17 +64,6 @@ watch(
 const selectedWorker = ref(null);
 const showProfile = ref(false);
 const showRequest = ref(false);
-
-watch(
-    () => props.selectedWorker,
-    (worker) => {
-        if (worker) {
-            selectedWorker.value = worker;
-            showProfile.value = true;
-        }
-    },
-    { immediate: true }
-);
 
 const requestForm = useForm({
     mission_id: '',

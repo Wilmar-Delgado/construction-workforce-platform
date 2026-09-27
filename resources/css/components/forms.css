@@ -7,6 +7,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    margin-bottom: 6px;
 }
 
 .form-group.full {
@@ -16,7 +17,6 @@
 .form-group label {
     font-size: 14px;
     font-weight: 900;
-    margin-bottom: 6px;
 }
 
 .form-group input {

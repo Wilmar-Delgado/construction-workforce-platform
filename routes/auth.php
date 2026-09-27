@@ -9,9 +9,15 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\CompanyInvitationAcceptanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
+    Route::get('company-invitations/{token}', [CompanyInvitationAcceptanceController::class, 'create'])
+        ->name('company-invitations.accept.show');
+    Route::post('company-invitations/{token}', [CompanyInvitationAcceptanceController::class, 'store'])
+        ->name('company-invitations.accept.store');
+
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 

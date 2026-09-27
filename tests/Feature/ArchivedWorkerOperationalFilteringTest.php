@@ -253,19 +253,17 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
         $this->assertSame($worker->id, Rating::with('worker')->firstOrFail()->worker->id);
 
         $this->actingAs($lendingManager)
-            ->get(route('find-workers.index', [
-                'worker' => $worker->id,
+            ->getJson(route('mission-management.workers.details', [
+                'workerProfile' => $worker,
                 'request' => $request->id,
             ]))
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('FindWorkers')
-                ->where('selectedWorker.id', $worker->id)
-                ->where('selectedWorker.name', $worker->name)
-            );
+            ->assertOk()
+            ->assertJsonPath('worker.id', $worker->id)
+            ->assertJsonPath('worker.name', $worker->name);
 
         $this->actingAs($unrelatedManager)
-            ->get(route('find-workers.index', [
-                'worker' => $worker->id,
+            ->getJson(route('mission-management.workers.details', [
+                'workerProfile' => $worker,
                 'request' => $request->id,
             ]))
             ->assertForbidden();
