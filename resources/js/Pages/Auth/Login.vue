@@ -30,7 +30,7 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Log in" />
+        <Head :title="t('auth.login.title')" />
 
         <h2 class="login-title">{{ t('auth.login.title') }}</h2>
 

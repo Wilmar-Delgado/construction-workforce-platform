@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,9 +29,9 @@ class Company extends Model
         return $this->belongsTo(User::class, 'owner_id');
     }
 
-    public function missions()
+    public function projects()
     {
-        return $this->hasMany(Mission::class, 'hiring_company_id');
+        return $this->hasMany(Project::class, 'hiring_company_id');
     }
 
     public function members()

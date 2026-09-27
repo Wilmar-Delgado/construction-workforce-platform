@@ -18,7 +18,7 @@ class WorkerRequestCreated extends Mailable
 
     public function build()
     {
-        return $this->subject('New Worker Request')
+        return $this->subject(__('app.emails.worker_request.subject'))
             ->view('emails.worker-request-created');
     }
 }

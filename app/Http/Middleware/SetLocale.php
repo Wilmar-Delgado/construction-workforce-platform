@@ -11,13 +11,15 @@ class SetLocale
     public function handle(Request $request, Closure $next)
     {
         // 1. Session (manual switch)
-        if (session()->has('locale')) {
+        if (session()->has('locale')
+            && in_array(session('locale'), config('locales.supported'), true)) {
             App::setLocale(session('locale'));
             return $next($request);
         }
 
         // 2. User preference (future-ready)
-        if ($request->user() && $request->user()->language) {
+        if ($request->user()
+            && in_array($request->user()->language, config('locales.supported'), true)) {
             App::setLocale($request->user()->language);
             return $next($request);
         }
@@ -25,7 +27,7 @@ class SetLocale
         // 3. Browser language
         $browserLocale = substr($request->header('Accept-Language'), 0, 2);
 
-        if (in_array($browserLocale, ['en', 'fr'])) {
+        if (in_array($browserLocale, config('locales.supported'), true)) {
             App::setLocale($browserLocale);
         } else {
             App::setLocale(config('app.locale'));

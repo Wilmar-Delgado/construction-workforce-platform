@@ -26,7 +26,7 @@ const props = defineProps({
     workers: Object,
     jobs: Array,
     filters: Object,
-    missions: Array,
+    projects: Array,
     existingRequests: Array,
 });
 
@@ -66,7 +66,7 @@ const showProfile = ref(false);
 const showRequest = ref(false);
 
 const requestForm = useForm({
-    mission_id: '',
+    project_id: '',
     message: '',
 });
 
@@ -78,10 +78,10 @@ function ratingDisplay(worker) {
     return `${Number(worker.rating).toFixed(1)} (${worker.ratings_count})`;
 }
 
-const alreadyRequested = (workerId, missionId) => {
+const alreadyRequested = (workerId, projectId) => {
     return props.existingRequests.some(r =>
         r.worker_profile_id === workerId &&
-        r.mission_id === missionId
+        r.project_id === projectId
     );
 };
 
@@ -143,6 +143,7 @@ function submitRequest() {
                 :search="search"
                 :job="job"
                 :jobs="jobs"
+                translation-namespace="find_workers_page"
                 :t="t"
 
                 @update:search="val => search = val"
@@ -326,32 +327,32 @@ function submitRequest() {
                         </div>
                     </div>
 
-                    <!-- Mission Select -->
+                    <!-- Project Select -->
                     <div class="form-group">
-                        <label>{{ t('find_workers_page.request_modal.select_mission') }}</label>
+                        <label>{{ t('find_workers_page.request_modal.select_project') }}</label>
                         <select
-                            v-model="requestForm.mission_id"
+                            v-model="requestForm.project_id"
                             :disabled="requestForm.processing"
                         >
                             <option disabled value="">
-                                {{ t('find_workers_page.request_modal.choose_mission') }}
+                                {{ t('find_workers_page.request_modal.choose_project') }}
                             </option>
 
                             <option
-                                v-for="mission in missions"
-                                :key="mission.id"
-                                :value="mission.id"
+                                v-for="project in projects"
+                                :key="project.id"
+                                :value="project.id"
                             >
-                                {{ mission.title }}
+                                {{ project.title }}
                             </option>
                         </select>
 
-                        <p v-if="requestForm.errors.mission_id" class="error">{{ requestForm.errors.mission_id }}</p>
+                        <p v-if="requestForm.errors.project_id" class="error">{{ requestForm.errors.project_id }}</p>
                     </div>
 
                     <!-- Message -->
                     <div class="form-group">
-                        <label>{{ t('find_workers_page.request_modal.mission_desc') }}</label>
+                        <label>{{ t('find_workers_page.request_modal.project_desc') }}</label>
 
                         <textarea
                             v-model="requestForm.message"
@@ -368,11 +369,11 @@ function submitRequest() {
                         class="btn-primary btn-full"
                         :disabled="
                             requestForm.processing ||
-                            alreadyRequested(selectedWorker.id, requestForm.mission_id)
+                            alreadyRequested(selectedWorker.id, requestForm.project_id)
                         "
                     >
                         {{
-                            alreadyRequested(selectedWorker.id, requestForm.mission_id)
+                            alreadyRequested(selectedWorker.id, requestForm.project_id)
                                 ? t('find_workers_page.request_modal.already_requested')
                                 : (requestForm.processing 
                                     ? t('find_workers_page.request_modal.sending') 

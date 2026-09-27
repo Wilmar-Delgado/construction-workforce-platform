@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\WorkerProfile;
 use App\Models\WorkerRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -20,17 +20,17 @@ class WorkerRequestController extends Controller
     {
         $validated = $request->validate(
             [
-                'mission_id' => 'required|exists:missions,id',
+                'project_id' => 'required|exists:projects,id',
                 'message' => 'nullable|string|max:1000',
             ],
             [
-                'mission_id.required' => 'Please select a mission.',
-                'mission_id.exists' => 'The selected mission is invalid.',
-                'message.max' => 'Message cannot exceed 1000 characters.',
+                'project_id.required' => __('app.find_workers_page.validation.project_required'),
+                'project_id.exists' => __('app.find_workers_page.validation.project_invalid'),
+                'message.max' => __('app.find_workers_page.validation.message_max'),
             ]
         );
 
-        $mission = Mission::findOrFail($validated['mission_id']);
+        $project = Project::findOrFail($validated['project_id']);
 
         if (! $worker->isOperationallyAvailable()) {
             throw ValidationException::withMessages([
@@ -44,25 +44,25 @@ class WorkerRequestController extends Controller
             ]);
         }
 
-        $this->authorize('createInvite', [WorkerRequest::class, $mission, $worker]);
+        $this->authorize('createInvite', [WorkerRequest::class, $project, $worker]);
 
         $companyId = auth()->user()->company_id;
 
-        // A worker has one durable request record per mission, regardless of request type or status.
+        // A worker has one durable request record per project, regardless of request type or status.
         $alreadyExists = WorkerRequest::where([
-            'mission_id'        => $validated['mission_id'],
+            'project_id'        => $validated['project_id'],
             'worker_profile_id' => $worker->id,
         ])->exists();
 
         if ($alreadyExists) {
             return back()->withErrors([
-                'mission_id' => 'You already requested this worker for this mission.'
+                'project_id' => __('app.find_workers_page.validation.worker_already_requested'),
             ]);
         }
 
         // Create request
         $requestModel = WorkerRequest::create([
-            'mission_id'        => $validated['mission_id'],
+            'project_id'        => $validated['project_id'],
             'requested_by'      => auth()->id(),
             'company_id'        => $companyId,
             'worker_profile_id' => $worker->id,
@@ -75,7 +75,7 @@ class WorkerRequestController extends Controller
 
         // Load relationships (important for email view)
         $requestModel->load([
-            'mission',
+            'project',
             'worker.company',
             'company',
             'requester'
@@ -92,7 +92,9 @@ class WorkerRequestController extends Controller
             ->first();
 
             if ($companyOwner) {
-                Mail::to($companyOwner->email)->send(new WorkerRequestCreated($requestModel));
+                Mail::to($companyOwner->email)
+                    ->locale($companyOwner->language)
+                    ->send(new WorkerRequestCreated($requestModel));
             }
 
         } else {
@@ -101,10 +103,12 @@ class WorkerRequestController extends Controller
             $workerUser = User::where('id', $worker->user_id)->first();
 
             if ($workerUser) {
-                Mail::to($workerUser->email)->send(new WorkerRequestCreated($requestModel));
+                Mail::to($workerUser->email)
+                    ->locale($workerUser->language)
+                    ->send(new WorkerRequestCreated($requestModel));
             }
         }
 
-        return back()->with('success', 'Request sent successfully.');
+        return back()->with('success', __('app.find_workers_page.success.request_sent'));
     }
 }

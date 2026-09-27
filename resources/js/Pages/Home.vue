@@ -17,14 +17,14 @@ const authStore = useAuthStore();
 const statsData = page.props.stats;
 const stats = computed(() => {
     const commonStats = [
-        { key: 'ongoing_missions', value: statsData.ongoing_missions, icon: TrendingUp },
+        { key: 'ongoing_projects', value: statsData.ongoing_projects, icon: TrendingUp },
         { key: 'pending_requests', value: statsData.pending_requests, icon: Calendar },
     ];
 
     if (isSelfEmployed.value) {
         return [
             ...commonStats,
-            { key: 'completed_missions', value: statsData.completed_missions, icon: Users },
+            { key: 'completed_projects', value: statsData.completed_projects, icon: Users },
             { key: 'total_applications', value: statsData.total_applications, icon: Briefcase },
         ];
     }
@@ -32,17 +32,17 @@ const stats = computed(() => {
     return [
         ...commonStats,
         { key: 'active_workers', value: statsData.active_workers, icon: Users },
-        { key: 'total_missions', value: statsData.total_missions, icon: Briefcase },
+        { key: 'total_projects', value: statsData.total_projects, icon: Briefcase },
     ];
 });
 const hasProfile = page.props.hasWorkerProfile;
 
-const openFindMissions = () => {
-    router.visit('/find-missions');
+const openFindProjects = () => {
+    router.visit('/find-projects');
 };
 
-const openMissionManagement = () => {
-    router.visit('/mission-management');
+const openProjectManagement = () => {
+    router.visit('/project-management');
 };
 
 const openProfiles = () => {
@@ -57,8 +57,8 @@ const openAvailability = () => {
     router.visit('/availability');
 };
 
-const openMissions = () => {
-    router.visit('/missions');
+const openProjects = () => {
+    router.visit('/projects');
 };
 
 const openSettings = () => {
@@ -143,13 +143,13 @@ const openSettings = () => {
                         </p>
                     </div>
 
-                    <!-- Browse Missions -->
-                    <div class="action-card" @click="openFindMissions">
+                    <!-- Browse Projects -->
+                    <div class="action-card" @click="openFindProjects">
                         <div class="action-icon">
                             <Briefcase class="icon" />
                         </div>
-                        <h3>{{ t('home_page.actions.browse_missions') }}</h3>
-                        <p>{{ t('home_page.actions.browse_missions_desc') }}</p>
+                        <h3>{{ t('home_page.actions.browse_projects') }}</h3>
+                        <p>{{ t('home_page.actions.browse_projects_desc') }}</p>
                     </div>
 
                 </template>
@@ -160,10 +160,10 @@ const openSettings = () => {
                 <h4>{{ t('home_page.quick_access') }}</h4>
                 <div class="quick-buttons">
                     <button
-                        v-if="can('view_mission_management')"
-                        @click="openMissionManagement"
+                        v-if="can('view_project_management')"
+                        @click="openProjectManagement"
                     >
-                        {{ t('home_page.mission_hub') }}
+                        {{ t('home_page.project_hub') }}
                     </button>
 
                     <button
@@ -175,16 +175,16 @@ const openSettings = () => {
 
                     <button
                         v-if="isSelfEmployed"
-                        @click="openFindMissions"
+                        @click="openFindProjects"
                     >
-                        {{ t('find_missions') }}
+                        {{ t('find_projects') }}
                     </button>
 
                     <button
-                        v-else-if="can('create_missions')"
-                        @click="openMissions"
+                        v-else-if="can('create_projects')"
+                        @click="openProjects"
                     >
-                        {{ t('home_page.manage_missions') }}
+                        {{ t('home_page.manage_projects') }}
                     </button>
 
                     <button

@@ -13,15 +13,15 @@ class DevelopmentSeederCompatibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_seeded_worker_requests_match_their_mission_job_type(): void
+    public function test_seeded_worker_requests_match_their_project_job_type(): void
     {
         $this->seed(RoleSeeder::class);
         $this->seed(DevelopmentDataSeeder::class);
 
         $mismatches = WorkerRequest::query()
             ->join('worker_profiles', 'worker_profiles.id', '=', 'requests.worker_profile_id')
-            ->join('missions', 'missions.id', '=', 'requests.mission_id')
-            ->whereColumn('missions.job_type', '!=', 'worker_profiles.job')
+            ->join('projects', 'projects.id', '=', 'requests.project_id')
+            ->whereColumn('projects.job_type', '!=', 'worker_profiles.job')
             ->count();
 
         $this->assertSame(0, $mismatches);
@@ -33,7 +33,7 @@ class DevelopmentSeederCompatibilityTest extends TestCase
         $this->seed(DevelopmentDataSeeder::class);
 
         $request = WorkerRequest::query()
-            ->whereHas('mission', fn ($mission) => $mission->where(
+            ->whereHas('project', fn ($project) => $project->where(
                 'title',
                 'Commercial Roofing Crew for School Addition',
             ))
@@ -49,12 +49,12 @@ class DevelopmentSeederCompatibilityTest extends TestCase
             $viewer = User::where('email', $email)->firstOrFail();
 
             $this->actingAs($viewer)
-                ->getJson(route('mission-management.missions.details', [
-                    'mission' => $request->mission_id,
+                ->getJson(route('project-management.projects.details', [
+                    'project' => $request->project_id,
                     'request' => $request->id,
                 ]))
                 ->assertOk()
-                ->assertJsonPath('mission.id', $request->mission_id);
+                ->assertJsonPath('project.id', $request->project_id);
         }
     }
 }

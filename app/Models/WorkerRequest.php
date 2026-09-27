@@ -9,7 +9,7 @@ class WorkerRequest extends Model
     protected $table = 'requests';
     
     protected $fillable = [
-        'mission_id',
+        'project_id',
         'requested_by',
         'company_id',
         'worker_profile_id',
@@ -29,9 +29,9 @@ class WorkerRequest extends Model
         'ended_at' => 'datetime',
     ];
 
-    public function mission()
+    public function project()
     {
-        return $this->belongsTo(Mission::class);
+        return $this->belongsTo(Project::class);
     }
 
     public function worker()

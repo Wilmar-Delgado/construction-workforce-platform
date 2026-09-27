@@ -125,7 +125,7 @@ class WorkerProfileController extends Controller
             $worker->skills()->sync($skillIds);
         }
 
-        return redirect()->route('worker-profiles.index')->with('success', 'Worker profile created successfully.');
+        return redirect()->route('worker-profiles.index')->with('success', __('app.profiles_page.success.created'));
     }
 
     public function update(Request $request, WorkerProfile $workerProfile): RedirectResponse
@@ -189,7 +189,7 @@ class WorkerProfileController extends Controller
             $workerProfile->skills()->sync([]);
         }
 
-        return redirect()->route('worker-profiles.index')->with('success', 'Worker profile updated successfully.');
+        return redirect()->route('worker-profiles.index')->with('success', __('app.profiles_page.success.updated'));
     }
 
     public function destroy(WorkerProfile $workerProfile): RedirectResponse
@@ -210,7 +210,7 @@ class WorkerProfileController extends Controller
             $lockedWorkerProfile->delete();
         });
 
-        return redirect()->route('worker-profiles.index')->with('success', 'Worker profile deleted successfully.');
+        return redirect()->route('worker-profiles.index')->with('success', __('app.profiles_page.success.deleted'));
     }
 
     public function archive(WorkerProfile $workerProfile): RedirectResponse
@@ -233,6 +233,6 @@ class WorkerProfileController extends Controller
             ]);
         });
 
-        return redirect()->route('worker-profiles.index')->with('success', 'Worker profile archived successfully.');
+        return redirect()->route('worker-profiles.index')->with('success', __('app.profiles_page.success.archived'));
     }
 }

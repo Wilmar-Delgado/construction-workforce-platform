@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\WorkerProfile;
@@ -19,18 +19,18 @@ class HomeRoleAwareStatsTest extends TestCase
     public function test_company_owner_receives_company_oriented_home_metrics(): void
     {
         [$owner, $company] = $this->companyUser('company_owner', 'Owner Company');
-        $this->mission($owner, $company, 'Active company mission', 'in_progress');
+        $this->project($owner, $company, 'Active company project', 'in_progress');
         $this->worker($owner, $company, 'Company Electrician');
 
         $this->actingAs($owner)
             ->get(route('home'))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Home')
-                ->where('stats.ongoing_missions', 1)
+                ->where('stats.ongoing_projects', 1)
                 ->where('stats.pending_requests', 0)
                 ->where('stats.active_workers', 1)
-                ->where('stats.total_missions', 1)
-                ->missing('stats.completed_missions')
+                ->where('stats.total_projects', 1)
+                ->missing('stats.completed_projects')
                 ->missing('stats.total_applications')
             );
     }
@@ -39,17 +39,17 @@ class HomeRoleAwareStatsTest extends TestCase
     {
         [$owner, $company] = $this->companyUser('company_owner', 'Managed Company');
         $manager = $this->user('planning_manager', ['company_id' => $company->id]);
-        $this->mission($owner, $company, 'Planning mission', 'in_progress');
+        $this->project($owner, $company, 'Planning project', 'in_progress');
         $this->worker($owner, $company, 'Company Welder');
 
         $this->actingAs($manager)
             ->get(route('home'))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Home')
-                ->where('stats.ongoing_missions', 1)
+                ->where('stats.ongoing_projects', 1)
                 ->where('stats.active_workers', 1)
-                ->where('stats.total_missions', 1)
-                ->missing('stats.completed_missions')
+                ->where('stats.total_projects', 1)
+                ->missing('stats.completed_projects')
             );
     }
 
@@ -61,44 +61,44 @@ class HomeRoleAwareStatsTest extends TestCase
         $otherWorker = $this->worker($otherSelfEmployed, null, 'Other Independent Electrician');
         [$hiringOwner, $hiringCompany] = $this->companyUser('company_owner', 'Hiring Company');
 
-        $ongoingMission = $this->mission($hiringOwner, $hiringCompany, 'Ongoing assignment', 'in_progress');
-        $this->request($ongoingMission, $selfEmployed, null, $selfWorker, 'apply', 'ongoing');
+        $ongoingProject = $this->project($hiringOwner, $hiringCompany, 'Ongoing assignment', 'in_progress');
+        $this->request($ongoingProject, $selfEmployed, null, $selfWorker, 'apply', 'ongoing');
 
-        $acceptedMission = $this->mission($hiringOwner, $hiringCompany, 'Awaiting start', 'open');
-        $this->request($acceptedMission, $selfEmployed, null, $selfWorker, 'apply', 'accepted');
+        $acceptedProject = $this->project($hiringOwner, $hiringCompany, 'Awaiting start', 'open');
+        $this->request($acceptedProject, $selfEmployed, null, $selfWorker, 'apply', 'accepted');
 
-        $completedMission = $this->mission($hiringOwner, $hiringCompany, 'Completed assignment', 'completed');
-        $this->request($completedMission, $selfEmployed, null, $selfWorker, 'apply', 'completed');
+        $completedProject = $this->project($hiringOwner, $hiringCompany, 'Completed assignment', 'completed');
+        $this->request($completedProject, $selfEmployed, null, $selfWorker, 'apply', 'completed');
 
-        $earlyEndMission = $this->mission($hiringOwner, $hiringCompany, 'Ended early assignment', 'in_progress');
-        $this->request($earlyEndMission, $selfEmployed, null, $selfWorker, 'apply', 'ended_early');
+        $earlyEndProject = $this->project($hiringOwner, $hiringCompany, 'Ended early assignment', 'in_progress');
+        $this->request($earlyEndProject, $selfEmployed, null, $selfWorker, 'apply', 'ended_early');
 
-        $pendingInviteMission = $this->mission($hiringOwner, $hiringCompany, 'Pending invitation', 'open');
-        $this->request($pendingInviteMission, $hiringOwner, $hiringCompany, $selfWorker, 'invite', 'pending');
+        $pendingInviteProject = $this->project($hiringOwner, $hiringCompany, 'Pending invitation', 'open');
+        $this->request($pendingInviteProject, $hiringOwner, $hiringCompany, $selfWorker, 'invite', 'pending');
 
-        $pendingApplicationMission = $this->mission($hiringOwner, $hiringCompany, 'Pending application', 'open');
-        $this->request($pendingApplicationMission, $selfEmployed, null, $selfWorker, 'apply', 'pending');
+        $pendingApplicationProject = $this->project($hiringOwner, $hiringCompany, 'Pending application', 'open');
+        $this->request($pendingApplicationProject, $selfEmployed, null, $selfWorker, 'apply', 'pending');
 
-        $rejectedApplicationMission = $this->mission($hiringOwner, $hiringCompany, 'Rejected application', 'open');
-        $this->request($rejectedApplicationMission, $selfEmployed, null, $selfWorker, 'apply', 'rejected');
+        $rejectedApplicationProject = $this->project($hiringOwner, $hiringCompany, 'Rejected application', 'open');
+        $this->request($rejectedApplicationProject, $selfEmployed, null, $selfWorker, 'apply', 'rejected');
 
-        $otherMission = $this->mission($hiringOwner, $hiringCompany, 'Other worker assignment', 'in_progress');
-        $this->request($otherMission, $otherSelfEmployed, null, $otherWorker, 'apply', 'ongoing');
+        $otherProject = $this->project($hiringOwner, $hiringCompany, 'Other worker assignment', 'in_progress');
+        $this->request($otherProject, $otherSelfEmployed, null, $otherWorker, 'apply', 'ongoing');
 
         $this->actingAs($selfEmployed)
             ->get(route('home'))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Home')
-                ->where('stats.ongoing_missions', 1)
+                ->where('stats.ongoing_projects', 1)
                 ->where('stats.pending_requests', 2)
-                ->where('stats.completed_missions', 2)
+                ->where('stats.completed_projects', 2)
                 ->where('stats.total_applications', 6)
                 ->missing('stats.active_workers')
-                ->missing('stats.total_missions')
+                ->missing('stats.total_projects')
             );
 
         $this->actingAs($selfEmployed)
-            ->get(route('mission-management.index'))
+            ->get(route('project-management.index'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('data.completed.joined.total', 2)
             );
@@ -112,17 +112,17 @@ class HomeRoleAwareStatsTest extends TestCase
         ]);
         [$hiringOwner, $hiringCompany] = $this->companyUser('company_owner', 'Historical Hiring Company');
 
-        $completedMission = $this->mission($hiringOwner, $hiringCompany, 'Historical completion', 'completed');
-        $this->request($completedMission, $selfEmployed, null, $archivedWorker, 'apply', 'completed');
+        $completedProject = $this->project($hiringOwner, $hiringCompany, 'Historical completion', 'completed');
+        $this->request($completedProject, $selfEmployed, null, $archivedWorker, 'apply', 'completed');
 
-        $pendingMission = $this->mission($hiringOwner, $hiringCompany, 'Historical pending application', 'open');
-        $this->request($pendingMission, $selfEmployed, null, $archivedWorker, 'apply', 'pending');
+        $pendingProject = $this->project($hiringOwner, $hiringCompany, 'Historical pending application', 'open');
+        $this->request($pendingProject, $selfEmployed, null, $archivedWorker, 'apply', 'pending');
 
         $this->actingAs($selfEmployed)
             ->get(route('home'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('stats.pending_requests', 0)
-                ->where('stats.completed_missions', 1)
+                ->where('stats.completed_projects', 1)
                 ->where('stats.total_applications', 2)
             );
     }
@@ -135,11 +135,11 @@ class HomeRoleAwareStatsTest extends TestCase
             ->get(route('home'))
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Home')
-                ->where('stats.ongoing_missions', 0)
+                ->where('stats.ongoing_projects', 0)
                 ->where('stats.pending_requests', 0)
                 ->where('stats.active_workers', 0)
-                ->where('stats.total_missions', 0)
-                ->missing('stats.completed_missions')
+                ->where('stats.total_projects', 0)
+                ->missing('stats.completed_projects')
                 ->missing('stats.total_applications')
             );
     }
@@ -180,9 +180,9 @@ class HomeRoleAwareStatsTest extends TestCase
         ], $attributes));
     }
 
-    private function mission(User $owner, Company $company, string $title, string $status): Mission
+    private function project(User $owner, Company $company, string $title, string $status): Project
     {
-        return Mission::create([
+        return Project::create([
             'hiring_company_id' => $company->id,
             'created_by' => $owner->id,
             'title' => $title,
@@ -198,7 +198,7 @@ class HomeRoleAwareStatsTest extends TestCase
     }
 
     private function request(
-        Mission $mission,
+        Project $project,
         User $requestedBy,
         ?Company $company,
         WorkerProfile $worker,
@@ -206,7 +206,7 @@ class HomeRoleAwareStatsTest extends TestCase
         string $status,
     ): WorkerRequest {
         return WorkerRequest::create([
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'requested_by' => $requestedBy->id,
             'company_id' => $company?->id,
             'worker_profile_id' => $worker->id,

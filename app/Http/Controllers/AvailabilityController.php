@@ -124,12 +124,12 @@ class AvailabilityController extends Controller
 
         DB::transaction(function () use ($validated) {
             $this->ensureDoesNotOverlap($validated);
-            $this->ensureNoCommittedMissionAssignment($validated);
+            $this->ensureNoCommittedProjectAssignment($validated);
 
             Availability::create($validated);
         });
 
-        return redirect()->route('availability.index')->with('success', 'Availability slot added successfully.');
+        return redirect()->route('availability.index')->with('success', __('app.availability_page.success.created'));
     }
 
     public function update(Request $request, Availability $availability): RedirectResponse
@@ -146,12 +146,12 @@ class AvailabilityController extends Controller
 
         DB::transaction(function () use ($availability, $validated) {
             $this->ensureDoesNotOverlap($validated, $availability);
-            $this->ensureNoCommittedMissionAssignment($validated);
+            $this->ensureNoCommittedProjectAssignment($validated);
 
             $availability->update($validated);
         });
 
-        return redirect()->route('availability.index')->with('success', 'Availability slot updated successfully.');
+        return redirect()->route('availability.index')->with('success', __('app.availability_page.success.updated'));
     }
 
     public function destroy(Request $request, Availability $availability): RedirectResponse
@@ -162,7 +162,7 @@ class AvailabilityController extends Controller
 
         $availability->delete();
 
-        return redirect()->route('availability.index')->with('success', 'Availability slot deleted successfully.');
+        return redirect()->route('availability.index')->with('success', __('app.availability_page.success.deleted'));
     }
 
     private function validateAvailability(Request $request): array
@@ -214,12 +214,12 @@ class AvailabilityController extends Controller
         }
     }
 
-    private function ensureNoCommittedMissionAssignment(array $validated): void
+    private function ensureNoCommittedProjectAssignment(array $validated): void
     {
         $hasActiveAssignment = WorkerRequest::query()
             ->where('worker_profile_id', $validated['worker_profile_id'])
             ->whereIn('status', ['accepted', 'ongoing'])
-            ->whereHas('mission', function ($query) use ($validated) {
+            ->whereHas('project', function ($query) use ($validated) {
                 $query->whereIn('status', ['open', 'in_progress'])
                     ->whereDate('start_date', '<=', $validated['date'])
                     ->whereDate('end_date', '>=', $validated['date']);
@@ -228,7 +228,7 @@ class AvailabilityController extends Controller
 
         if ($hasActiveAssignment) {
             throw ValidationException::withMessages([
-                'date' => __('app.availability_page.validation.mission_assignment_conflict'),
+                'date' => __('app.availability_page.validation.project_assignment_conflict'),
             ]);
         }
     }

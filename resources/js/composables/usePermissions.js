@@ -12,11 +12,11 @@ export function usePermissions() {
 
         if (role === 'self_employed' && user.company_id === null) {
             return [
-                'view_missions',
+                'view_projects',
                 'create_profile',
                 'edit_own_profile',
-                'view_mission_management',
-                'apply_to_missions',
+                'view_project_management',
+                'apply_to_projects',
             ];
         }
 
@@ -24,18 +24,18 @@ export function usePermissions() {
             return [
                 'view_workers',
                 'manage_workers',
-                'create_missions',
+                'create_projects',
                 'manage_availability',
-                'view_mission_management',
+                'view_project_management',
                 'invite_workers',
-                'apply_to_missions',
+                'apply_to_projects',
             ];
         }
 
         if (role === 'administrator') {
             return [
                 'view_workers',
-                'view_mission_management',
+                'view_project_management',
             ];
         }
 

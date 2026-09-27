@@ -1,55 +1,55 @@
 <h2>
     @if($request->worker->company_id)
-        New Request for Your Worker
+        {{ __('app.emails.worker_request.company_heading') }}
     @else
-        You’ve Been Invited to a Mission
+        {{ __('app.emails.worker_request.self_employed_heading') }}
     @endif
 </h2>
 
 <p>
     @if($request->worker->company_id)
-        <strong>{{ $request->company->name }}</strong> has requested one of your workers for a mission.
+        {!! __('app.emails.worker_request.company_intro', ['company' => '<strong>' . e($request->company->name) . '</strong>']) !!}
     @else
-        <strong>{{ $request->company->name }}</strong> has invited you to join a mission.
+        {!! __('app.emails.worker_request.self_employed_intro', ['company' => '<strong>' . e($request->company->name) . '</strong>']) !!}
     @endif
 </p>
 
 <hr>
 
-<h3>📌 Mission Details</h3>
-<p><strong>Title:</strong> {{ $request->mission->title }}</p>
+<h3>📌 {{ __('app.emails.common.project_details') }}</h3>
+<p><strong>{{ __('app.emails.common.title') }}:</strong> {{ $request->project->title }}</p>
 
 @if($request->message)
-    <p><strong>Message:</strong> {{ $request->message }}</p>
+    <p><strong>{{ __('app.emails.common.message') }}:</strong> {{ $request->message }}</p>
 @endif
 
 <hr>
 
-<h3>👷 Worker Details</h3>
+<h3>👷 {{ __('app.emails.worker_request.worker_details') }}</h3>
 
 @if($request->worker->company_id)
     {{-- Company Owner view --}}
-    <p><strong>Worker:</strong> {{ $request->worker->name }}</p>
-    <p><strong>Role:</strong> {{ ucfirst($request->worker->job) }}</p>
+    <p><strong>{{ __('app.emails.common.worker') }}:</strong> {{ $request->worker->name }}</p>
+    <p><strong>{{ __('app.emails.common.role') }}:</strong> {{ __('app.profiles_page.jobs.' . $request->worker->job) }}</p>
 @else
     {{-- Self-employed view --}}
-    <p>This request is specifically for you.</p>
+    <p>{{ __('app.emails.worker_request.self_employed_notice') }}</p>
 @endif
 
 <hr>
 
-<h3>🏢 Requesting Company</h3>
+<h3>🏢 {{ __('app.emails.worker_request.requesting_company') }}</h3>
 <p><strong>{{ $request->company->name }}</strong></p>
 
 <hr>
 
 <p>
-    Please log in to your account to accept or decline this request.
+    {{ __('app.emails.worker_request.login_instruction') }}
 </p>
 
 <p style="margin-top:20px;">
-    <a href="{{ config('app.url') }}/mission-management"
+    <a href="{{ config('app.url') }}/project-management"
        style="background:#4CAF50;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">
-        View Request
+        {{ __('app.emails.common.view_request') }}
     </a>
 </p>

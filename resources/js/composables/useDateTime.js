@@ -1,6 +1,10 @@
 import { usePage } from '@inertiajs/vue3';
 
-const localeFor = (locale) => locale === 'fr' ? 'fr-CA' : 'en-CA';
+const localeFor = (locale) => ({
+    en: 'en-CA',
+    fr: 'fr-CA',
+    es: 'es-ES',
+}[locale] ?? 'en-CA');
 
 function parseDateOnly(value) {
     const match = String(value ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);

@@ -27,7 +27,7 @@ const props = defineProps({
     },
 });
 
-const availableLanguages = ['en', 'fr'];
+const availableLanguages = ['en', 'fr', 'es'];
 const supportedTimezoneIds = Object.keys(props.timezoneOptions);
 const savedTimezone = authStore.user.timezone ?? 'UTC';
 const selectedTimezone = supportedTimezoneIds.includes(savedTimezone) ? savedTimezone : 'UTC';
@@ -43,7 +43,7 @@ const companyName = authStore.user.company?.name ?? '';
 const notifications = useForm({
     email: authStore.user.email_notifications ?? true,
     sms: authStore.user.sms_notifications ?? false,
-    missionAlerts: authStore.user.mission_alerts ?? true,
+    projectAlerts: authStore.user.project_alerts ?? true,
     language: authStore.user.language ?? 'en',
     timezone: selectedTimezone,
 });
@@ -77,8 +77,15 @@ function savePersonalInfo() {
 }
 
 function saveNotifications() {
+    const languageChanged = notifications.language !== authStore.user.language;
+
     notifications.post(route('settings.notifications.update'), {
         preserveScroll: true,
+        onSuccess: () => {
+            if (languageChanged) {
+                window.location.reload();
+            }
+        },
     });
 }
 
@@ -305,13 +312,13 @@ function deactivateAccount() {
                     <div class="setting-row">
                         <div>
                             <p class="setting-title">
-                                {{ t('settings_page.notifications.missions') }}
+                                {{ t('settings_page.notifications.projects') }}
                             </p>
                             <p class="setting-desc">
-                                {{ t('settings_page.notifications.missions_description') }}
+                                {{ t('settings_page.notifications.projects_description') }}
                             </p>
                         </div>
-                        <input type="checkbox" v-model="notifications.missionAlerts" />
+                        <input type="checkbox" v-model="notifications.projectAlerts" />
                     </div>
                     <div class="grid grid-cols-2 gap-6">
                     <!-- Language -->

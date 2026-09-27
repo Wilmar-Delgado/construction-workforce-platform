@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\{Availability, Certification, Company, Mission, MissionRequirement, Rating, Role, Skill, User, WorkerProfile, WorkerRequest};
+use App\Models\{Availability, Certification, Company, Project, ProjectRequirement, Rating, Role, Skill, User, WorkerProfile, WorkerRequest};
 use Illuminate\Database\Seeder;
 
 class DevelopmentDataSeeder extends Seeder
@@ -16,8 +16,8 @@ class DevelopmentDataSeeder extends Seeder
         $certifications = $this->seedLookups(Certification::class, $this->certifications());
         $workers = $this->seedWorkers($users, $companies, $skills, $certifications);
         $this->seedAvailability($workers);
-        $missions = $this->seedMissions($users, $companies);
-        $this->seedActivity($users, $companies, $workers, $missions);
+        $projects = $this->seedProjects($users, $companies);
+        $this->seedActivity($users, $companies, $workers, $projects);
         $this->assertSeededRequestJobCompatibility();
     }
 
@@ -37,7 +37,7 @@ class DevelopmentDataSeeder extends Seeder
         }
         $users=[];
         foreach ($accounts as $key => [$name,$email,$role]) {
-            $users[$key]=User::updateOrCreate(['email'=>$email], ['name'=>$name,'password'=>'password','role_id'=>$roles[$role],'company_id'=>null,'phone'=>sprintf('403-555-%04d',100+count($users)),'language'=>'en','timezone'=>'America/Edmonton','email_notifications'=>true,'sms_notifications'=>false,'mission_alerts'=>true,'email_verified_at'=>now()]);
+            $users[$key]=User::updateOrCreate(['email'=>$email], ['name'=>$name,'password'=>'password','role_id'=>$roles[$role],'company_id'=>null,'phone'=>sprintf('403-555-%04d',100+count($users)),'language'=>'en','timezone'=>'America/Edmonton','email_notifications'=>true,'sms_notifications'=>false,'project_alerts'=>true,'email_verified_at'=>now()]);
         }
         return $users;
     }
@@ -112,18 +112,18 @@ class DevelopmentDataSeeder extends Seeder
         }
     }
 
-    private function seedMissions(array $users,array $companies): array
+    private function seedProjects(array $users,array $companies): array
     {
-        $base=now()->startOfWeek(); $missions=[];
-        foreach ($this->missionDefinitions() as $key=>$d) {
+        $base=now()->startOfWeek(); $projects=[];
+        foreach ($this->projectDefinitions() as $key=>$d) {
             $start=$base->copy()->addWeeks($d[10]);
-            $missions[$key]=Mission::updateOrCreate(['title'=>$d[2]],['hiring_company_id'=>$companies[$d[0]]->id,'created_by'=>$users[$d[1]]->id,'description'=>$d[3],'city'=>$d[4],'province'=>'Alberta','country'=>'Canada','address_line_1'=>'Project site - details confirmed after acceptance','postal_code'=>'T2P 0A1','site_name'=>$d[5],'directions'=>'Check in with the site superintendent before entering the work area.','job_type'=>$d[6],'workers'=>$d[7],'hourly_rate'=>$d[8],'status'=>$d[9],'start_date'=>$start->toDateString(),'end_date'=>$start->copy()->addWeeks($d[11])->toDateString()]);
-            foreach ($d[12] as $requirement) MissionRequirement::updateOrCreate(['mission_id'=>$missions[$key]->id,'name'=>$requirement]);
+            $projects[$key]=Project::updateOrCreate(['title'=>$d[2]],['hiring_company_id'=>$companies[$d[0]]->id,'created_by'=>$users[$d[1]]->id,'description'=>$d[3],'city'=>$d[4],'province'=>'Alberta','country'=>'Canada','address_line_1'=>'Project site - details confirmed after acceptance','postal_code'=>'T2P 0A1','site_name'=>$d[5],'directions'=>'Check in with the site superintendent before entering the work area.','job_type'=>$d[6],'workers'=>$d[7],'hourly_rate'=>$d[8],'status'=>$d[9],'start_date'=>$start->toDateString(),'end_date'=>$start->copy()->addWeeks($d[11])->toDateString()]);
+            foreach ($d[12] as $requirement) ProjectRequirement::updateOrCreate(['project_id'=>$projects[$key]->id,'name'=>$requirement]);
         }
-        return $missions;
+        return $projects;
     }
 
-    private function missionDefinitions(): array
+    private function projectDefinitions(): array
     {
         $m=fn($company,$creator,$title,$description,$city,$site,$job,$workers,$rate,$status,$start,$duration,$requirements)=>[$company,$creator,$title,$description,$city,$site,$job,$workers,$rate,$status,$start,$duration,$requirements];
         return [
@@ -160,7 +160,7 @@ class DevelopmentDataSeeder extends Seeder
         ];
     }
 
-    private function seedActivity(array $users,array $companies,array $workers,array $missions): void
+    private function seedActivity(array $users,array $companies,array $workers,array $projects): void
     {
         $rows=[
             ['framing','maria','northstar_owner','northstar','invite','pending','Your commercial framing experience is a strong match for this Calgary office project.'],['electrician','jordan','jordan',null,'apply','pending','I am available for the renovation schedule and have current tenant-improvement experience.'],['concrete','nora','northstar_planner','northstar','apply','pending','Northstar is proposing Nora for the slab-placement scope.'],['drywall','noah','northstar_planner','northstar','apply','pending','Noah has commercial drywall and firestopping experience.'],['roofing','olivia','northstar_owner','northstar','apply','pending','Olivia is available for membrane and flashing work.'],['labour','ava','northstar_planner','northstar','apply','pending','Ava is available for site support and traffic accommodation duties.'],
@@ -169,11 +169,11 @@ class DevelopmentDataSeeder extends Seeder
             ['structural_welder','evan','evan',null,'apply','completed','I am a Red Seal welder with current structural field experience.','iron_owner'],['retail_carpentry','maria','summit_planner','summit','invite','completed','We would like to invite Maria for the retail millwork installation package.','maria'],['drain_piping','mason','summit_planner','summit','apply','completed','Mason is available for the industrial drainage upgrade.','prairie_owner'],['boom_operator','ella','iron_planner','iron','invite','completed','We would like to invite Ella to support the envelope-repair access work.','prairie_planner'],['roof_repair','olivia','northstar_owner','northstar','apply','completed','Olivia can respond to the emergency membrane repair package.','cedar_owner'],['curbing','lucas','prairie_planner','prairie','apply','completed','Lucas is available for sidewalk and curb finishing.','northstar_owner'],['generator_electrical','jordan','jordan',null,'apply','completed','I have generator tie-in and commercial feeder experience.','summit_owner'],['bridge_labour','ava','northstar_planner','northstar','apply','completed','Ava is available for bridge access and traffic support duties.','prairie_planner'],['stair_ironwork','hannah','evan',null,'apply','completed','I am available for stair tower steel fit-up and site welding.','iron_owner'],['suite_painting','maya','northstar_owner','northstar','apply','completed','Maya can complete the suite turnover painting package.','cedar_planner'],
         ];
         foreach ($rows as $row) {
-            [$mission,$worker,$requester,$company,$type,$status,$message,$responder]=array_pad($row,8,null); $responded=in_array($status,['accepted','ongoing','rejected','completed'],true);
-            WorkerRequest::updateOrCreate(['mission_id'=>$missions[$mission]->id,'worker_profile_id'=>$workers[$worker]->id,'type'=>$type],['mission_id'=>$missions[$mission]->id,'requested_by'=>$users[$requester]->id,'company_id'=>$company?$companies[$company]->id:null,'worker_profile_id'=>$workers[$worker]->id,'type'=>$type,'message'=>$message,'status'=>$status,'responded_by'=>$responder?$users[$responder]->id:null,'responded_at'=>$responded?now()->subDays(5):null,'completed_at'=>$status==='completed'?now()->subWeeks(2):null]);
+            [$project,$worker,$requester,$company,$type,$status,$message,$responder]=array_pad($row,8,null); $responded=in_array($status,['accepted','ongoing','rejected','completed'],true);
+            WorkerRequest::updateOrCreate(['project_id'=>$projects[$project]->id,'worker_profile_id'=>$workers[$worker]->id,'type'=>$type],['project_id'=>$projects[$project]->id,'requested_by'=>$users[$requester]->id,'company_id'=>$company?$companies[$company]->id:null,'worker_profile_id'=>$workers[$worker]->id,'type'=>$type,'message'=>$message,'status'=>$status,'responded_by'=>$responder?$users[$responder]->id:null,'responded_at'=>$responded?now()->subDays(5):null,'completed_at'=>$status==='completed'?now()->subWeeks(2):null]);
         }
-        foreach (['structural_welder'=>['evan','iron_owner',5,'Evan was dependable, safety-focused, and completed the repair scope to a high standard.'],'retail_carpentry'=>['maria','summit_owner',5,'Maria delivered careful finish work and coordinated well with the retail opening schedule.'],'drain_piping'=>['mason','prairie_owner',4,'Mason completed the drainage work cleanly and communicated issues early.'],'boom_operator'=>['ella','iron_planner',4,'Ella operated safely and kept material access moving through a tight work area.'],'roof_repair'=>['olivia','cedar_owner',5,'Olivia responded quickly and completed repairs ahead of the weather window.'],'curbing'=>['lucas','northstar_owner',3,'The curb work met the required finish, though the crew needed more schedule follow-up.'],'generator_electrical'=>['jordan','summit_owner',5,'Jordan was well prepared, followed the commissioning plan, and produced excellent documentation.'],'bridge_labour'=>['ava','prairie_planner',3,'Ava was reliable on site and completed the assigned access and cleanup duties.'],'stair_ironwork'=>['evan','iron_owner',2,'The steel work was acceptable, but late arrivals created coordination delays.'],'suite_painting'=>['maya','cedar_planner',2,'Surface preparation required rework before final turnover, although the final coating was acceptable.']] as $mission=>[$worker,$reviewer,$score,$feedback]) {
-            Rating::updateOrCreate(['mission_id'=>$missions[$mission]->id],['reviewed_by_user_id'=>$users[$reviewer]->id,'worker_profile_id'=>$workers[$worker]->id,'score'=>$score,'feedback'=>$feedback]);
+        foreach (['structural_welder'=>['evan','iron_owner',5,'Evan was dependable, safety-focused, and completed the repair scope to a high standard.'],'retail_carpentry'=>['maria','summit_owner',5,'Maria delivered careful finish work and coordinated well with the retail opening schedule.'],'drain_piping'=>['mason','prairie_owner',4,'Mason completed the drainage work cleanly and communicated issues early.'],'boom_operator'=>['ella','iron_planner',4,'Ella operated safely and kept material access moving through a tight work area.'],'roof_repair'=>['olivia','cedar_owner',5,'Olivia responded quickly and completed repairs ahead of the weather window.'],'curbing'=>['lucas','northstar_owner',3,'The curb work met the required finish, though the crew needed more schedule follow-up.'],'generator_electrical'=>['jordan','summit_owner',5,'Jordan was well prepared, followed the commissioning plan, and produced excellent documentation.'],'bridge_labour'=>['ava','prairie_planner',3,'Ava was reliable on site and completed the assigned access and cleanup duties.'],'stair_ironwork'=>['evan','iron_owner',2,'The steel work was acceptable, but late arrivals created coordination delays.'],'suite_painting'=>['maya','cedar_planner',2,'Surface preparation required rework before final turnover, although the final coating was acceptable.']] as $project=>[$worker,$reviewer,$score,$feedback]) {
+            Rating::updateOrCreate(['project_id'=>$projects[$project]->id],['reviewed_by_user_id'=>$users[$reviewer]->id,'worker_profile_id'=>$workers[$worker]->id,'score'=>$score,'feedback'=>$feedback]);
         }
     }
 
@@ -181,12 +181,12 @@ class DevelopmentDataSeeder extends Seeder
     {
         $hasMismatch = WorkerRequest::query()
             ->join('worker_profiles', 'worker_profiles.id', '=', 'requests.worker_profile_id')
-            ->join('missions', 'missions.id', '=', 'requests.mission_id')
-            ->whereColumn('missions.job_type', '!=', 'worker_profiles.job')
+            ->join('projects', 'projects.id', '=', 'requests.project_id')
+            ->whereColumn('projects.job_type', '!=', 'worker_profiles.job')
             ->exists();
 
         if ($hasMismatch) {
-            throw new \LogicException('Seeded worker requests must match the mission job type.');
+            throw new \LogicException('Seeded worker requests must match the project job type.');
         }
     }
 }

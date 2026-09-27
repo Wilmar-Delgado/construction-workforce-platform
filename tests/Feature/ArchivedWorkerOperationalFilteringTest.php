@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Availability;
 use App\Models\Company;
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\Rating;
 use App\Models\Role;
 use App\Models\User;
@@ -39,7 +39,7 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
     {
         [$applicant, $applicantCompany] = $this->companyUser('Applicant Company');
         [$hiringManager, $hiringCompany] = $this->companyUser('Hiring Company');
-        $mission = $this->mission($hiringManager, $hiringCompany, 'Open mission');
+        $project = $this->project($hiringManager, $hiringCompany, 'Open project');
         $activeWorker = $this->worker($applicantCompany, 'Active electrician', 'Electrician');
         $archivedWorker = $this->worker($applicantCompany, 'Archived electrician', 'Electrician', [
             'archived_at' => now(),
@@ -53,9 +53,9 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
         ]);
 
         $this->actingAs($applicant)
-            ->get(route('find-missions.index'))
+            ->get(route('find-projects.index'))
             ->assertInertia(fn (Assert $page) => $page
-                ->component('FindMissions')
+                ->component('FindProjects')
                 ->has('workers', 1)
                 ->where('workers.0.id', $activeWorker->id)
             );
@@ -79,15 +79,15 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
             ->assertJsonCount(0, 'availabilities');
 
         $this->assertDatabaseHas('availabilities', ['id' => $availability->id]);
-        $this->assertDatabaseHas('missions', ['id' => $mission->id]);
+        $this->assertDatabaseHas('projects', ['id' => $project->id]);
     }
 
     public function test_archived_workers_are_rejected_by_operational_request_and_availability_endpoints(): void
     {
         [$hiringManager, $hiringCompany] = $this->companyUser('Hiring Company');
         [$lendingManager, $lendingCompany] = $this->companyUser('Lending Company');
-        $hiringMission = $this->mission($hiringManager, $hiringCompany, 'Hiring mission');
-        $externalMission = $this->mission($lendingManager, $lendingCompany, 'External mission');
+        $hiringProject = $this->project($hiringManager, $hiringCompany, 'Hiring project');
+        $externalProject = $this->project($lendingManager, $lendingCompany, 'External project');
         $archivedLendingWorker = $this->worker($lendingCompany, 'Archived lending worker', 'Electrician', [
             'archived_at' => now(),
         ]);
@@ -105,13 +105,13 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
         $this->actingAs($hiringManager)
             ->from(route('find-workers.index'))
             ->post(route('request-worker.store', $archivedLendingWorker), [
-                'mission_id' => $hiringMission->id,
+                'project_id' => $hiringProject->id,
             ])
             ->assertSessionHasErrors('worker');
 
         $this->actingAs($lendingManager)
-            ->from(route('find-missions.index'))
-            ->post(route('request-mission.store', $hiringMission), [
+            ->from(route('find-projects.index'))
+            ->post(route('request-project.store', $hiringProject), [
                 'worker_profile_id' => $archivedLendingWorker->id,
             ])
             ->assertSessionHasErrors('worker_profile_id');
@@ -127,18 +127,18 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
             ->assertSessionHasErrors('worker_profile_id');
 
         $this->assertDatabaseMissing('requests', [
-            'mission_id' => $hiringMission->id,
+            'project_id' => $hiringProject->id,
             'worker_profile_id' => $archivedLendingWorker->id,
         ]);
         $this->assertSame('07:00', $availability->fresh()->start_time);
-        $this->assertDatabaseHas('missions', ['id' => $externalMission->id]);
+        $this->assertDatabaseHas('projects', ['id' => $externalProject->id]);
     }
 
     public function test_administrators_cannot_bypass_archived_worker_operational_guards(): void
     {
         [$hiringManager, $hiringCompany] = $this->companyUser('Hiring Company');
         [, $lendingCompany] = $this->companyUser('Lending Company');
-        $mission = $this->mission($hiringManager, $hiringCompany, 'Hiring mission');
+        $project = $this->project($hiringManager, $hiringCompany, 'Hiring project');
         $archivedWorker = $this->worker($lendingCompany, 'Archived worker', 'Electrician', [
             'archived_at' => now(),
         ]);
@@ -149,13 +149,13 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
         $this->actingAs($administrator)
             ->from(route('find-workers.index'))
             ->post(route('request-worker.store', $archivedWorker), [
-                'mission_id' => $mission->id,
+                'project_id' => $project->id,
             ])
             ->assertSessionHasErrors('worker');
 
         $this->actingAs($administrator)
-            ->from(route('find-missions.index'))
-            ->post(route('request-mission.store', $mission), [
+            ->from(route('find-projects.index'))
+            ->post(route('request-project.store', $project), [
                 'worker_profile_id' => $archivedWorker->id,
             ])
             ->assertSessionHasErrors('worker_profile_id');
@@ -166,10 +166,10 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
             ->assertSessionHasErrors('worker_profile_id');
     }
 
-    public function test_archived_self_employed_workers_cannot_apply_but_find_missions_remains_browsable(): void
+    public function test_archived_self_employed_workers_cannot_apply_but_find_projects_remains_browsable(): void
     {
         [$hiringManager, $hiringCompany] = $this->companyUser('Hiring Company');
-        $mission = $this->mission($hiringManager, $hiringCompany, 'Hiring mission');
+        $project = $this->project($hiringManager, $hiringCompany, 'Hiring project');
         $selfEmployed = User::factory()->create([
             'role_id' => Role::firstOrCreate(['name' => 'self_employed'])->id,
             'company_id' => null,
@@ -185,17 +185,17 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
         ]);
 
         $this->actingAs($selfEmployed)
-            ->get(route('find-missions.index'))
+            ->get(route('find-projects.index'))
             ->assertInertia(fn (Assert $page) => $page
-                ->component('FindMissions')
-                ->has('missions.data', 1)
+                ->component('FindProjects')
+                ->has('projects.data', 1)
                 ->has('workers', 0)
                 ->where('hasWorkerProfile', false)
             );
 
         $this->actingAs($selfEmployed)
-            ->from(route('find-missions.index'))
-            ->post(route('request-mission.store', $mission), [
+            ->from(route('find-projects.index'))
+            ->post(route('request-project.store', $project), [
                 'worker_profile_id' => $archivedWorker->id,
             ])
             ->assertSessionHasErrors('worker_profile_id');
@@ -215,19 +215,19 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
             );
     }
 
-    public function test_archived_workers_remain_resolvable_in_authorized_mission_history_and_contextual_profile_views(): void
+    public function test_archived_workers_remain_resolvable_in_authorized_project_history_and_contextual_profile_views(): void
     {
         [$hiringManager, $hiringCompany] = $this->companyUser('Hiring Company');
         [$lendingManager, $lendingCompany] = $this->companyUser('Lending Company');
         [$unrelatedManager] = $this->companyUser('Unrelated Company');
-        $mission = $this->mission($hiringManager, $hiringCompany, 'Completed mission', [
+        $project = $this->project($hiringManager, $hiringCompany, 'Completed project', [
             'status' => 'completed',
         ]);
         $worker = $this->worker($lendingCompany, 'Historical archived worker', 'Electrician', [
             'archived_at' => now(),
         ]);
         $request = WorkerRequest::create([
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'requested_by' => $lendingManager->id,
             'company_id' => $lendingCompany->id,
             'worker_profile_id' => $worker->id,
@@ -236,7 +236,7 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
             'completed_at' => now(),
         ]);
         Rating::create([
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'reviewed_by_user_id' => $hiringManager->id,
             'worker_profile_id' => $worker->id,
             'score' => 5,
@@ -244,16 +244,16 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
         ]);
 
         $this->actingAs($lendingManager)
-            ->get(route('mission-management.index'))
+            ->get(route('project-management.index'))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('missionData.tabs.completed.data.0.management_requests.0.worker.name', $worker->name)
-                ->where('missionData.tabs.completed.data.0.management_requests.0.rating.worker_profile_id', $worker->id)
+                ->where('projectData.tabs.completed.data.0.management_requests.0.worker.name', $worker->name)
+                ->where('projectData.tabs.completed.data.0.management_requests.0.rating.worker_profile_id', $worker->id)
             );
 
         $this->assertSame($worker->id, Rating::with('worker')->firstOrFail()->worker->id);
 
         $this->actingAs($lendingManager)
-            ->getJson(route('mission-management.workers.details', [
+            ->getJson(route('project-management.workers.details', [
                 'workerProfile' => $worker,
                 'request' => $request->id,
             ]))
@@ -262,7 +262,7 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
             ->assertJsonPath('worker.name', $worker->name);
 
         $this->actingAs($unrelatedManager)
-            ->getJson(route('mission-management.workers.details', [
+            ->getJson(route('project-management.workers.details', [
                 'workerProfile' => $worker,
                 'request' => $request->id,
             ]))
@@ -283,9 +283,9 @@ class ArchivedWorkerOperationalFilteringTest extends TestCase
         return [$manager->fresh(), $company];
     }
 
-    private function mission(User $manager, Company $company, string $title, array $overrides = []): Mission
+    private function project(User $manager, Company $company, string $title, array $overrides = []): Project
     {
-        return Mission::create([
+        return Project::create([
             'hiring_company_id' => $company->id,
             'created_by' => $manager->id,
             'title' => $title,

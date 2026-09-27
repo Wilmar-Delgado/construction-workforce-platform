@@ -87,7 +87,7 @@ class CompanyTimezoneTest extends TestCase
             ->postJson(route('settings.notifications.update'), [
                 'email' => true,
                 'sms' => false,
-                'missionAlerts' => true,
+                'projectAlerts' => true,
                 'language' => 'en',
                 'timezone' => 'America/Vancouver',
             ])

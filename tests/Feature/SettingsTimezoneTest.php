@@ -50,14 +50,14 @@ class SettingsTimezoneTest extends TestCase
             'timezone' => 'UTC',
             'email_notifications' => false,
             'sms_notifications' => false,
-            'mission_alerts' => false,
+            'project_alerts' => false,
         ]);
 
         $this->actingAs($user)
             ->postJson(route('settings.notifications.update'), [
                 'email' => true,
                 'sms' => true,
-                'missionAlerts' => true,
+                'projectAlerts' => true,
                 'language' => 'en',
                 'timezone' => 'America/Edmonton',
             ])
@@ -71,7 +71,7 @@ class SettingsTimezoneTest extends TestCase
             'timezone' => 'America/Edmonton',
             'email_notifications' => true,
             'sms_notifications' => true,
-            'mission_alerts' => true,
+            'project_alerts' => true,
         ]);
     }
 
@@ -84,7 +84,7 @@ class SettingsTimezoneTest extends TestCase
             ->post(route('settings.notifications.update'), [
                 'email' => true,
                 'sms' => false,
-                'missionAlerts' => true,
+                'projectAlerts' => true,
                 'language' => 'en',
                 'timezone' => 'America/Edmonton',
             ])
@@ -104,7 +104,7 @@ class SettingsTimezoneTest extends TestCase
             ->postJson(route('settings.notifications.update'), [
                 'email' => true,
                 'sms' => true,
-                'missionAlerts' => true,
+                'projectAlerts' => true,
                 'language' => 'en',
                 'timezone' => 'Europe/Paris',
             ])

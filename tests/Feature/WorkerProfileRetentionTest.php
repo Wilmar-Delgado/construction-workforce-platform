@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Availability;
 use App\Models\Certification;
 use App\Models\Company;
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\Rating;
 use App\Models\Role;
 use App\Models\Skill;
@@ -51,29 +51,29 @@ class WorkerProfileRetentionTest extends TestCase
         $this->assertDatabaseMissing('availabilities', ['worker_profile_id' => $withAvailability->id]);
     }
 
-    public function test_business_history_blocks_permanent_deletion_for_requests_ratings_and_direct_missions(): void
+    public function test_business_history_blocks_permanent_deletion_for_requests_ratings_and_direct_projects(): void
     {
         [$manager, $company] = $this->companyManager('Hiring Company');
-        $mission = $this->mission($manager, 'Historical mission', ['status' => 'completed']);
+        $project = $this->project($manager, 'Historical project', ['status' => 'completed']);
 
         $requested = $this->worker($company, 'Requested worker');
-        $this->request($mission, $manager, $company, $requested, 'rejected');
+        $this->request($project, $manager, $company, $requested, 'rejected');
 
         $rated = $this->worker($company, 'Rated worker');
         Rating::create([
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'reviewed_by_user_id' => $manager->id,
             'worker_profile_id' => $rated->id,
             'score' => 5,
         ]);
 
-        $directMissionWorker = $this->worker($company, 'Legacy mission worker');
-        $this->mission($manager, 'Legacy worker mission', [
+        $directProjectWorker = $this->worker($company, 'Legacy project worker');
+        $this->project($manager, 'Legacy worker project', [
             'status' => 'completed',
-            'worker_profile_id' => $directMissionWorker->id,
+            'worker_profile_id' => $directProjectWorker->id,
         ]);
 
-        foreach ([$requested, $rated, $directMissionWorker] as $worker) {
+        foreach ([$requested, $rated, $directProjectWorker] as $worker) {
             $this->actingAs($manager)
                 ->from(route('worker-profiles.index'))
                 ->delete(route('worker-profiles.destroy', $worker))
@@ -86,21 +86,21 @@ class WorkerProfileRetentionTest extends TestCase
     public function test_profiles_with_resolved_history_can_be_archived_and_preserve_history(): void
     {
         [$manager, $company] = $this->companyManager('Hiring Company');
-        $mission = $this->mission($manager, 'Resolved history mission', ['status' => 'completed']);
+        $project = $this->project($manager, 'Resolved history project', ['status' => 'completed']);
         $worker = $this->worker($company, 'Historical worker');
-        $request = $this->request($mission, $manager, $company, $worker, 'completed', [
+        $request = $this->request($project, $manager, $company, $worker, 'completed', [
             'message' => 'Original application.',
             'completed_at' => now()->subDay(),
         ]);
         $rating = Rating::create([
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'reviewed_by_user_id' => $manager->id,
             'worker_profile_id' => $worker->id,
             'score' => 5,
             'feedback' => 'Excellent work.',
         ]);
-        $rejectedMission = $this->mission($manager, 'Rejected history mission', ['status' => 'completed']);
-        $rejectedRequest = $this->request($rejectedMission, $manager, $company, $worker, 'rejected', [
+        $rejectedProject = $this->project($manager, 'Rejected history project', ['status' => 'completed']);
+        $rejectedRequest = $this->request($rejectedProject, $manager, $company, $worker, 'rejected', [
             'message' => 'Original rejected application.',
             'rejection_message' => 'This application was not selected.',
             'responded_by' => $manager->id,
@@ -134,7 +134,7 @@ class WorkerProfileRetentionTest extends TestCase
             'rejection_message' => 'This application was not selected.',
             'responded_by' => $manager->id,
         ]);
-        $this->assertDatabaseHas('missions', ['id' => $mission->id]);
+        $this->assertDatabaseHas('projects', ['id' => $project->id]);
     }
 
     public function test_rejected_cancelled_completed_and_ended_early_requests_allow_archival(): void
@@ -142,9 +142,9 @@ class WorkerProfileRetentionTest extends TestCase
         [$manager, $company] = $this->companyManager('Hiring Company');
 
         foreach (['rejected', 'cancelled', 'completed', 'ended_early'] as $status) {
-            $mission = $this->mission($manager, "{$status} mission", ['status' => 'completed']);
+            $project = $this->project($manager, "{$status} project", ['status' => 'completed']);
             $worker = $this->worker($company, "{$status} worker");
-            $this->request($mission, $manager, $company, $worker, $status);
+            $this->request($project, $manager, $company, $worker, $status);
 
             $this->assertTrue($worker->canBeArchived());
             $this->actingAs($manager)
@@ -153,20 +153,20 @@ class WorkerProfileRetentionTest extends TestCase
         }
     }
 
-    public function test_active_requests_and_direct_active_missions_block_archival(): void
+    public function test_active_requests_and_direct_active_projects_block_archival(): void
     {
         [$manager, $company] = $this->companyManager('Hiring Company');
 
         foreach (['pending', 'accepted', 'ongoing'] as $status) {
             $worker = $this->worker($company, "{$status} worker");
-            $mission = $this->mission($manager, "{$status} mission", ['status' => 'open']);
-            $this->request($mission, $manager, $company, $worker, $status);
+            $project = $this->project($manager, "{$status} project", ['status' => 'open']);
+            $this->request($project, $manager, $company, $worker, $status);
 
             $this->assertArchiveIsRefused($manager, $worker);
         }
 
-        $legacyWorker = $this->worker($company, 'Active legacy mission worker');
-        $this->mission($manager, 'Active direct mission', [
+        $legacyWorker = $this->worker($company, 'Active legacy project worker');
+        $this->project($manager, 'Active direct project', [
             'status' => 'in_progress',
             'worker_profile_id' => $legacyWorker->id,
         ]);
@@ -234,8 +234,8 @@ class WorkerProfileRetentionTest extends TestCase
             ->put(route('worker-profiles.archive', $worker))
             ->assertForbidden();
 
-        $mission = $this->mission($manager, 'Admin retention mission', ['status' => 'open']);
-        $this->request($mission, $manager, $company, $worker, 'pending');
+        $project = $this->project($manager, 'Admin retention project', ['status' => 'open']);
+        $this->request($project, $manager, $company, $worker, 'pending');
         $administrator = User::factory()->create([
             'role_id' => Role::firstOrCreate(['name' => 'administrator'])->id,
         ]);
@@ -257,8 +257,8 @@ class WorkerProfileRetentionTest extends TestCase
         [$manager, $company] = $this->companyManager('Hiring Company');
         $unused = $this->worker($company, 'A Deletable worker');
         $historical = $this->worker($company, 'B Archivable worker');
-        $mission = $this->mission($manager, 'Completed archive source', ['status' => 'completed']);
-        $this->request($mission, $manager, $company, $historical, 'completed');
+        $project = $this->project($manager, 'Completed archive source', ['status' => 'completed']);
+        $this->request($project, $manager, $company, $historical, 'completed');
         $archived = $this->worker($company, 'C Archived worker', ['archived_at' => now()]);
 
         $this->actingAs($manager)
@@ -293,9 +293,9 @@ class WorkerProfileRetentionTest extends TestCase
         return [$manager->fresh(), $company];
     }
 
-    private function mission(User $manager, string $title, array $overrides = []): Mission
+    private function project(User $manager, string $title, array $overrides = []): Project
     {
-        return Mission::create([
+        return Project::create([
             'hiring_company_id' => $manager->company_id,
             'created_by' => $manager->id,
             'title' => $title,
@@ -325,7 +325,7 @@ class WorkerProfileRetentionTest extends TestCase
     }
 
     private function request(
-        Mission $mission,
+        Project $project,
         User $requestedBy,
         Company $company,
         WorkerProfile $worker,
@@ -333,7 +333,7 @@ class WorkerProfileRetentionTest extends TestCase
         array $overrides = [],
     ): WorkerRequest {
         return WorkerRequest::create([
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'requested_by' => $requestedBy->id,
             'company_id' => $company->id,
             'worker_profile_id' => $worker->id,

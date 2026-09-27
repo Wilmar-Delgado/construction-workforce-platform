@@ -89,27 +89,27 @@ class CompanyOnboardingIntegrityTest extends TestCase
         ];
     }
 
-    public function test_administrator_without_company_context_cannot_create_a_mission(): void
+    public function test_administrator_without_company_context_cannot_create_a_project(): void
     {
         $administrator = $this->userWithRole('administrator');
 
         $response = $this->actingAs($administrator)
-            ->from(route('missions.index'))
-            ->post(route('missions.store'), $this->missionPayload());
+            ->from(route('projects.index'))
+            ->post(route('projects.store'), $this->projectPayload());
 
-        $response->assertRedirect(route('missions.index', absolute: false));
+        $response->assertRedirect(route('projects.index', absolute: false));
         $response->assertSessionHasErrors('company');
-        $this->assertDatabaseCount('missions', 0);
+        $this->assertDatabaseCount('projects', 0);
     }
 
-    public function test_planning_manager_with_company_context_retains_mission_creation_access(): void
+    public function test_planning_manager_with_company_context_retains_project_creation_access(): void
     {
         $manager = $this->companyUser('planning_manager');
 
-        $response = $this->actingAs($manager)->post(route('missions.store'), $this->missionPayload());
+        $response = $this->actingAs($manager)->post(route('projects.store'), $this->projectPayload());
 
-        $response->assertRedirect(route('missions.index', absolute: false));
-        $this->assertDatabaseHas('missions', [
+        $response->assertRedirect(route('projects.index', absolute: false));
+        $this->assertDatabaseHas('projects', [
             'title' => 'Concrete Formwork Support',
             'hiring_company_id' => $manager->company_id,
         ]);
@@ -119,10 +119,10 @@ class CompanyOnboardingIntegrityTest extends TestCase
     {
         $manager = $this->userWithRole('planning_manager');
 
-        $response = $this->actingAs($manager)->post(route('missions.store'), $this->missionPayload());
+        $response = $this->actingAs($manager)->post(route('projects.store'), $this->projectPayload());
 
         $response->assertForbidden();
-        $this->assertDatabaseCount('missions', 0);
+        $this->assertDatabaseCount('projects', 0);
     }
 
     private function userWithRole(string $roleName): User
@@ -165,7 +165,7 @@ class CompanyOnboardingIntegrityTest extends TestCase
         ];
     }
 
-    private function missionPayload(): array
+    private function projectPayload(): array
     {
         return [
             'title' => 'Concrete Formwork Support',

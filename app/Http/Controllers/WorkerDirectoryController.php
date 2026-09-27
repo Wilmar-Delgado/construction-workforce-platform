@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\WorkerProfile;
 use App\Models\WorkerRequest;
 use Illuminate\Http\Request;
@@ -58,7 +58,7 @@ class WorkerDirectoryController extends Controller
             ->distinct()
             ->pluck('job');
 
-        $missions = Mission::query()
+        $projects = Project::query()
             ->notArchived()
             ->where('hiring_company_id', $user->company_id)
             ->select('id', 'title', 'workers', 'recruiting_closed_at', 'start_date')
@@ -69,13 +69,13 @@ class WorkerDirectoryController extends Controller
 
         $existingRequests = WorkerRequest::where('company_id', $user->company_id)
         ->where('type', 'invite')
-        ->get(['mission_id', 'worker_profile_id']);
+        ->get(['project_id', 'worker_profile_id']);
 
         return Inertia::render('FindWorkers', [
             'workers' => $workers,
             'jobs' => $jobs,
             'filters' => $request->only(['search', 'job']),
-            'missions' => $missions,
+            'projects' => $projects,
             'existingRequests' => $existingRequests,
         ]);
     }

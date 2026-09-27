@@ -8,9 +8,9 @@ return [
     'profile' => 'My Profile',
     'availability' => 'Availability',
     'find_workers' => 'Find Workers',
-    'find_missions' => 'Find Missions',
-    'missions' => 'My Missions',
-    'mission_management' => 'Mission Management',
+    'find_projects' => 'Find Projects',
+    'projects' => 'My Projects',
+    'project_management' => 'Project Management',
     'settings' => 'Settings',
     'self_employed' => 'Self-employed',
     'logout' => 'Logout',
@@ -91,13 +91,43 @@ return [
             'submit' => 'Register',
         ],
 
+        'forgot_password' => [
+            'title' => 'Forgot Password',
+            'description' => 'Enter your email address and we will send you a password reset link.',
+            'email' => 'Email',
+            'submit' => 'Email Password Reset Link',
+        ],
+
+        'reset_password' => [
+            'title' => 'Reset Password',
+            'email' => 'Email',
+            'password' => 'Password',
+            'confirm_password' => 'Confirm Password',
+            'submit' => 'Reset Password',
+        ],
+
+        'confirm_password' => [
+            'title' => 'Confirm Password',
+            'description' => 'This is a secure area of the application. Please confirm your password before continuing.',
+            'password' => 'Password',
+            'submit' => 'Confirm',
+        ],
+
+        'verify_email' => [
+            'title' => 'Email Verification',
+            'description' => 'Thanks for signing up! Before getting started, verify your email address using the link we sent you. If you did not receive it, we can send another.',
+            'link_sent' => 'A new verification link has been sent to the email address you provided during registration.',
+            'resend' => 'Resend Verification Email',
+            'logout' => 'Log Out',
+        ],
+
     ],
 
     //:: Welcome Page
     'welcome_page' => [
         'hero_highlight' => 'Matching',
         'subtitle' => 'Share workforce between construction companies — no downtime, no layoffs. Put idle crews to work or find skilled workers instantly when you need them.',
-        'description' => 'This platform connects construction companies with available employees, understaffed companies looking for skilled workers, and self-employed contractors seeking short-term missions.',
+        'description' => 'This platform connects construction companies with available employees, understaffed companies looking for skilled workers, and self-employed contractors seeking short-term projects.',
 
         // Audience
         'audience_title' => 'Who is this platform for?',
@@ -120,15 +150,15 @@ return [
                 'points' => [
                     'Access vetted professionals',
                     'Fast hiring process',
-                    'Flexible short-term missions',
+                    'Flexible short-term projects',
                 ],
             ],
 
             'contractors' => [
                 'title' => 'Self-Employed Contractors',
-                'description' => "Discover missions instantly. Build your reputation and track your earnings all in one place.",
+                'description' => "Discover projects instantly. Build your reputation and track your earnings all in one place.",
                 'points' => [
-                    'Discover missions instantly',
+                    'Discover projects instantly',
                     'Build your reputation',
                     'Track your earnings',
                 ],
@@ -165,16 +195,16 @@ return [
         'welcome_subtitle' => 'What would you like to do today?',
 
         'stats' => [
-            'ongoing_missions' => 'Ongoing Missions',
+            'ongoing_projects' => 'Ongoing Projects',
             'pending_requests' => 'Pending Requests',
             'active_workers' => 'Active Workers',
-            'total_missions' => 'Total Missions',
-            'completed_missions' => 'Completed Missions',
+            'total_projects' => 'Total Projects',
+            'completed_projects' => 'Completed Projects',
             'total_applications' => 'Total Applications',
             'ongoing' => 'Ongoing',
             'pending' => 'Pending',
             'workers' => 'Workers',
-            'missions' => 'Missions',
+            'projects' => 'Projects',
         ],
 
         'actions' => [
@@ -182,24 +212,24 @@ return [
             'make_available_desc' => "Add or update your workers' availability schedules. Quick editing in less than 30 seconds.",
 
             'search_worker' => 'Search for a Worker',
-            'search_worker_desc' => 'Browse available workers by job, experience, and skills. Find the perfect match for your mission.',
+            'search_worker_desc' => 'Browse available workers by job, experience, and skills. Find the perfect match for your project.',
 
             'create_profile' => 'Create Your Profile',
-            'create_profile_desc' => 'Showcase your skills and experience to get discovered by companies and land your next mission.',
+            'create_profile_desc' => 'Showcase your skills and experience to get discovered by companies and land your next project.',
 
             'edit_profile' => 'Edit Your Profile',
             'edit_profile_desc' => 'Update your skills, experience, and availability to stay visible to employers.',
 
-            'browse_missions' => 'Browse Missions & Opportunities',
-            'browse_missions_desc' => 'Discover available missions and job opportunities. Find your next project and apply directly.',
+            'browse_projects' => 'Browse Projects & Opportunities',
+            'browse_projects_desc' => 'Discover available projects and job opportunities. Find your next project and apply directly.',
         ],
 
         'quick_access' => 'Quick Access',
-        'mission_hub' => 'Mission Hub',
+        'project_hub' => 'Project Hub',
         'manage_profile' => 'Manage Profile',
         'manage_profiles' => 'Manage Profiles',
-        'manage_missions' => 'Manage Missions',
-        'view_all_missions' => 'View All Missions',
+        'manage_projects' => 'Manage Projects',
+        'view_all_projects' => 'View All Projects',
         'manage_availability' => 'Manage Availability',
         'settings' => 'Settings',
     ],
@@ -287,7 +317,7 @@ return [
 
         'archive_modal' => [
             'title' => 'Archive Worker Profile',
-            'message' => 'Archive this worker profile? Its mission, request, and rating history will be preserved.',
+            'message' => 'Archive this worker profile? Its project, request, and rating history will be preserved.',
             'action' => 'Archive',
             'confirm' => 'Yes, archive it',
             'cancel' => 'Cancel',
@@ -297,6 +327,13 @@ return [
             'cannot_delete_worker' => 'Only unarchived worker profiles without business history can be permanently deleted.',
             'cannot_archive_worker' => 'Only worker profiles with resolved history and no active work or requests can be archived.',
             'cannot_edit_archived_worker' => 'Archived worker profiles cannot be edited.',
+        ],
+
+        'success' => [
+            'created' => 'Worker profile created successfully.',
+            'updated' => 'Worker profile updated successfully.',
+            'deleted' => 'Worker profile deleted successfully.',
+            'archived' => 'Worker profile archived successfully.',
         ],
     ],
 
@@ -333,7 +370,7 @@ return [
         'validation' => [
             'overlap' => 'This worker already has an availability slot that overlaps this time.',
             'end_after_start' => 'End time must be later than start time.',
-            'mission_assignment_conflict' => 'This worker is already assigned to a mission on this date.',
+            'project_assignment_conflict' => 'This worker is already assigned to a project on this date.',
             'calendar_range_too_large' => 'The calendar range cannot exceed :days days.',
             'worker_not_available' => 'The selected worker is not available to you.',
             'archived_worker_cannot_receive_availability' => 'Archived workers cannot receive new or updated availability.',
@@ -366,12 +403,18 @@ return [
             'cancel' => 'Cancel',
             'item_name' => ':worker on :date',
         ],
+
+        'success' => [
+            'created' => 'Availability added successfully.',
+            'updated' => 'Availability updated successfully.',
+            'deleted' => 'Availability deleted successfully.',
+        ],
     ],
 
     //:: Find Workers Page
     'find_workers_page' => [
         'title' => 'Find Workers',
-        'subtitle' => 'Browse and request available workers for your missions',
+        'subtitle' => 'Browse and request available workers for your projects',
         'workers_found' => 'workers found',
         'view_profile' => 'View Profile',
         'request' => 'Request Worker',
@@ -395,7 +438,7 @@ return [
         ],
 
         'request_modal' => [
-            'title' => 'Request Worker for Mission',
+            'title' => 'Request Worker for Project',
 
             'rate' => 'Rate',
             'rating' => 'Rating',
@@ -407,28 +450,39 @@ return [
                 'self_employed' => 'Worker can accept or reject',
                 'company_worker' => 'Company (Owner or Planning Manager) can accept or reject',
                 'step3' => 'Phone number unlocked upon acceptance',
-                'step4' => 'Mission confirmed automatically',
+                'step4' => 'Project confirmed automatically',
             ],
 
-            'select_mission' => 'Select Mission *',
+            'select_project' => 'Select Project *',
             'company' => 'Your Company Name',
             'start_date' => 'Start Date',
             'end_date' => 'End Date',
-            'choose_mission' => 'Choose a mission for this worker',
-            'mission_desc' => 'Optional Message (e.g. specific tasks, project details, etc.)',
+            'choose_project' => 'Choose a project for this worker',
+            'project_desc' => 'Optional Message (e.g. specific tasks, project details, etc.)',
             'already_requested' => 'Already Requested',
             'archived_worker_cannot_receive_request' => 'Archived workers cannot receive new requests.',
             'sending' => 'Sending Request...',
             'send' => 'Send Request',
             'cancel' => 'Cancel',
         ],
+
+        'validation' => [
+            'project_required' => 'Please select a project.',
+            'project_invalid' => 'The selected project is invalid.',
+            'message_max' => 'Message cannot exceed 1000 characters.',
+            'worker_already_requested' => 'You already requested this worker for this project.',
+        ],
+
+        'success' => [
+            'request_sent' => 'Request sent successfully.',
+        ],
     ],
 
-    //:: Find Missions Page
-    'find_missions_page' => [
-        'title' => 'Find Missions',
-        'subtitle' => 'Browse available mission opportunities and apply',
-        'missions_found' => 'missions found',
+    //:: Find Projects Page
+    'find_projects_page' => [
+        'title' => 'Find Projects',
+        'subtitle' => 'Browse available project opportunities and apply',
+        'projects_found' => 'projects found',
 
         'filters' => [
             'search' => 'Search by title, company or requirements...',
@@ -436,7 +490,7 @@ return [
             'location' => 'All locations',
         ],
 
-        'mission_card' => [
+        'project_card' => [
             'duration' => 'Duration',
             'duration_day' => ':count day',
             'duration_days' => ':count days',
@@ -455,25 +509,30 @@ return [
         ],
 
         'request_modal' => [
-            'title' => 'Request to Join Mission',
+            'title' => 'Request to Join Project',
             'select_worker' => 'Select Worker *',
             'worker' => 'Select a Worker',
-            'no_matching_workers' => "No workers match this mission's job type.",
+            'no_matching_workers' => "No workers match this project's job type.",
             'message' => 'Optional Message (e.g. specific skills, experience, questions, etc.)',
             'info' => 'Contact information will be unlocked upon acceptance',
             'already_requested' => 'Already Requested',
-            'already_requested_for_mission' => 'This worker already has a request for this mission.',
+            'already_requested_for_project' => 'This worker already has a request for this project.',
             'sending' => 'Sending Application...',
             'send' => 'Send Application',
             'cancel' => 'Cancel',
         ],
 
         'validation' => [
-            'archived_worker_cannot_request' => 'Archived workers cannot submit new mission applications.',
+            'archived_worker_cannot_request' => 'Archived workers cannot submit new project applications.',
+            'worker_already_requested' => 'This worker was already offered to this project.',
+        ],
+
+        'success' => [
+            'request_sent' => 'Request to join project sent successfully.',
         ],
 
         'details_modal' => [
-            'title' => 'Mission Details',
+            'title' => 'Project Details',
             'trade' => 'Trade',
             'description' => 'Description',
             'requirements' => 'Requirements',
@@ -485,16 +544,16 @@ return [
         ],
     ],
 
-    //:: My Missions Page
-    'missions_page' => [
-        'title' => 'Missions',
-        'subtitle' => "Create, manage, and track your company’s missions",
-        'create_mission' => 'Create Mission',
-        'empty_title' => 'No missions yet',
-        'empty_desc' => 'Create your first mission to start finding workers and filling your workforce gaps.',
-        'empty_tab_title' => 'No :status missions found',
+    //:: My Projects Page
+    'projects_page' => [
+        'title' => 'Projects',
+        'subtitle' => "Create, manage, and track your company’s projects",
+        'create_project' => 'Create Project',
+        'empty_title' => 'No projects yet',
+        'empty_desc' => 'Create your first project to start finding workers and filling your workforce gaps.',
+        'empty_tab_title' => 'No :status projects found',
         'empty_search_description' => 'Try adjusting your search or filters.',
-        'empty_tab_description' => 'You currently have no :status missions.',
+        'empty_tab_description' => 'You currently have no :status projects.',
         'copy_title' => ':title (Copy :count)',
 
         'filters' => [
@@ -537,7 +596,7 @@ return [
         ],
 
         'stats' => [
-            'total_missions' => 'Total Missions',
+            'total_projects' => 'Total Projects',
             'draft' => 'Draft',
             'open' => 'Open',
             'in_progress' => 'In Progress',
@@ -545,8 +604,8 @@ return [
         ],
 
         'add_modal' => [
-            'title' => 'Create Mission',
-            'mission_title' => 'Mission Title *',
+            'title' => 'Create Project',
+            'project_title' => 'Project Title *',
             'description' => 'Description *',
             'start_date' => 'Start Date *',
             'end_date' => 'End Date *',
@@ -565,47 +624,54 @@ return [
             'requirements_placeholder' => 'Add multiple requirements by separating with commas',
             'status' => 'Status *',
             'saving' => 'Saving...',
-            'save' => 'Create Mission',
+            'save' => 'Create Project',
             'cancel' => 'Cancel',
         ],
 
         'edit_modal' => [
-            'title' => 'Edit Mission - :title',
-            'save' => 'Update Mission',
+            'title' => 'Edit Project - :title',
+            'save' => 'Update Project',
         ],
 
         'view_modal' => [
-            'title' => 'View Mission - :title',
+            'title' => 'View Project - :title',
         ],
 
         'delete_modal' => [
-            'title' => 'Delete Draft Mission - :title',
-            'message' => 'Delete this draft mission?',
+            'title' => 'Delete Draft Project - :title',
+            'message' => 'Delete this draft project?',
             'subtitle' => 'This action permanently removes the unused draft.',
             'confirm' => 'Yes, Delete',
         ],
 
         'archive_modal' => [
-            'title' => 'Archive Mission - :title',
-            'message' => 'Archive this mission?',
-            'subtitle' => 'This mission will be removed from your normal mission list, but its staffing, request, rating, and worker history will be preserved.',
+            'title' => 'Archive Project - :title',
+            'message' => 'Archive this project?',
+            'subtitle' => 'This project will be removed from your normal project list, but its staffing, request, rating, and worker history will be preserved.',
             'confirm' => 'Yes, Archive',
         ],
 
         'validation' => [
-            'lifecycle_managed_status' => 'This mission status is managed by the staffing lifecycle and cannot be edited here.',
-            'open_mission_must_remain_open' => 'An open mission cannot be moved back to draft through ordinary editing.',
+            'lifecycle_managed_status' => 'This project status is managed by the staffing lifecycle and cannot be edited here.',
+            'open_project_must_remain_open' => 'An open project cannot be moved back to draft through ordinary editing.',
             'capacity_below_committed' => 'Worker capacity cannot be reduced below the :count committed worker(s).',
-            'cannot_delete_mission' => 'Only unused, unarchived draft missions can be permanently deleted.',
-            'cannot_archive_mission' => 'Only completed, unarchived missions can be archived.',
+            'cannot_delete_project' => 'Only unused, unarchived draft projects can be permanently deleted.',
+            'cannot_archive_project' => 'Only completed, unarchived projects can be archived.',
+        ],
+
+        'success' => [
+            'created' => 'Project created successfully.',
+            'updated' => 'Project updated successfully.',
+            'deleted' => 'Project deleted successfully.',
+            'archived' => 'Project archived successfully.',
         ],
     ],
 
-    //:: Mission Management Page
-    'mission_management_page' => [
-        'title' => 'Mission Management',
-        'subtitle' => 'Your central hub for requests, mission activity, and progress tracking.',
-        'create_mission' => 'Create Mission',
+    //:: Project Management Page
+    'project_management_page' => [
+        'title' => 'Project Management',
+        'subtitle' => 'Your central hub for requests, project activity, and progress tracking.',
+        'create_project' => 'Create Project',
 
         'stats' => [
             'ongoing' => 'Ongoing',
@@ -622,19 +688,19 @@ return [
             'completed' => 'Completed',
             'requests_sent' => 'Requests Sent',
             'requests_received' => 'Requests Received',
-            'requests_join' => 'Requests to Join Missions',
+            'requests_join' => 'Requests to Join Projects',
             'awaiting_response_invitations' => 'Awaiting their response — Invitations',
             'awaiting_response_applications' => 'Awaiting their response — Applications',
             'needs_your_response' => 'Needs your response',
             'invitations' => 'Invitations',
             'applications' => 'Applications',
             'assignments' => 'Assignments',
-            'your_active_missions' => 'Your active missions',
+            'your_active_projects' => 'Your active projects',
             'external_assignments' => 'External assignments',
-            'your_mission' => 'Your Mission',
+            'your_project' => 'Your Project',
             'external_assignment' => 'External Assignment',
-            'ongoing_missions' => 'Ongoing Missions',
-            'completed_missions' => 'Completed Missions',
+            'ongoing_projects' => 'Ongoing Projects',
+            'completed_projects' => 'Completed Projects',
             'date' => 'Requested on',
             'waiting_response' => 'Waiting for response...',
             'accept' => 'Accept',
@@ -642,8 +708,8 @@ return [
         ],
 
         'sections' => [
-            'completed_created' => 'Completed Missions You Created',
-            'completed_joined' => "Completed Missions You've Joined",
+            'completed_created' => 'Completed Projects You Created',
+            'completed_joined' => "Completed Projects You've Joined",
             'completed_assignments' => 'Completed Assignments',
             'pending_activity' => 'Pending Activity',
             'ongoing_activity' => 'Ongoing Activity',
@@ -652,39 +718,39 @@ return [
 
         'empty_states' => [
             'no_requests' => 'No requests',
-            'requests_description' => 'Requests related to your missions and workers will appear here.',
+            'requests_description' => 'Requests related to your projects and workers will appear here.',
             'self_employed_requests_description' => 'Invitations and application requests will appear here.',
-            'no_staffing_missions' => 'No staffing missions',
-            'staffing_description' => 'Pre-start missions with accepted workers or closed recruiting will appear here.',
+            'no_staffing_projects' => 'No staffing projects',
+            'staffing_description' => 'Pre-start projects with accepted workers or closed recruiting will appear here.',
             'no_assignments' => 'No assignments',
             'assignments_description' => 'Accepted assignments that have not started yet will appear here.',
-            'no_in_progress_missions' => 'No missions in progress',
-            'in_progress_description' => 'Active mission assignments will appear here.',
-            'completed_description' => 'Completed mission outcomes will appear here.',
+            'no_in_progress_projects' => 'No projects in progress',
+            'in_progress_description' => 'Active project assignments will appear here.',
+            'completed_description' => 'Completed project outcomes will appear here.',
             'no_sent_requests' => 'No sent requests',
-            'sent_requests_description' => 'Mission invitations you send to workers will appear here.',
+            'sent_requests_description' => 'Project invitations you send to workers will appear here.',
             'no_received_requests' => 'No received requests',
             'received_requests_description' => 'Worker applications and invitations will appear here.',
             'no_join_requests' => 'No join requests',
-            'join_requests_description' => 'Mission applications submitted by your company will appear here.',
-            'no_active_missions' => 'No active missions',
-            'active_created_description' => 'Accepted workers for your missions will appear here.',
-            'active_joined_description' => 'External missions your workers joined will appear here.',
-            'no_completed_missions' => 'No completed missions',
-            'completed_created_description' => 'Completed missions for your organization will appear here.',
-            'completed_joined_description' => 'External missions completed by your workers will appear here.',
-            'no_activity' => 'No mission activity yet',
-            'activity_description' => 'Requests, ongoing missions, and completed work will appear here.',
+            'join_requests_description' => 'Project applications submitted by your company will appear here.',
+            'no_active_projects' => 'No active projects',
+            'active_created_description' => 'Accepted workers for your projects will appear here.',
+            'active_joined_description' => 'External projects your workers joined will appear here.',
+            'no_completed_projects' => 'No completed projects',
+            'completed_created_description' => 'Completed projects for your organization will appear here.',
+            'completed_joined_description' => 'External projects completed by your workers will appear here.',
+            'no_activity' => 'No project activity yet',
+            'activity_description' => 'Requests, ongoing projects, and completed work will appear here.',
             'no_pending_activity' => 'No pending activity',
-            'pending_activity_description' => 'Pending requests and missions awaiting acceptance will appear here.',
+            'pending_activity_description' => 'Pending requests and projects awaiting acceptance will appear here.',
             'no_ongoing_activity' => 'No ongoing activity',
-            'ongoing_activity_description' => 'Ongoing requests and missions will appear here.',
+            'ongoing_activity_description' => 'Ongoing requests and projects will appear here.',
             'no_completed_activity' => 'No completed activity',
-            'completed_activity_description' => 'Completed requests and missions will appear here.',
+            'completed_activity_description' => 'Completed requests and projects will appear here.',
         ],
 
         'labels' => [
-            'mission' => 'Mission',
+            'project' => 'Project',
             'requests' => 'Requests',
             'worker' => 'Worker',
             'assigned_workers' => 'Assigned Workers',
@@ -694,7 +760,7 @@ return [
             'proposed_worker' => 'Proposed Worker',
             'assigned_worker' => 'Assigned Worker',
             'requested_dates' => 'Requested Dates',
-            'mission_dates' => 'Mission Dates',
+            'project_dates' => 'Project Dates',
             'worker_rate' => "Worker's Rate",
             'rate' => 'Rate',
             'final_rate' => 'Final Rate',
@@ -731,18 +797,18 @@ return [
 
         'actions' => [
             'complete_and_rate' => 'Complete & Rate',
-            'complete_mission' => 'Complete Mission',
+            'complete_project' => 'Complete Project',
             'end_assignment' => 'End Assignment',
             'end_assignment_and_rate' => 'End Assignment & Rate',
             'view_worker_profile' => 'View Worker Profile',
             'view_request_history' => 'View request history',
-            'view_mission' => 'View Mission',
+            'view_project' => 'View Project',
             'stop_recruiting' => 'Stop Recruiting',
-            'start_mission' => 'Start Mission',
+            'start_project' => 'Start Project',
         ],
 
         'details_modal' => [
-            'load_error' => 'Unable to load mission details. Please try again.',
+            'load_error' => 'Unable to load project details. Please try again.',
         ],
 
         'worker_details_modal' => [
@@ -757,40 +823,41 @@ return [
         ],
 
         'states' => [
-            'mission_accepted' => 'Mission accepted.',
-            'mission_completed' => 'Mission completed successfully.',
+            'project_accepted' => 'Project accepted.',
+            'project_completed' => 'Project completed successfully.',
             'assignment_completed' => 'Assignment completed successfully.',
             'assignment_ended_early' => 'Assignment ended early.',
         ],
 
         'success' => [
-            'recruiting_closed' => 'Recruiting has been closed for this mission.',
-            'mission_started' => 'Mission has started successfully.',
+            'request_updated' => 'Request updated successfully.',
+            'recruiting_closed' => 'Recruiting has been closed for this project.',
+            'project_started' => 'Project has started successfully.',
             'assignment_completed' => 'Assignment completed successfully.',
             'assignment_ended_early' => 'Assignment ended early successfully.',
         ],
 
         'validation' => [
             'request_no_longer_pending' => 'This request is no longer pending.',
-            'recruiting_closed' => 'This mission is no longer accepting workers.',
-            'mission_not_eligible_for_staffing' => 'This mission is not eligible for additional staffing.',
-            'worker_already_committed' => 'This worker is already committed to this mission.',
-            'recruiting_already_closed' => 'Recruiting is already closed for this mission.',
+            'recruiting_closed' => 'This project is no longer accepting workers.',
+            'project_not_eligible_for_staffing' => 'This project is not eligible for additional staffing.',
+            'worker_already_committed' => 'This worker is already committed to this project.',
+            'recruiting_already_closed' => 'Recruiting is already closed for this project.',
             'recruiting_requires_committed_worker' => 'At least one worker must be accepted before recruiting can be closed.',
-            'mission_not_ready_to_start' => 'This mission is not ready to start.',
-            'mission_start_date_not_reached' => 'This mission cannot start before its start date.',
-            'mission_start_requires_committed_worker' => 'At least one committed worker is required to start this mission.',
-            'mission_not_in_progress' => 'This mission is not currently in progress.',
+            'project_not_ready_to_start' => 'This project is not ready to start.',
+            'project_start_date_not_reached' => 'This project cannot start before its start date.',
+            'project_start_requires_committed_worker' => 'At least one committed worker is required to start this project.',
+            'project_not_in_progress' => 'This project is not currently in progress.',
             'assignment_not_ready_to_complete' => 'This assignment is not ready to be completed.',
             'assignment_not_ready_to_end_early' => 'This assignment is not ready to end early.',
-            'mission_end_date_not_reached' => 'This assignment cannot be completed before the mission end date.',
-            'rating_already_exists' => 'This worker has already been rated for this mission.',
+            'project_end_date_not_reached' => 'This assignment cannot be completed before the project end date.',
+            'rating_already_exists' => 'This worker has already been rated for this project.',
         ],
 
         'fallbacks' => [
             'no_feedback' => 'No feedback was provided for this worker.',
-            'pending_activity' => 'Pending mission activity.',
-            'active_mission' => 'Mission currently active.',
+            'pending_activity' => 'Pending project activity.',
+            'active_project' => 'Project currently active.',
         ],
 
         'rating' => [
@@ -808,10 +875,10 @@ return [
             'confirm_accept' => 'Confirm Accept',
             'confirm_reject' => 'Reject Request',
             'company_contact_fallback' => 'Team',
-            'acceptance_message_self_employed' => "Hello :contact,\n\nYou've been accepted for the mission “:mission”.\n\nWe look forward to working with you. Thank you!",
-            'acceptance_message_company' => "Hello :contact,\n\n:worker has been accepted for the mission “:mission”.\n\nWe look forward to working with you and your team. Thank you!",
-            'rejection_message_self_employed' => "Hello :contact,\n\nUnfortunately, you have not been selected for the mission “:mission”.\n\nThank you for your interest.",
-            'rejection_message_company' => "Hello :contact,\n\nUnfortunately, :worker has not been selected for the mission “:mission”.\n\nThank you for your interest.",
+            'acceptance_message_self_employed' => "Hello :contact,\n\nYou've been accepted for the project “:project”.\n\nWe look forward to working with you. Thank you!",
+            'acceptance_message_company' => "Hello :contact,\n\n:worker has been accepted for the project “:project”.\n\nWe look forward to working with you and your team. Thank you!",
+            'rejection_message_self_employed' => "Hello :contact,\n\nUnfortunately, you have not been selected for the project “:project”.\n\nThank you for your interest.",
+            'rejection_message_company' => "Hello :contact,\n\nUnfortunately, :worker has not been selected for the project “:project”.\n\nThank you for your interest.",
         ],
 
         'request_history_modal' => [
@@ -828,16 +895,16 @@ return [
 
         'recruiting_modal' => [
             'title' => 'Stop Recruiting',
-            'message' => 'Stop recruiting for this mission?',
+            'message' => 'Stop recruiting for this project?',
             'subtitle' => 'Pending requests will be cancelled. Accepted workers will remain assigned.',
             'confirm' => 'Stop Recruiting',
         ],
 
         'start_modal' => [
-            'title' => 'Start Mission',
-            'message' => 'Start this mission now?',
+            'title' => 'Start Project',
+            'message' => 'Start this project now?',
             'subtitle' => 'Accepted worker assignments will move to in progress.',
-            'confirm' => 'Start Mission',
+            'confirm' => 'Start Project',
         ],
     ],
 
@@ -934,14 +1001,14 @@ return [
             'subtitle' => 'Customize your notification settings',
             'email' => 'Email Notifications',
             'sms' => 'SMS Notifications',
-            'missions' => 'Mission Alerts',
+            'projects' => 'Project Alerts',
             'language' => 'Language',
             'timezone' => 'Timezone',
             'save' => 'Save Preferences',
             'success' => 'Notification preferences updated.',
             'email_description' => 'Receive email updates',
             'sms_description' => 'Receive SMS updates',
-            'missions_description' => 'Get notified about new missions',
+            'projects_description' => 'Get notified about new projects',
             'timezone_options' => [
                 'utc' => 'UTC',
                 'newfoundland' => 'Newfoundland Time',
@@ -968,7 +1035,42 @@ return [
             'languages' => [
                 'en' => 'English',
                 'fr' => 'French',
+                'es' => 'Spanish',
             ],
+        ],
+    ],
+
+    'emails' => [
+        'common' => [
+            'project_details' => 'Project Details',
+            'title' => 'Title',
+            'message' => 'Message',
+            'worker' => 'Worker',
+            'role' => 'Role',
+            'name' => 'Name',
+            'company' => 'Company',
+            'view_request' => 'View Request',
+        ],
+        'project_request' => [
+            'subject' => 'New Project Join Request',
+            'heading' => 'New Request to Join Project',
+            'company_intro' => ':company has offered a worker for your project.',
+            'self_employed_intro' => 'A self-employed worker has applied to your project.',
+            'worker_information' => 'Worker Information',
+            'employment' => 'Employment',
+            'lending_company' => 'Lending Company',
+            'login_instruction' => 'Please log in to review this request.',
+        ],
+        'worker_request' => [
+            'subject' => 'New Worker Request',
+            'company_heading' => 'New Request for Your Worker',
+            'self_employed_heading' => 'You’ve Been Invited to a Project',
+            'company_intro' => ':company has requested one of your workers for a project.',
+            'self_employed_intro' => ':company has invited you to join a project.',
+            'worker_details' => 'Worker Details',
+            'self_employed_notice' => 'This request is specifically for you.',
+            'requesting_company' => 'Requesting Company',
+            'login_instruction' => 'Please log in to your account to accept or decline this request.',
         ],
     ],
 ];

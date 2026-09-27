@@ -47,8 +47,8 @@ class SettingController extends Controller
         $validated = $request->validate([
             'email' => 'boolean',
             'sms' => 'boolean',
-            'missionAlerts' => 'boolean',
-            'language' => 'required|string',
+            'projectAlerts' => 'boolean',
+            'language' => ['required', 'string', Rule::in(config('locales.supported'))],
             'timezone' => [
                 'required',
                 'string',
@@ -59,22 +59,24 @@ class SettingController extends Controller
         $user->update([
             'email_notifications' => $validated['email'],
             'sms_notifications' => $validated['sms'],
-            'mission_alerts' => $validated['missionAlerts'],
+            'project_alerts' => $validated['projectAlerts'],
             'language' => $validated['language'],
             'timezone' => $validated['timezone'],
         ]);
 
+        session(['locale' => $validated['language']]);
+
         $updatedUser = $user->fresh()->only([
             'email_notifications',
             'sms_notifications',
-            'mission_alerts',
+            'project_alerts',
             'language',
             'timezone',
         ]);
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Notification preferences updated successfully.',
+                'message' => __('app.settings_page.notifications.success'),
                 'user' => $updatedUser,
             ]);
         }

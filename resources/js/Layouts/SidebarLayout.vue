@@ -83,32 +83,32 @@ const topbarOrganizationLabel = computed(() => {
                 </Link>
 
                 <Link
-                    :href="route('find-missions.index')"
+                    :href="route('find-projects.index')"
                     class="nav-link"
-                    :class="{ active: $page.url.startsWith('/find-missions') }"
+                    :class="{ active: $page.url.startsWith('/find-projects') }"
                 >
                     <Briefcase class="nav-icon" />
-                    {{ t('find_missions') }}
+                    {{ t('find_projects') }}
                 </Link>
 
                 <Link
-                    v-if="can('create_missions')"
-                    :href="route('missions.index')"
+                    v-if="can('create_projects')"
+                    :href="route('projects.index')"
                     class="nav-link"
-                    :class="{ active: $page.url.startsWith('/missions') }"
+                    :class="{ active: $page.url.startsWith('/projects') }"
                 >
                     <ClipboardList class="nav-icon" />
-                    {{ t('missions') }}
+                    {{ t('projects') }}
                 </Link>
 
                 <Link
-                    v-if="can('view_mission_management')"
-                    :href="route('mission-management.index')"
+                    v-if="can('view_project_management')"
+                    :href="route('project-management.index')"
                     class="nav-link"
-                    :class="{ active: $page.url.startsWith('/mission-management') }"
+                    :class="{ active: $page.url.startsWith('/project-management') }"
                 >
                     <LayoutDashboard class="nav-icon" />
-                    {{ t('mission_management') }}
+                    {{ t('project_management') }}
                 </Link>
 
                 <Link

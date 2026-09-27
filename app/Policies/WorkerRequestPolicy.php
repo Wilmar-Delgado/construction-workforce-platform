@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkerProfile;
 use App\Models\WorkerRequest;
@@ -28,30 +28,30 @@ class WorkerRequestPolicy
             || $this->isRecipient($user, $workerRequest);
     }
 
-    public function createInvite(User $user, Mission $mission, WorkerProfile $worker): bool
+    public function createInvite(User $user, Project $project, WorkerProfile $worker): bool
     {
         return $this->isCompanyManager($user)
-            && $mission->hiring_company_id === $user->company_id
-            && $mission->isActionableForStaffing()
+            && $project->hiring_company_id === $user->company_id
+            && $project->isActionableForStaffing()
             && $worker->isOperationallyAvailable()
             && $worker->company_id !== $user->company_id;
     }
 
-    public function createApplication(User $user, Mission $mission, WorkerProfile $worker): bool
+    public function createApplication(User $user, Project $project, WorkerProfile $worker): bool
     {
-        if (! $mission->isActionableForStaffing() || ! $worker->isOperationallyAvailable()) {
+        if (! $project->isActionableForStaffing() || ! $worker->isOperationallyAvailable()) {
             return false;
         }
 
         if ($this->isCompanyManager($user)) {
             return $worker->company_id === $user->company_id
-                && $mission->hiring_company_id !== $user->company_id;
+                && $project->hiring_company_id !== $user->company_id;
         }
 
         return $this->isSelfEmployed($user)
             && $worker->company_id === null
             && $worker->user_id === $user->id
-            && $mission->hiring_company_id !== $user->company_id;
+            && $project->hiring_company_id !== $user->company_id;
     }
 
     public function respond(User $user, WorkerRequest $workerRequest, string $action): bool
@@ -60,15 +60,15 @@ class WorkerRequestPolicy
             return false;
         }
 
-        return $action !== 'accept' || $workerRequest->mission?->isActionableForStaffing();
+        return $action !== 'accept' || $workerRequest->project?->isActionableForStaffing();
     }
 
     public function complete(User $user, WorkerRequest $workerRequest): bool
     {
         return in_array($workerRequest->status, ['accepted', 'ongoing'], true)
             && $this->isCompanyManager($user)
-            && $workerRequest->mission?->hiring_company_id === $user->company_id
-            && $workerRequest->mission?->status === 'in_progress';
+            && $workerRequest->project?->hiring_company_id === $user->company_id
+            && $workerRequest->project?->status === 'in_progress';
     }
 
     public function endEarly(User $user, WorkerRequest $workerRequest): bool
@@ -107,7 +107,7 @@ class WorkerRequestPolicy
 
         if ($workerRequest->type === 'apply') {
             return $this->isCompanyManager($user)
-                && $workerRequest->mission?->hiring_company_id === $user->company_id;
+                && $workerRequest->project?->hiring_company_id === $user->company_id;
         }
 
         return false;

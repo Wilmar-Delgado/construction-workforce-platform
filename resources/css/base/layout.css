@@ -26,11 +26,11 @@
     padding: 1.5rem 2rem 0;
 }
 
-.mission-page-container {
+.project-page-container {
     padding: 1rem 2rem 1rem;
 }
 
-.mission-management-page-container {
+.project-management-page-container {
     padding: 1.5rem 2rem 1rem;
 }
 
@@ -65,8 +65,8 @@
 
     .page-container,
     .page-container-lg,
-    .mission-page-container,
-    .mission-management-page-container {
+    .project-page-container,
+    .project-management-page-container {
         padding: 1rem;
     }
 

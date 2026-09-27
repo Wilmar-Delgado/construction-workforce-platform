@@ -19,6 +19,11 @@ const props = defineProps({
         default: false
     },
 
+    translationNamespace: {
+        type: String,
+        required: true
+    },
+
     t: Function
 });
 
@@ -56,14 +61,14 @@ function onEnter() {
                 :value="search"
                 @input="onSearchInput"
                 @keyup.enter="onEnter"
-                :placeholder="t('find_missions_page.filters.search')"
+                :placeholder="t(`${translationNamespace}.filters.search`)"
             />
         </div>
 
         <!-- JOB -->
         <select :value="job" @change="onJobChange">
             <option value="">
-                {{ t('find_missions_page.filters.job') }}
+                {{ t(`${translationNamespace}.filters.job`) }}
             </option>
             <option v-for="j in jobs" :key="j" :value="j">
                 {{ t(`profiles_page.jobs.${j}`) }}
@@ -77,7 +82,7 @@ function onEnter() {
             @change="onLocationChange"
         >
             <option value="">
-                {{ t('find_missions_page.filters.location') }}
+                {{ t(`${translationNamespace}.filters.location`) }}
             </option>
             <option v-for="l in locations" :key="l" :value="l">
                 {{ l }}

@@ -32,7 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'timezone',
         'email_notifications',
         'sms_notifications',
-        'mission_alerts',
+        'project_alerts',
     ];
 
     /**
@@ -57,7 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'email_notifications' => 'boolean',
             'sms_notifications' => 'boolean',
-            'mission_alerts' => 'boolean',
+            'project_alerts' => 'boolean',
             'is_active' => 'boolean',
         ];
     }

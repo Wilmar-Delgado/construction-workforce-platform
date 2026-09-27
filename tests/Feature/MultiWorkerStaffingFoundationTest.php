@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\Rating;
 use App\Models\Role;
 use App\Models\User;
@@ -19,86 +19,86 @@ class MultiWorkerStaffingFoundationTest extends TestCase
 
     public function test_requested_capacity_is_preserved_and_remaining_capacity_is_calculated_from_committed_requests(): void
     {
-        [$mission, $manager] = $this->missionAndManager(3);
+        [$project, $manager] = $this->projectAndManager(3);
 
         foreach (['accepted', 'ongoing', 'completed', 'pending', 'rejected', 'cancelled'] as $index => $status) {
-            $this->createRequest($mission, $manager, $status, "Worker {$index}");
+            $this->createRequest($project, $manager, $status, "Worker {$index}");
         }
 
-        $mission = Mission::withCommittedWorkerCount()->findOrFail($mission->id);
+        $project = Project::withCommittedWorkerCount()->findOrFail($project->id);
 
-        $this->assertSame(3, $mission->workers);
-        $this->assertSame(3, $mission->committed_worker_count);
-        $this->assertSame(0, $mission->remaining_capacity);
+        $this->assertSame(3, $project->workers);
+        $this->assertSame(3, $project->committed_worker_count);
+        $this->assertSame(0, $project->remaining_capacity);
     }
 
     public function test_pending_rejected_and_cancelled_requests_do_not_consume_capacity(): void
     {
-        [$mission, $manager] = $this->missionAndManager(3);
+        [$project, $manager] = $this->projectAndManager(3);
 
         foreach (['pending', 'rejected', 'cancelled'] as $index => $status) {
-            $this->createRequest($mission, $manager, $status, "Worker {$index}");
+            $this->createRequest($project, $manager, $status, "Worker {$index}");
         }
 
-        $mission = Mission::withCommittedWorkerCount()->findOrFail($mission->id);
+        $project = Project::withCommittedWorkerCount()->findOrFail($project->id);
 
-        $this->assertSame(0, $mission->committed_worker_count);
-        $this->assertSame(3, $mission->remaining_capacity);
+        $this->assertSame(0, $project->committed_worker_count);
+        $this->assertSame(3, $project->remaining_capacity);
     }
 
     public function test_recruiting_closed_at_distinguishes_open_recruiting_from_closed_recruiting(): void
     {
-        [$mission] = $this->missionAndManager(2);
+        [$project] = $this->projectAndManager(2);
 
-        $this->assertTrue($mission->isRecruitingOpen());
-        $this->assertTrue($mission->isActionableForStaffing());
-        $this->assertTrue(Mission::actionableForStaffing()->whereKey($mission->id)->exists());
+        $this->assertTrue($project->isRecruitingOpen());
+        $this->assertTrue($project->isActionableForStaffing());
+        $this->assertTrue(Project::actionableForStaffing()->whereKey($project->id)->exists());
 
-        $mission->update(['recruiting_closed_at' => now()]);
-        $mission->refresh();
+        $project->update(['recruiting_closed_at' => now()]);
+        $project->refresh();
 
-        $this->assertFalse($mission->isRecruitingOpen());
-        $this->assertFalse($mission->isActionableForStaffing());
-        $this->assertFalse(Mission::actionableForStaffing()->whereKey($mission->id)->exists());
+        $this->assertFalse($project->isRecruitingOpen());
+        $this->assertFalse($project->isActionableForStaffing());
+        $this->assertFalse(Project::actionableForStaffing()->whereKey($project->id)->exists());
     }
 
-    public function test_multiple_workers_can_each_have_one_rating_for_the_same_mission(): void
+    public function test_multiple_workers_can_each_have_one_rating_for_the_same_project(): void
     {
-        [$mission, $manager] = $this->missionAndManager(2);
+        [$project, $manager] = $this->projectAndManager(2);
         $firstWorker = $this->workerForCompany($manager->company_id, 'First Worker');
         $secondWorker = $this->workerForCompany($manager->company_id, 'Second Worker');
 
-        Rating::create($this->ratingData($mission, $manager, $firstWorker));
-        Rating::create($this->ratingData($mission, $manager, $secondWorker));
+        Rating::create($this->ratingData($project, $manager, $firstWorker));
+        Rating::create($this->ratingData($project, $manager, $secondWorker));
 
         $this->assertDatabaseCount('ratings', 2);
     }
 
-    public function test_duplicate_rating_for_the_same_mission_and_worker_is_rejected(): void
+    public function test_duplicate_rating_for_the_same_project_and_worker_is_rejected(): void
     {
-        [$mission, $manager] = $this->missionAndManager(1);
+        [$project, $manager] = $this->projectAndManager(1);
         $worker = $this->workerForCompany($manager->company_id, 'Rated Worker');
 
-        Rating::create($this->ratingData($mission, $manager, $worker));
+        Rating::create($this->ratingData($project, $manager, $worker));
 
         $this->expectException(QueryException::class);
 
-        Rating::create($this->ratingData($mission, $manager, $worker));
+        Rating::create($this->ratingData($project, $manager, $worker));
     }
 
-    public function test_one_worker_cannot_have_multiple_request_paths_for_the_same_mission(): void
+    public function test_one_worker_cannot_have_multiple_request_paths_for_the_same_project(): void
     {
-        [$mission, $manager] = $this->missionAndManager(2);
+        [$project, $manager] = $this->projectAndManager(2);
         $worker = $this->workerForCompany($manager->company_id, 'Requested Worker');
 
-        WorkerRequest::create($this->requestData($mission, $manager, $worker, 'invite', 'pending'));
+        WorkerRequest::create($this->requestData($project, $manager, $worker, 'invite', 'pending'));
 
         $this->expectException(QueryException::class);
 
-        WorkerRequest::create($this->requestData($mission, $manager, $worker, 'apply', 'rejected'));
+        WorkerRequest::create($this->requestData($project, $manager, $worker, 'apply', 'rejected'));
     }
 
-    private function missionAndManager(int $capacity): array
+    private function projectAndManager(int $capacity): array
     {
         $role = Role::create(['name' => 'company_owner']);
         $manager = User::factory()->create(['role_id' => $role->id]);
@@ -108,10 +108,10 @@ class MultiWorkerStaffingFoundationTest extends TestCase
         ]);
         $manager->update(['company_id' => $company->id]);
 
-        $mission = Mission::create([
+        $project = Project::create([
             'hiring_company_id' => $company->id,
             'created_by' => $manager->id,
-            'title' => 'Multi-worker mission',
+            'title' => 'Multi-worker project',
             'city' => 'Calgary',
             'province' => 'Alberta',
             'job_type' => 'Electrician',
@@ -121,14 +121,14 @@ class MultiWorkerStaffingFoundationTest extends TestCase
             'status' => 'open',
         ]);
 
-        return [$mission, $manager->fresh()];
+        return [$project, $manager->fresh()];
     }
 
-    private function createRequest(Mission $mission, User $manager, string $status, string $name): WorkerRequest
+    private function createRequest(Project $project, User $manager, string $status, string $name): WorkerRequest
     {
         $worker = $this->workerForCompany($manager->company_id, $name);
 
-        return WorkerRequest::create($this->requestData($mission, $manager, $worker, 'apply', $status));
+        return WorkerRequest::create($this->requestData($project, $manager, $worker, 'apply', $status));
     }
 
     private function workerForCompany(int $companyId, string $name): WorkerProfile
@@ -143,14 +143,14 @@ class MultiWorkerStaffingFoundationTest extends TestCase
     }
 
     private function requestData(
-        Mission $mission,
+        Project $project,
         User $manager,
         WorkerProfile $worker,
         string $type,
         string $status,
     ): array {
         return [
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'requested_by' => $manager->id,
             'company_id' => $manager->company_id,
             'worker_profile_id' => $worker->id,
@@ -159,10 +159,10 @@ class MultiWorkerStaffingFoundationTest extends TestCase
         ];
     }
 
-    private function ratingData(Mission $mission, User $manager, WorkerProfile $worker): array
+    private function ratingData(Project $project, User $manager, WorkerProfile $worker): array
     {
         return [
-            'mission_id' => $mission->id,
+            'project_id' => $project->id,
             'reviewed_by_user_id' => $manager->id,
             'worker_profile_id' => $worker->id,
             'score' => 5,

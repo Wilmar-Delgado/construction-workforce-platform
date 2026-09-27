@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('timezone')->default('UTC')->after('language');
             $table->boolean('email_notifications')->default(true)->after('timezone');
             $table->boolean('sms_notifications')->default(false)->after('email_notifications');
-            $table->boolean('mission_alerts')->default(true)->after('sms_notifications');
+            $table->boolean('project_alerts')->default(true)->after('sms_notifications');
         });
     }
 
@@ -33,7 +33,7 @@ return new class extends Migration
                 'timezone',
                 'email_notifications',
                 'sms_notifications',
-                'mission_alerts'
+                'project_alerts'
             ]);
         });
     }

@@ -8,6 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('missions:process-start-dates')
+Schedule::command('projects:process-start-dates')
     ->everyTenMinutes()
     ->withoutOverlapping();

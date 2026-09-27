@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('ratings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mission_id')->constrained('missions')->cascadeOnDelete();
+            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
             $table->unsignedTinyInteger('score');
             $table->text('feedback')->nullable();
             $table->timestamps();
-            $table->unique('mission_id');
+            $table->unique('project_id');
             $table->index('score');
         });
     }

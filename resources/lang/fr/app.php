@@ -5,11 +5,14 @@ return [
     'app_name' => 'Construction Workforce',
     'home' => 'Accueil',
     'profiles' => 'Profils des travailleurs',
+    'profile' => 'Mon profil',
     'availability' => 'Disponibilités',
     'find_workers' => 'Trouver des travailleurs',
-    'find_missions' => 'Trouver des missions',
-    'dashboard' => 'Tableau de bord',
+    'find_projects' => 'Trouver des missions',
+    'projects' => 'Mes missions',
+    'project_management' => 'Gestion des missions',
     'settings' => 'Paramètres',
+    'self_employed' => 'Travailleur autonome',
     'logout' => 'Déconnexion',
 
     'common' => [
@@ -44,12 +47,12 @@ return [
     //:: Post Registration Onboarding
     'onboarding' => [
         'company' => [
-            'title' => "Configuration de l’entreprise",
+            'title' => 'Configuration de l’entreprise',
             'description' => 'Complétez le profil de votre entreprise pour commencer.',
-            'name' => "Nom de l'entreprise",
+            'name' => 'Nom de l\'entreprise',
             'phone' => 'Téléphone',
             'address' => 'Adresse',
-            'create' => "Créer l'entreprise",
+            'create' => 'Créer l\'entreprise',
             'validation' => [
                 'not_eligible' => 'Vous n’êtes pas autorisé à créer une entreprise.',
             ],
@@ -88,22 +91,52 @@ return [
             'submit' => 'Créer un compte',
         ],
 
+        'forgot_password' => [
+            'title' => 'Mot de passe oublié',
+            'description' => 'Entrez votre adresse e-mail et nous vous enverrons un lien de réinitialisation.',
+            'email' => 'Adresse e-mail',
+            'submit' => 'Envoyer le lien de réinitialisation',
+        ],
+
+        'reset_password' => [
+            'title' => 'Réinitialiser le mot de passe',
+            'email' => 'Adresse e-mail',
+            'password' => 'Mot de passe',
+            'confirm_password' => 'Confirmer le mot de passe',
+            'submit' => 'Réinitialiser le mot de passe',
+        ],
+
+        'confirm_password' => [
+            'title' => 'Confirmer le mot de passe',
+            'description' => 'Cette zone de l’application est sécurisée. Veuillez confirmer votre mot de passe avant de continuer.',
+            'password' => 'Mot de passe',
+            'submit' => 'Confirmer',
+        ],
+
+        'verify_email' => [
+            'title' => 'Vérification de l’adresse e-mail',
+            'description' => 'Merci de votre inscription! Avant de commencer, vérifiez votre adresse e-mail à l’aide du lien que nous vous avons envoyé. Si vous ne l’avez pas reçu, nous pouvons vous en envoyer un autre.',
+            'link_sent' => 'Un nouveau lien de vérification a été envoyé à l’adresse e-mail fournie lors de l’inscription.',
+            'resend' => 'Renvoyer le courriel de vérification',
+            'logout' => 'Se déconnecter',
+        ],
+
     ],
 
     //:: Welcome Page
     'welcome_page' => [
         'hero_highlight' => 'Mise en relation',
-        'subtitle' => "Mise en relation rapide entre entreprises de construction et travailleurs disponibles. Trouvez la correspondance idéale pour votre prochaine mission en quelques minutes.",
-        'description' => "Cette plateforme met en relation les entreprises disposant de travailleurs disponibles, celles qui recherchent de la main-d’œuvre qualifiée, ainsi que les travailleurs autonomes à la recherche de missions.",
+        'subtitle' => 'Mise en relation rapide entre entreprises de construction et travailleurs disponibles. Trouvez la correspondance idéale pour votre prochaine mission en quelques minutes.',
+        'description' => 'Cette plateforme met en relation les entreprises disposant de travailleurs disponibles, celles qui recherchent de la main-d’œuvre qualifiée, ainsi que les travailleurs autonomes à la recherche de missions.',
 
         // Audience
-        'audience_title' => "À qui s’adresse cette plateforme?",
-        'audience_subtitle' => "Connexion de trois groupes clés de l’industrie de la construction",
+        'audience_title' => 'À qui s’adresse cette plateforme?',
+        'audience_subtitle' => 'Connexion de trois groupes clés de l’industrie de la construction',
 
         'audience' => [
             'employers' => [
                 'title' => 'Entreprises avec des employés disponibles',
-                'description' => "Listez vos travailleurs qualifiés lorsqu’ils sont disponibles entre deux projets. Transformez les périodes creuses en revenus.",
+                'description' => 'Listez vos travailleurs qualifiés lorsqu’ils sont disponibles entre deux projets. Transformez les périodes creuses en revenus.',
                 'points' => [
                     'Optimiser l’utilisation de la main-d’œuvre',
                     'Générer des revenus supplémentaires',
@@ -113,7 +146,7 @@ return [
 
             'hiring' => [
                 'title' => 'Entreprises à la recherche de travailleurs qualifiés',
-                'description' => "Trouvez instantanément des professionnels qualifiés du secteur de la construction. Comblez vos besoins en main-d’œuvre sans complications.",
+                'description' => 'Trouvez instantanément des professionnels qualifiés du secteur de la construction. Comblez vos besoins en main-d’œuvre sans complications.',
                 'points' => [
                     'Accès à des professionnels qualifiés',
                     'Processus d’embauche rapide',
@@ -123,7 +156,7 @@ return [
 
             'contractors' => [
                 'title' => 'Travailleurs autonomes',
-                'description' => "Découvrez des missions instantanément. Développez votre réputation et suivez vos revenus en un seul endroit.",
+                'description' => 'Découvrez des missions instantanément. Développez votre réputation et suivez vos revenus en un seul endroit.',
                 'points' => [
                     'Découvrez des missions instantanément',
                     'Développez votre réputation',
@@ -140,7 +173,7 @@ return [
         // CTA
         'cta' => [
             'title' => 'Prêt à commencer?',
-            'subtitle' => "Rejoignez des milliers de professionnels de la construction qui utilisent déjà notre plateforme",
+            'subtitle' => 'Rejoignez des milliers de professionnels de la construction qui utilisent déjà notre plateforme',
             'action' => 'Créer un compte',
         ],
 
@@ -162,37 +195,41 @@ return [
         'welcome_subtitle' => 'Que souhaitez-vous faire aujourd’hui?',
 
         'stats' => [
-            'ongoing_missions' => 'Missions en cours',
+            'ongoing_projects' => 'Missions en cours',
             'pending_requests' => 'Demandes en attente',
             'active_workers' => 'Travailleurs actifs',
-            'total_missions' => 'Total des missions',
-            'completed_missions' => 'Missions terminées',
+            'total_projects' => 'Total des missions',
+            'completed_projects' => 'Missions terminées',
             'total_applications' => 'Total des candidatures',
             'ongoing' => 'En cours',
             'pending' => 'En attente',
             'workers' => 'Travailleurs',
-            'missions' => 'Missions',
+            'projects' => 'Missions',
         ],
 
         'actions' => [
             'make_available' => 'Rendre un employé disponible',
-            'make_available_desc' => "Ajouter ou mettre à jour les disponibilités de vos travailleurs. Édition rapide en moins de 30 secondes.",
-            'browse_missions' => 'Parcourir les missions & opportunités',
-            'browse_missions_desc' => "Découvrez les missions et opportunités d’emploi disponibles. Trouvez votre prochain projet et postulez directement.",
+            'make_available_desc' => 'Ajouter ou mettre à jour les disponibilités de vos travailleurs. Édition rapide en moins de 30 secondes.',
+
             'search_worker' => 'Rechercher un travailleur',
             'search_worker_desc' => 'Parcourez les travailleurs disponibles par métier, expérience et compétences. Trouvez la correspondance parfaite pour votre mission.',
+
             'create_profile' => 'Créer votre profil',
             'create_profile_desc' => 'Présentez vos compétences et votre expérience pour être découvert par les entreprises et obtenir votre prochaine mission.',
+
             'edit_profile' => 'Modifier votre profil',
             'edit_profile_desc' => 'Mettez à jour vos compétences, votre expérience et vos disponibilités pour rester visible auprès des employeurs.',
+
+            'browse_projects' => 'Parcourir les missions & opportunités',
+            'browse_projects_desc' => 'Découvrez les missions et opportunités d’emploi disponibles. Trouvez votre prochain projet et postulez directement.',
         ],
 
         'quick_access' => 'Accès rapide',
-        'mission_hub' => 'Centre des missions',
+        'project_hub' => 'Centre des missions',
         'manage_profile' => 'Gérer mon profil',
-        'view_all_missions' => 'Voir toutes les missions',
         'manage_profiles' => 'Gérer les profils',
-        'manage_missions' => 'Gérer les missions',
+        'manage_projects' => 'Gérer les missions',
+        'view_all_projects' => 'Voir toutes les missions',
         'manage_availability' => 'Gérer les disponibilités',
         'settings' => 'Paramètres',
     ],
@@ -241,7 +278,7 @@ return [
             'roofer' => 'Couvreur',
             'painter' => 'Peintre',
             'mason' => 'Maçon',
-            'ironworker' => "Monteur d’acier",
+            'ironworker' => 'Monteur d’acier',
             'insulator' => 'Calorifugeur',
             'drywall_installer' => 'Installateur de cloisons sèches',
         ],
@@ -252,7 +289,7 @@ return [
             'company' => 'Entreprise (rempli automatiquement)',
             'job' => 'Emploi / Métier *',
             'job_select' => 'Sélectionnez un emploi ou un métier',
-            'experience' => "Années d'expérience *",
+            'experience' => 'Années d\'expérience *',
             'rate' => 'Tarif horaire ($) *',
             'certifications' => 'Certifications (optionnel)',
             'certifications_placeholder' => 'Ajoutez plusieurs certifications en les séparant par des virgules',
@@ -291,6 +328,13 @@ return [
             'cannot_archive_worker' => 'Seuls les profils avec un historique résolu et sans travail ou demande active peuvent être archivés.',
             'cannot_edit_archived_worker' => 'Les profils de travailleurs archivés ne peuvent pas être modifiés.',
         ],
+
+        'success' => [
+            'created' => 'Profil de travailleur créé avec succès.',
+            'updated' => 'Profil de travailleur mis à jour avec succès.',
+            'deleted' => 'Profil de travailleur supprimé avec succès.',
+            'archived' => 'Profil de travailleur archivé avec succès.',
+        ],
     ],
 
     //:: Availability Page
@@ -317,6 +361,21 @@ return [
             'no_slots' => 'Aucune disponibilité pour cette période.',
         ],
 
+        'status_options' => [
+            'available' => 'Disponible',
+            'booked' => 'Réservé',
+            'unavailable' => 'Indisponible',
+        ],
+
+        'validation' => [
+            'overlap' => 'Ce travailleur a déjà une disponibilité qui chevauche cette période.',
+            'end_after_start' => 'L’heure de fin doit être postérieure à l’heure de début.',
+            'project_assignment_conflict' => 'Ce travailleur est déjà affecté à une mission à cette date.',
+            'calendar_range_too_large' => 'La période du calendrier ne peut pas dépasser :days jours.',
+            'worker_not_available' => 'Le travailleur sélectionné ne vous est pas accessible.',
+            'archived_worker_cannot_receive_availability' => 'Les travailleurs archivés ne peuvent pas recevoir de nouvelles disponibilités ni de mises à jour.',
+        ],
+
         'add_modal' => [
             'title' => 'Ajouter une disponibilité',
             'select_worker' => 'Sélectionner un travailleur',
@@ -328,21 +387,6 @@ return [
             'saving' => 'Enregistrement...',
             'save' => 'Créer la disponibilité',
             'cancel' => 'Annuler',
-        ],
-
-        'status_options' => [
-            'available' => 'Disponible',
-            'booked' => 'Réservé',
-            'unavailable' => 'Indisponible',
-        ],
-
-        'validation' => [
-            'overlap' => 'Ce travailleur a déjà une disponibilité qui chevauche cette période.',
-            'end_after_start' => 'L’heure de fin doit être postérieure à l’heure de début.',
-            'mission_assignment_conflict' => 'Ce travailleur est déjà affecté à une mission à cette date.',
-            'calendar_range_too_large' => 'La période du calendrier ne peut pas dépasser :days jours.',
-            'worker_not_available' => 'Le travailleur sélectionné ne vous est pas accessible.',
-            'archived_worker_cannot_receive_availability' => 'Les travailleurs archivés ne peuvent pas recevoir de nouvelles disponibilités ni de mises à jour.',
         ],
 
         'edit_modal' => [
@@ -358,6 +402,12 @@ return [
             'confirm' => 'Oui, supprimer',
             'cancel' => 'Annuler',
             'item_name' => ':worker le :date',
+        ],
+
+        'success' => [
+            'created' => 'Disponibilité ajoutée avec succès.',
+            'updated' => 'Disponibilité mise à jour avec succès.',
+            'deleted' => 'Disponibilité supprimée avec succès.',
         ],
     ],
 
@@ -390,40 +440,49 @@ return [
         'request_modal' => [
             'title' => 'Demander un travailleur pour une mission',
 
-            'select_mission' => 'Sélectionner une mission *',
-
             'rate' => 'Tarif',
             'rating' => 'Note',
 
             'process_title' => 'Processus de demande',
             'steps' => [
                 'step1_self' => 'Demande envoyée au travailleur',
-                'step1_company' => "Demande envoyée à l’entreprise prêteuse",
+                'step1_company' => 'Demande envoyée à l’entreprise prêteuse',
                 'self_employed' => 'Le travailleur peut accepter ou refuser',
                 'company_worker' => 'Le propriétaire ou le responsable planification peut accepter ou refuser',
                 'step3' => 'Numéro de téléphone débloqué après acceptation',
                 'step4' => 'Mission confirmée automatiquement',
             ],
 
+            'select_project' => 'Sélectionner une mission *',
             'company' => 'Nom de votre entreprise',
             'start_date' => 'Date de début',
             'end_date' => 'Date de fin',
-            'mission_desc' => 'Message facultatif (p. ex. tâches précises ou détails du projet)',
-            'choose_mission' => 'Choisissez une mission pour ce travailleur',
+            'choose_project' => 'Choisissez une mission pour ce travailleur',
+            'project_desc' => 'Message facultatif (p. ex. tâches précises ou détails du projet)',
             'already_requested' => 'Déjà demandée',
             'archived_worker_cannot_receive_request' => 'Les travailleurs archivés ne peuvent pas recevoir de nouvelles demandes.',
             'sending' => 'Envoi de la demande...',
-
             'send' => 'Envoyer la demande',
             'cancel' => 'Annuler',
         ],
+
+        'validation' => [
+            'project_required' => 'Veuillez sélectionner une mission.',
+            'project_invalid' => 'La mission sélectionnée est invalide.',
+            'message_max' => 'Le message ne peut pas dépasser 1 000 caractères.',
+            'worker_already_requested' => 'Vous avez déjà demandé ce travailleur pour cette mission.',
+        ],
+
+        'success' => [
+            'request_sent' => 'Demande envoyée avec succès.',
+        ],
     ],
 
-    //:: Find Missions Page
-    'find_missions_page' => [
+    //:: Find Projects Page
+    'find_projects_page' => [
         'title' => 'Trouver des missions',
         'subtitle' => 'Parcourez les occasions de mission disponibles et postulez',
-        'missions_found' => 'missions trouvées',
+        'projects_found' => 'missions trouvées',
 
         'filters' => [
             'search' => 'Rechercher par titre, entreprise ou exigences...',
@@ -431,7 +490,7 @@ return [
             'location' => 'Tous les lieux',
         ],
 
-        'mission_card' => [
+        'project_card' => [
             'duration' => 'Durée',
             'duration_day' => ':count jour',
             'duration_days' => ':count jours',
@@ -457,7 +516,7 @@ return [
             'message' => 'Message facultatif (p. ex. compétences, expérience ou questions précises)',
             'info' => 'Les coordonnées seront accessibles après l’acceptation',
             'already_requested' => 'Déjà demandée',
-            'already_requested_for_mission' => 'Ce travailleur a déjà une demande pour cette mission.',
+            'already_requested_for_project' => 'Ce travailleur a déjà une demande pour cette mission.',
             'sending' => 'Envoi de la candidature...',
             'send' => 'Envoyer la candidature',
             'cancel' => 'Annuler',
@@ -465,6 +524,11 @@ return [
 
         'validation' => [
             'archived_worker_cannot_request' => 'Les travailleurs archivés ne peuvent pas soumettre de nouvelles candidatures.',
+            'worker_already_requested' => 'Ce travailleur a déjà été proposé pour cette mission.',
+        ],
+
+        'success' => [
+            'request_sent' => 'Demande pour joindre la mission envoyée avec succès.',
         ],
 
         'details_modal' => [
@@ -480,11 +544,11 @@ return [
         ],
     ],
 
-    //:: My Missions Page
-    'missions_page' => [
+    //:: My Projects Page
+    'projects_page' => [
         'title' => 'Missions',
         'subtitle' => 'Créez, gérez et suivez les missions de votre entreprise',
-        'create_mission' => 'Créer une mission',
+        'create_project' => 'Créer une mission',
         'empty_title' => 'Aucune mission pour le moment',
         'empty_desc' => 'Créez votre première mission pour trouver des travailleurs et répondre à vos besoins en main-d’œuvre.',
         'empty_tab_title' => 'Aucune mission :status trouvée',
@@ -532,7 +596,7 @@ return [
         ],
 
         'stats' => [
-            'total_missions' => 'Total des missions',
+            'total_projects' => 'Total des missions',
             'draft' => 'Brouillon',
             'open' => 'Ouverte',
             'in_progress' => 'En cours',
@@ -541,7 +605,7 @@ return [
 
         'add_modal' => [
             'title' => 'Créer une mission',
-            'mission_title' => 'Titre de la mission *',
+            'project_title' => 'Titre de la mission *',
             'description' => 'Description *',
             'start_date' => 'Date de début *',
             'end_date' => 'Date de fin *',
@@ -589,18 +653,25 @@ return [
 
         'validation' => [
             'lifecycle_managed_status' => 'Le statut de cette mission est géré par le cycle de dotation et ne peut pas être modifié ici.',
-            'open_mission_must_remain_open' => 'Une mission ouverte ne peut pas être remise à l’état de brouillon par une modification ordinaire.',
+            'open_project_must_remain_open' => 'Une mission ouverte ne peut pas être remise à l’état de brouillon par une modification ordinaire.',
             'capacity_below_committed' => 'La capacité ne peut pas être réduite sous le nombre de travailleurs affectés (:count).',
-            'cannot_delete_mission' => 'Seules les missions brouillon inutilisées et non archivées peuvent être supprimées définitivement.',
-            'cannot_archive_mission' => 'Seules les missions terminées et non archivées peuvent être archivées.',
+            'cannot_delete_project' => 'Seules les missions brouillon inutilisées et non archivées peuvent être supprimées définitivement.',
+            'cannot_archive_project' => 'Seules les missions terminées et non archivées peuvent être archivées.',
+        ],
+
+        'success' => [
+            'created' => 'Mission créée avec succès.',
+            'updated' => 'Mission mise à jour avec succès.',
+            'deleted' => 'Mission supprimée avec succès.',
+            'archived' => 'Mission archivée avec succès.',
         ],
     ],
 
-    //:: Mission Management Page
-    'mission_management_page' => [
+    //:: Project Management Page
+    'project_management_page' => [
         'title' => 'Gestion des missions',
         'subtitle' => 'Votre espace central pour les demandes, l’activité des missions et le suivi de leur avancement.',
-        'create_mission' => 'Créer une mission',
+        'create_project' => 'Créer une mission',
 
         'stats' => [
             'ongoing' => 'En cours',
@@ -624,12 +695,12 @@ return [
             'invitations' => 'Invitations',
             'applications' => 'Candidatures',
             'assignments' => 'Affectations',
-            'your_active_missions' => 'Vos missions actives',
+            'your_active_projects' => 'Vos missions actives',
             'external_assignments' => 'Affectations externes',
-            'your_mission' => 'Votre mission',
+            'your_project' => 'Votre mission',
             'external_assignment' => 'Affectation externe',
-            'ongoing_missions' => 'Missions en cours',
-            'completed_missions' => 'Missions terminées',
+            'ongoing_projects' => 'Missions en cours',
+            'completed_projects' => 'Missions terminées',
             'date' => 'Demandée le',
             'waiting_response' => 'En attente d’une réponse...',
             'accept' => 'Accepter',
@@ -649,11 +720,11 @@ return [
             'no_requests' => 'Aucune demande',
             'requests_description' => 'Les demandes liées à vos missions et travailleurs apparaîtront ici.',
             'self_employed_requests_description' => 'Les invitations et demandes de candidature apparaîtront ici.',
-            'no_staffing_missions' => 'Aucune mission en dotation',
+            'no_staffing_projects' => 'Aucune mission en dotation',
             'staffing_description' => 'Les missions avant leur début avec des travailleurs acceptés ou un recrutement fermé apparaîtront ici.',
             'no_assignments' => 'Aucune affectation',
             'assignments_description' => 'Les affectations acceptées qui n’ont pas encore commencé apparaîtront ici.',
-            'no_in_progress_missions' => 'Aucune mission en cours',
+            'no_in_progress_projects' => 'Aucune mission en cours',
             'in_progress_description' => 'Les affectations de missions actives apparaîtront ici.',
             'completed_description' => 'Les résultats des missions terminées apparaîtront ici.',
             'no_sent_requests' => 'Aucune demande envoyée',
@@ -662,10 +733,10 @@ return [
             'received_requests_description' => 'Les candidatures et invitations de travailleurs apparaîtront ici.',
             'no_join_requests' => 'Aucune demande pour rejoindre une mission',
             'join_requests_description' => 'Les candidatures à des missions soumises par votre entreprise apparaîtront ici.',
-            'no_active_missions' => 'Aucune mission active',
+            'no_active_projects' => 'Aucune mission active',
             'active_created_description' => 'Les travailleurs acceptés pour vos missions apparaîtront ici.',
             'active_joined_description' => 'Les missions externes auxquelles vos travailleurs ont participé apparaîtront ici.',
-            'no_completed_missions' => 'Aucune mission terminée',
+            'no_completed_projects' => 'Aucune mission terminée',
             'completed_created_description' => 'Les missions terminées de votre organisation apparaîtront ici.',
             'completed_joined_description' => 'Les missions externes terminées par vos travailleurs apparaîtront ici.',
             'no_activity' => 'Aucune activité de mission pour le moment',
@@ -679,7 +750,7 @@ return [
         ],
 
         'labels' => [
-            'mission' => 'Mission',
+            'project' => 'Mission',
             'requests' => 'Demandes',
             'worker' => 'Travailleur',
             'assigned_workers' => 'Travailleurs affectés',
@@ -689,7 +760,7 @@ return [
             'proposed_worker' => 'Travailleur proposé',
             'assigned_worker' => 'Travailleur affecté',
             'requested_dates' => 'Dates demandées',
-            'mission_dates' => 'Dates de la mission',
+            'project_dates' => 'Dates de la mission',
             'worker_rate' => 'Taux du travailleur',
             'rate' => 'Taux',
             'final_rate' => 'Taux final',
@@ -726,14 +797,14 @@ return [
 
         'actions' => [
             'complete_and_rate' => 'Terminer et évaluer',
-            'complete_mission' => 'Terminer la mission',
+            'complete_project' => 'Terminer la mission',
             'end_assignment' => 'Mettre fin à l’affectation',
             'end_assignment_and_rate' => 'Mettre fin à l’affectation et évaluer',
             'view_worker_profile' => 'Voir le profil du travailleur',
             'view_request_history' => 'Voir l’historique de la demande',
-            'view_mission' => 'Voir la mission',
+            'view_project' => 'Voir la mission',
             'stop_recruiting' => 'Arrêter le recrutement',
-            'start_mission' => 'Démarrer la mission',
+            'start_project' => 'Démarrer la mission',
         ],
 
         'details_modal' => [
@@ -752,15 +823,16 @@ return [
         ],
 
         'states' => [
-            'mission_accepted' => 'Mission acceptée.',
-            'mission_completed' => 'Mission terminée avec succès.',
+            'project_accepted' => 'Mission acceptée.',
+            'project_completed' => 'Mission terminée avec succès.',
             'assignment_completed' => 'Affectation terminée avec succès.',
             'assignment_ended_early' => 'Affectation terminée plus tôt.',
         ],
 
         'success' => [
+            'request_updated' => 'Demande mise à jour avec succès.',
             'recruiting_closed' => 'Le recrutement a été fermé pour cette mission.',
-            'mission_started' => 'La mission a été démarrée avec succès.',
+            'project_started' => 'La mission a été démarrée avec succès.',
             'assignment_completed' => 'Affectation terminée avec succès.',
             'assignment_ended_early' => 'Affectation terminée plus tôt avec succès.',
         ],
@@ -768,24 +840,24 @@ return [
         'validation' => [
             'request_no_longer_pending' => 'Cette demande n’est plus en attente.',
             'recruiting_closed' => 'Cette mission n’accepte plus de travailleurs.',
-            'mission_not_eligible_for_staffing' => 'Cette mission n’est pas admissible à l’ajout de travailleurs.',
+            'project_not_eligible_for_staffing' => 'Cette mission n’est pas admissible à l’ajout de travailleurs.',
             'worker_already_committed' => 'Ce travailleur est déjà affecté à cette mission.',
             'recruiting_already_closed' => 'Le recrutement est déjà fermé pour cette mission.',
             'recruiting_requires_committed_worker' => 'Au moins un travailleur doit être accepté avant de pouvoir fermer le recrutement.',
-            'mission_not_ready_to_start' => 'Cette mission n’est pas prête à démarrer.',
-            'mission_start_date_not_reached' => 'Cette mission ne peut pas démarrer avant sa date de début.',
-            'mission_start_requires_committed_worker' => 'Au moins un travailleur affecté est requis pour démarrer cette mission.',
-            'mission_not_in_progress' => 'Cette mission n’est pas actuellement en cours.',
+            'project_not_ready_to_start' => 'Cette mission n’est pas prête à démarrer.',
+            'project_start_date_not_reached' => 'Cette mission ne peut pas démarrer avant sa date de début.',
+            'project_start_requires_committed_worker' => 'Au moins un travailleur affecté est requis pour démarrer cette mission.',
+            'project_not_in_progress' => 'Cette mission n’est pas actuellement en cours.',
             'assignment_not_ready_to_complete' => 'Cette affectation n’est pas prête à être terminée.',
             'assignment_not_ready_to_end_early' => 'Cette affectation ne peut pas être terminée plus tôt.',
-            'mission_end_date_not_reached' => 'Cette affectation ne peut pas être terminée avant la date de fin de la mission.',
+            'project_end_date_not_reached' => 'Cette affectation ne peut pas être terminée avant la date de fin de la mission.',
             'rating_already_exists' => 'Ce travailleur a déjà été évalué pour cette mission.',
         ],
 
         'fallbacks' => [
             'no_feedback' => 'Aucun commentaire n’a été fourni pour ce travailleur.',
             'pending_activity' => 'Activité de mission en attente.',
-            'active_mission' => 'Mission actuellement active.',
+            'active_project' => 'Mission actuellement active.',
         ],
 
         'rating' => [
@@ -908,7 +980,7 @@ return [
             'name' => 'Nom complet',
             'email' => 'Adresse e-mail',
             'phone' => 'Numéro de téléphone',
-            'company' => "Nom de l'entreprise",
+            'company' => 'Nom de l\'entreprise',
             'success' => 'Les informations personnelles ont été mises à jour.',
         ],
 
@@ -926,17 +998,17 @@ return [
 
         'notifications' => [
             'title' => 'Notifications & Préférences',
-            'subtitle' => "Personnalisez vos paramètres de notification",
+            'subtitle' => 'Personnalisez vos paramètres de notification',
             'email' => 'Notifications par e-mail',
             'sms' => 'Notifications par SMS',
-            'missions' => 'Alertes de mission',
+            'projects' => 'Alertes de mission',
             'language' => 'Langue',
             'timezone' => 'Fuseau horaire',
             'save' => 'Enregistrer les préférences',
             'success' => 'Les préférences de notification ont été mises à jour.',
             'email_description' => 'Recevez les mises à jour par e-mail',
             'sms_description' => 'Recevez les mises à jour par SMS',
-            'missions_description' => 'Recevez des notifications sur les nouvelles missions',
+            'projects_description' => 'Recevez des notifications sur les nouvelles missions',
             'timezone_options' => [
                 'utc' => 'UTC',
                 'newfoundland' => 'Heure de Terre-Neuve',
@@ -963,7 +1035,42 @@ return [
             'languages' => [
                 'en' => 'Anglais',
                 'fr' => 'Français',
+                'es' => 'Espagnol',
             ],
+        ],
+    ],
+
+    'emails' => [
+        'common' => [
+            'project_details' => 'Détails de la mission',
+            'title' => 'Titre',
+            'message' => 'Message',
+            'worker' => 'Travailleur',
+            'role' => 'Rôle',
+            'name' => 'Nom',
+            'company' => 'Entreprise',
+            'view_request' => 'Voir la demande',
+        ],
+        'project_request' => [
+            'subject' => 'Nouvelle demande pour joindre une mission',
+            'heading' => 'Nouvelle demande pour joindre une mission',
+            'company_intro' => ':company a proposé un travailleur pour votre mission.',
+            'self_employed_intro' => 'Un travailleur autonome a postulé à votre mission.',
+            'worker_information' => 'Renseignements sur le travailleur',
+            'employment' => 'Statut d’emploi',
+            'lending_company' => 'Entreprise prêteuse',
+            'login_instruction' => 'Veuillez vous connecter pour examiner cette demande.',
+        ],
+        'worker_request' => [
+            'subject' => 'Nouvelle demande de travailleur',
+            'company_heading' => 'Nouvelle demande pour votre travailleur',
+            'self_employed_heading' => 'Vous avez été invité à une mission',
+            'company_intro' => ':company a demandé un de vos travailleurs pour une mission.',
+            'self_employed_intro' => ':company vous a invité à joindre une mission.',
+            'worker_details' => 'Détails du travailleur',
+            'self_employed_notice' => 'Cette demande vous est destinée.',
+            'requesting_company' => 'Entreprise demandeuse',
+            'login_instruction' => 'Veuillez vous connecter à votre compte pour accepter ou refuser cette demande.',
         ],
     ],
 ];

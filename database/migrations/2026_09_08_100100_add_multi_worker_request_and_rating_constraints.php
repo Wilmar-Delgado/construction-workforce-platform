@@ -9,25 +9,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $hasDuplicateMissionWorkerPairs = DB::table('requests')
-            ->select('mission_id', 'worker_profile_id')
+        $hasDuplicateProjectWorkerPairs = DB::table('requests')
+            ->select('project_id', 'worker_profile_id')
             ->whereNotNull('worker_profile_id')
-            ->groupBy('mission_id', 'worker_profile_id')
+            ->groupBy('project_id', 'worker_profile_id')
             ->havingRaw('COUNT(*) > 1')
             ->exists();
 
-        if ($hasDuplicateMissionWorkerPairs) {
+        if ($hasDuplicateProjectWorkerPairs) {
             throw new \RuntimeException(
-                'Cannot add the mission-worker request uniqueness constraint while duplicate request records exist. Resolve duplicate mission_id/worker_profile_id pairs first.'
+                'Cannot add the project-worker request uniqueness constraint while duplicate request records exist. Resolve duplicate project_id/worker_profile_id pairs first.'
             );
         }
 
         // Add the replacement indexes before removing the legacy indexes. On MySQL,
-        // the legacy ratings index is required by the mission_id foreign key until the
+        // the legacy ratings index is required by the project_id foreign key until the
         // composite index can satisfy that same leftmost-column requirement.
-        if (! Schema::hasIndex('requests', 'requests_mission_worker_unique')) {
+        if (! Schema::hasIndex('requests', 'requests_project_worker_unique')) {
             Schema::table('requests', function (Blueprint $table) {
-                $table->unique(['mission_id', 'worker_profile_id'], 'requests_mission_worker_unique');
+                $table->unique(['project_id', 'worker_profile_id'], 'requests_project_worker_unique');
             });
         }
 
@@ -37,42 +37,42 @@ return new class extends Migration
             });
         }
 
-        if (! Schema::hasIndex('ratings', 'ratings_mission_worker_unique')) {
+        if (! Schema::hasIndex('ratings', 'ratings_project_worker_unique')) {
             Schema::table('ratings', function (Blueprint $table) {
-                $table->unique(['mission_id', 'worker_profile_id'], 'ratings_mission_worker_unique');
+                $table->unique(['project_id', 'worker_profile_id'], 'ratings_project_worker_unique');
             });
         }
 
-        if (Schema::hasIndex('ratings', 'ratings_mission_id_unique')) {
+        if (Schema::hasIndex('ratings', 'ratings_project_id_unique')) {
             Schema::table('ratings', function (Blueprint $table) {
-                $table->dropUnique('ratings_mission_id_unique');
+                $table->dropUnique('ratings_project_id_unique');
             });
         }
     }
 
     public function down(): void
     {
-        if (! Schema::hasIndex('ratings', 'ratings_mission_id_unique')) {
+        if (! Schema::hasIndex('ratings', 'ratings_project_id_unique')) {
             Schema::table('ratings', function (Blueprint $table) {
-                $table->unique('mission_id', 'ratings_mission_id_unique');
+                $table->unique('project_id', 'ratings_project_id_unique');
             });
         }
 
-        if (Schema::hasIndex('ratings', 'ratings_mission_worker_unique')) {
+        if (Schema::hasIndex('ratings', 'ratings_project_worker_unique')) {
             Schema::table('ratings', function (Blueprint $table) {
-                $table->dropUnique('ratings_mission_worker_unique');
+                $table->dropUnique('ratings_project_worker_unique');
             });
         }
 
         if (! Schema::hasIndex('requests', 'request_unique_per_worker')) {
             Schema::table('requests', function (Blueprint $table) {
-                $table->unique(['mission_id', 'worker_profile_id', 'type'], 'request_unique_per_worker');
+                $table->unique(['project_id', 'worker_profile_id', 'type'], 'request_unique_per_worker');
             });
         }
 
-        if (Schema::hasIndex('requests', 'requests_mission_worker_unique')) {
+        if (Schema::hasIndex('requests', 'requests_project_worker_unique')) {
             Schema::table('requests', function (Blueprint $table) {
-                $table->dropUnique('requests_mission_worker_unique');
+                $table->dropUnique('requests_project_worker_unique');
             });
         }
     }

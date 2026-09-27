@@ -25,9 +25,9 @@ const isLoading = ref(false);
 const hasLoadError = ref(false);
 let latestRequestId = 0;
 
-const locale = computed(() => page.props.locale === 'fr' ? 'fr-ca' : 'en-ca');
-const weekStarts = computed(() => page.props.locale === 'fr' ? 1 : 0);
-const displayLocale = computed(() => page.props.locale === 'fr' ? 'fr-CA' : 'en-CA');
+const locale = computed(() => ({ en: 'en-ca', fr: 'fr-ca', es: 'es-es' }[page.props.locale] ?? 'en-ca'));
+const weekStarts = computed(() => page.props.locale === 'en' ? 0 : 1);
+const displayLocale = computed(() => ({ en: 'en-CA', fr: 'fr-CA', es: 'es-ES' }[page.props.locale] ?? 'en-CA'));
 const hasMultipleWorkers = computed(() => workerOptions.value.length > 1);
 const visibleRangeLabel = computed(() => {
     const start = parseIsoDate(visibleStartDate.value);

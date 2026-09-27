@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('ratings', function (Blueprint $table) {
 
             $table->foreignId('reviewed_by_user_id')
-                ->after('mission_id')
+                ->after('project_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
 

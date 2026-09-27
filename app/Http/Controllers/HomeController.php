@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Mission;
+use App\Models\Project;
 use App\Models\WorkerProfile;
 use App\Models\WorkerRequest;
 use Illuminate\Support\Facades\Auth;
@@ -20,10 +20,10 @@ class HomeController extends Controller
         if (! $isCompanyOperator && ! $isSelfEmployed) {
             return Inertia::render('Home', [
                 'stats' => [
-                    'ongoing_missions' => 0,
+                    'ongoing_projects' => 0,
                     'pending_requests' => 0,
                     'active_workers' => 0,
-                    'total_missions' => 0,
+                    'total_projects' => 0,
                 ],
             ]);
         }
@@ -64,10 +64,10 @@ class HomeController extends Controller
 
                     })
 
-                    // Applications to my missions
+                    // Applications to my projects
                     ->orWhere(function ($sub) use ($companyId) {
 
-                        $sub->whereHas('mission', function ($q2) use ($companyId) {
+                        $sub->whereHas('project', function ($q2) use ($companyId) {
                             $q2->where('hiring_company_id', $companyId);
                         })
                         ->where('type', 'apply');
@@ -91,7 +91,7 @@ class HomeController extends Controller
         return Inertia::render('Home', [
             'stats' => [
 
-                'ongoing_missions' => Mission::where('hiring_company_id', $companyId)
+                'ongoing_projects' => Project::where('hiring_company_id', $companyId)
                     ->where('status', 'in_progress')
                     ->count(),
 
@@ -102,7 +102,7 @@ class HomeController extends Controller
                     ->where('company_id', $companyId)
                     ->count(),
 
-                'total_missions' => Mission::where('hiring_company_id', $companyId)
+                'total_projects' => Project::where('hiring_company_id', $companyId)
                     ->count(),
             ]
         ]);
@@ -118,10 +118,10 @@ class HomeController extends Controller
         };
 
         return [
-            'ongoing_missions' => WorkerRequest::query()
+            'ongoing_projects' => WorkerRequest::query()
                 ->where('status', 'ongoing')
                 ->whereHas('worker', $workerScope)
-                ->whereHas('mission', fn ($query) => $query->where('status', 'in_progress'))
+                ->whereHas('project', fn ($query) => $query->where('status', 'in_progress'))
                 ->count(),
 
             'pending_requests' => WorkerRequest::query()
@@ -138,7 +138,7 @@ class HomeController extends Controller
                 })
                 ->count(),
 
-            'completed_missions' => WorkerRequest::query()
+            'completed_projects' => WorkerRequest::query()
                 ->whereIn('status', ['completed', 'ended_early'])
                 ->whereHas('worker', function ($query) use ($user): void {
                     $query

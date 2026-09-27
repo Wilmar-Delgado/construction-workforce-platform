@@ -7,16 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Rating extends Model
 {
     protected $fillable = [
-        'mission_id',
+        'project_id',
         'reviewed_by_user_id',
         'worker_profile_id',
         'score',
         'feedback',
     ];
 
-    public function mission()
+    public function project()
     {
-        return $this->belongsTo(Mission::class);
+        return $this->belongsTo(Project::class);
     }
 
     public function reviewer()

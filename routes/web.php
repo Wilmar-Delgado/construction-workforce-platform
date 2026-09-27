@@ -4,10 +4,10 @@ use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyTeamController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\MissionController;
-use App\Http\Controllers\MissionDirectoryController;
-use App\Http\Controllers\MissionManagementController;
-use App\Http\Controllers\MissionRequestController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectDirectoryController;
+use App\Http\Controllers\ProjectManagementController;
+use App\Http\Controllers\ProjectRequestController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\WorkerDirectoryController;
@@ -98,47 +98,47 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Find Missions
+    | Find Projects
     |-------------------------------------------------------------------------- 
     */
 
-    Route::resource('find-missions', MissionDirectoryController::class)
+    Route::resource('find-projects', ProjectDirectoryController::class)
         ->only(['index']);
-    Route::post('/request-mission/{mission}', [MissionRequestController::class, 'store'])
-        ->name('request-mission.store');
+    Route::post('/request-project/{project}', [ProjectRequestController::class, 'store'])
+        ->name('request-project.store');
     /*
     |--------------------------------------------------------------------------
-    | Missions
+    | Projects
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('missions', MissionController::class)
+    Route::resource('projects', ProjectController::class)
         ->only(['index', 'store', 'update', 'destroy']);
-    Route::put('/missions/{mission}/archive', [MissionController::class, 'archive'])
-        ->name('missions.archive');
+    Route::put('/projects/{project}/archive', [ProjectController::class, 'archive'])
+        ->name('projects.archive');
 
     /*
     |--------------------------------------------------------------------------
-    | Mission Management
+    | Project Management
     |--------------------------------------------------------------------------
     */
 
-    Route::resource('mission-management', MissionManagementController::class)
+    Route::resource('project-management', ProjectManagementController::class)
         ->only(['index']);
-    Route::get('/mission-management/missions/{mission}/details', [MissionManagementController::class, 'details'])
-        ->name('mission-management.missions.details');
-    Route::get('/mission-management/workers/{workerProfile}/details', [MissionManagementController::class, 'workerDetails'])
-        ->name('mission-management.workers.details');
-    Route::post('/mission-management/requests/{workerRequest}/respond', [MissionManagementController::class, 'respond'])
-        ->name('mission-management.respond');
-    Route::post('/mission-management/requests/{workerRequest}/complete', [MissionManagementController::class, 'complete'])
-        ->name('mission-management.complete');
-    Route::post('/mission-management/requests/{workerRequest}/end-early', [MissionManagementController::class, 'endEarly'])
-        ->name('mission-management.end-early');
-    Route::post('/mission-management/missions/{mission}/close-recruiting', [MissionManagementController::class, 'closeRecruiting'])
-        ->name('mission-management.close-recruiting');
-    Route::post('/mission-management/missions/{mission}/start', [MissionManagementController::class, 'start'])
-        ->name('mission-management.start');
+    Route::get('/project-management/projects/{project}/details', [ProjectManagementController::class, 'details'])
+        ->name('project-management.projects.details');
+    Route::get('/project-management/workers/{workerProfile}/details', [ProjectManagementController::class, 'workerDetails'])
+        ->name('project-management.workers.details');
+    Route::post('/project-management/requests/{workerRequest}/respond', [ProjectManagementController::class, 'respond'])
+        ->name('project-management.respond');
+    Route::post('/project-management/requests/{workerRequest}/complete', [ProjectManagementController::class, 'complete'])
+        ->name('project-management.complete');
+    Route::post('/project-management/requests/{workerRequest}/end-early', [ProjectManagementController::class, 'endEarly'])
+        ->name('project-management.end-early');
+    Route::post('/project-management/projects/{project}/close-recruiting', [ProjectManagementController::class, 'closeRecruiting'])
+        ->name('project-management.close-recruiting');
+    Route::post('/project-management/projects/{project}/start', [ProjectManagementController::class, 'start'])
+        ->name('project-management.start');
 
     /*
     |--------------------------------------------------------------------------

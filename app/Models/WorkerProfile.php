@@ -70,11 +70,11 @@ class WorkerProfile extends Model
     }
 
     /**
-     * Legacy direct worker-to-mission references still need retention protection.
+     * Legacy direct worker-to-project references still need retention protection.
      */
-    public function directMissions()
+    public function directProjects()
     {
-        return $this->hasMany(Mission::class, 'worker_profile_id');
+        return $this->hasMany(Project::class, 'worker_profile_id');
     }
 
     public function availabilities()
@@ -96,7 +96,7 @@ class WorkerProfile extends Model
     {
         return $this->requests()->exists()
             || $this->ratings()->exists()
-            || $this->directMissions()->exists();
+            || $this->directProjects()->exists();
     }
 
     public function hasActiveBusinessActivity(): bool
@@ -104,7 +104,7 @@ class WorkerProfile extends Model
         return $this->requests()
             ->whereIn('status', ['pending', 'accepted', 'ongoing'])
             ->exists()
-            || $this->directMissions()
+            || $this->directProjects()
                 ->whereIn('status', ['draft', 'open', 'in_progress'])
                 ->exists();
     }
